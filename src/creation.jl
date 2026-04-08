@@ -1,5 +1,5 @@
 export psu2k_fusion_ring, su2k_fusion_ring, son2_fusion_ring, metaplectic_fusion_ring,
-       fusion_ring_from_group, zn_fusion_ring, group_rep_fusion_ring, hi_fusion_ring,
+       group_fusion_ring, zn_fusion_ring, group_rep_fusion_ring, hi_fusion_ring,
        ty_fusion_ring
 
 range_psu2k(i, j, k) = abs(i - j):2:min(i + j, 2k - i - j)
@@ -79,7 +79,7 @@ function is_cayley_table(gmt::Array{Int, 2})
 end
 
 # TODO: add missing information
-function fusion_ring_from_group(gmt::Array{Int, 2}; skipcheck::Bool = false)::FusionRing
+function group_fusion_ring(gmt::Array{Int, 2}; skipcheck::Bool = false)::FusionRing
     !skipcheck && is_cayley_table(gmt) || error("Provided table is not a valid Cayley table")
     r = size(gmt, 1)
     mt = fill(0, r, r, r)

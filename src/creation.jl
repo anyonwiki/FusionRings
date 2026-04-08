@@ -5,7 +5,6 @@ export psu2k_fusion_ring, su2k_fusion_ring, son2_fusion_ring, metaplectic_fusion
 range_psu2k(i, j, k) = abs(i - j):2:min(i + j, 2k - i - j)
 
 # TODO: add missing information
-# TODO: code for labels is a bit too dense
 # PSU(2)_k
 function psu2k_fusion_ring(k::Int)::FusionRing
     rk = div(k, 2) + 1
@@ -271,31 +270,7 @@ function _son2_rules_odd(m::Integer)::Array{Int,3}
 end
 
 
-
-#  rulesdiv2[p_] and rulesdiv4[p_]  (SO(m)_2 even cases)
-#
-# Used by son2_fusion_ring:
-#   if m % 4 == 0  => rulesdiv4(m/2)
-#   elseif m % 2 == 0 => rulesdiv2(m/2)
-#
-# 
-#   build fusion matrices mats[a] as Integer matrices,
-#   apply transpose to match Anyonica's Transpose /@,
-#   convert mats -> multiplication table mt[a,b,c].
-
-
-
-
 # index convention (matches  Evaluate[...] = IdentityMatrix[rank]):
-# 1: Id
-# 2: Θ
-# 3: Φ1
-# 4: Φ2
-# 5: σ1
-# 6: σ2
-# 7: τ1
-# 8: τ2
-# 9..rank:  Φ[j] with j = 1..(rank-8)
 @inline 𝟙  = 1
 @inline Θ  = 2
 @inline Φ₁ = 3
@@ -305,7 +280,6 @@ end
 @inline τ₁ = 7
 @inline τ₂ = 8
 @inline Φ(j::Int) = 8 + j
-
 
 # rulesdiv2[p_]
 function _son2_rules_div2(p::Integer)::Array{Int,3}
@@ -1154,21 +1128,3 @@ function _inverse_vector(tab::AbstractMatrix{<:Integer})::Vector{Int}
     end
     return inv
 end
-
-
-
-
-
-#Added: from izumi
-
-# Haagerup–Izumi (HI) and Tambara–Yamagami (TY) fusion rings
-# - Input `tab` is  n×n group multiplication table on {1,…,n} with identity = 1.
-# - Output `mt` is a rank×rank×rank multiplication tensor with structure constants
-#     mt[i,j,k] = multiplicity of simple k in i ⊗ j.
-# must already have:
-#   - struct FusionRing with fields `multiplication_table`, `names`, `labels` (etc.)
-#   - `fusion_ring(mt; names=..., labels=...)` constructor
-#
-# This file provides:
-#   FusionRingHI(tab; names=...)
-#   FusionRingTY(tab; names=...)

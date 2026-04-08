@@ -831,7 +831,7 @@ export son2_fusion_ring
 # odd m: rank = (m+7)/2, elements are [1, Z, X_e1, X_e2, Y_1, ..., Y_r], r=(m-1)/2
 function _son2_labels_odd(m::Int)::Vector{String}
     r = (m - 1) ÷ 2
-    labels = String["1", "Z", "Xₑ₁", "Xₑ₂"]
+    labels = String[bold_integer(1), "Z", "Xₑ₁", "Xₑ₂"]
     for j in 1:r
         push!(labels, "Y"*subscript_integer(j))
     end
@@ -841,7 +841,7 @@ end
 # even m: rank = p+7 with p=m/2, elements are [Id, Θ, Φ1, Φ2, σ1, σ2, τ1, τ2, Φ_1..Φ_{p-1}]
 function _son2_labels_even(p::Int)::Vector{String}
     labels = String[
-        "1", "Θ", "Φ₁", "Φ₂", "σ₁", "σ₂", "τ₁", "τ₂"
+        bold_integer(1), "Θ", "Φ₁", "Φ₂", "σ₁", "σ₂", "τ₁", "τ₂"
     ]
     for j in 1:(p - 1)
         push!(labels, "Φ"*subscript_integer(j))

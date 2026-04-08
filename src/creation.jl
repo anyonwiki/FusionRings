@@ -21,9 +21,7 @@ function psu2k_fusion_ring(k::Int)::FusionRing
 
     elnames = 
         [
-            denominator((i-1)//2) == 1 ? 
-            string((i-1)//2) :
-            string(numerator((i-1)//2))*"/"*string(denominator((i-1)//2))
+            "["*string(numerator((i-1)//2))*"/"*string(denominator((i-1)//2))*"]"
             for i in 1:rk
         ]
     

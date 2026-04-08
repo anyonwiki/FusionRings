@@ -1084,6 +1084,11 @@ export TY_fusion_ring
 Build the Tambara–Yamagami fusion ring for a group with multiplication table `tab`.
 Rank is n+1 (group elements + one extra object).
 """
+
+function TY_fusion_ring(g::Group)::FusionRing
+    TY_fusion_ring( cayley_table(g) )
+end
+
 function TY_fusion_ring(tab::AbstractMatrix{<:Integer}; names::Vector{String}=String[])
     _is_group_table(tab) || throw(ArgumentError("FusionRingTY: tab must be a group multiplication table (identity=1, associative, latin square)."))
     n = size(tab, 1)

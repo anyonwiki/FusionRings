@@ -89,9 +89,8 @@ function group_fusion_ring(gmt::Array{Int, 2}; skipcheck::Bool = false)::FusionR
     fusion_ring(mt, skip_check = skipcheck)
 end
 
-# TODO: Overload for actual group objects (needs character data)
-function fusion_ring_from_group(grp)
-    throw(ErrorException("fusion_ring_from_group(grp) not yet implemented — require group algebra / character data"))
+function group_fusion_ring(g::Group)
+    group_fusion_ring( cayley_table(g) )
 end
 
 

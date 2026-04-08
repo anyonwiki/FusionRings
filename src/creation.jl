@@ -129,16 +129,7 @@ hi_fusion_ring(grp)        = throw(ErrorException("hi_fusion_ring (Haagerup–Iz
 
 
 
-# TODO 
-# 1. Could use unicode to make everything more readable
-# 2. Could use dictionaries rather than elseif statements 
-
-# Anyonica rulesodd[m_]  (metaplectic / SO(m)_2, m odd)
-# 
-# - Anyonica builds matX as a Table of vectors (length=rank),
-#   then does Transpose /@ at the end.
-# - i follow that exactly: build "row_table" (rank×rank),
-#   then transpose before converting to mt.
+# SO(2)_n fusion rings 
 
 # basis vector e_i in ℤ^rank
 @inline function _e(i::Int, rank::Int)::Vector{Int}

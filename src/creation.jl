@@ -96,8 +96,6 @@ end
 
 # TODO: implement 
 group_rep_fusion_ring(grp) = throw(ErrorException("group_rep_fusion_ring needs character tables (TODO)"))
-# TODO: implement 
-hi_fusion_ring(grp)        = throw(ErrorException("hi_fusion_ring (Haagerup–Izumi) pending implementation"))
 
 
 

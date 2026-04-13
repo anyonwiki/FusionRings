@@ -279,7 +279,10 @@ function is_equivalent_fusion_ring(ring1::FusionRing,ring2::FusionRing)::Bool
    which_permutation(ring1,ring2) !== nothing
 end
 
-which_permutation( ring1::FusionRing, ring2::FusionRing, all=false ) = _permutation_vector_equiv(mt(ring1),mt(ring2),all=all)
+function which_permutation( ring1::FusionRing, ring2::FusionRing, all=false )
+    mt = multiplication_table
+    _permutation_vector_equiv(mt(ring1),mt(ring2),all=all)
+end
 
 #Added: from updates/commutator
 """

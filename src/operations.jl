@@ -3,6 +3,9 @@ export permute, permute_mult_tab, sort, perm_vec_qd, perm_vec_sd_conj,
        register_known_ring!, known_rings, replace_by_known
 
 
+# TODO: implement replace_by_known
+# hint: use rank, mult, nnsd to compute first 3 indices of the formal code 
+
 "Return the fusion matrix (left multiplication by `a`)."
 function fusion_matrix(fr::FusionRing, a::Int)::Matrix{Int}
     @views multiplication_table(fr)[a, :, :]

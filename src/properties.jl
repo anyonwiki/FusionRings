@@ -210,24 +210,12 @@ function sub_fusion_rings(r::FusionRing)
             for dict in dictvec
         ]
     else
+        # note: for injection, use which_injection
         error("Method sub_fusion_rings not full implemented yet")
     end
 
 end
 
-
-# TODO: only implement if necessary for function sub_fusion_rings
-function sub_ring_tables(mat::Array{Int,2})
-
-end
-#best one to try on is ring w/fusion rings automorphism non-existent. 
-#like test with a ugly large ring, as many just give Z2
-# injection_form( subring, ring ) returns the vector of elements of
-# ring that form subring in the correct order  
-# TODO: implement 
-function injection_form( subring::FusionRing, ring::FusionRing )
-
-end
 
 """
     is_sub_fusion_ring(fr, S) -> Bool
@@ -287,37 +275,11 @@ function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
     out
 end
 
-#Added from feat/nilpotent
 function is_equivalent_fusion_ring(ring1::FusionRing,ring2::FusionRing)::Bool
-    r1 = rank(ring1)
-    r2 = rank(ring2)
-    r1 == r2 || return false
-    r = r1
-
-    N1 = multiplication_table(ring1)
-    N2 = multiplication_table(ring2)
-    sum(N1) == sum(N2) || return false
-
-    if r ≤ 8
-        for p in permutations(2:r)
-            perm = vcat(1, collect(p))
-            if permute_mult_tab(N1, perm) == N2
-                return true
-            end
-        end
-        return false
-    end
-
-    S1 = zeros(Int, r, r)
-    S2 = zeros(Int, r, r)
-    for a in 1:r
-        @views S1 .+= N1[a, :, :]
-        @views S2 .+= N2[a, :, :]
-    end
-    sort(eigvals(Matrix(S1))) == sort(eigvals(Matrix(S2)))
+   which_permutation(ring1,ring2) !== nothing
 end
 
-
+which_permutation( ring1::FusionRing, ring2::FusionRing, all=false ) = _permutation_vector_equiv(mt(ring1),mt(ring2),all=all)
 
 #Added: from updates/commutator
 """
@@ -326,7 +288,7 @@ end
 Find `perm` such that `_permute_multtab(A, perm) == B`, using diagonal-channel
 groups for pruning. Returns `nothing` if not found.
 """
-# TODO: we know that 1 is always the first element so we don't need to check for it
+# TODO: rewrite using group functionality of OSCAR
 function _permutation_vector_equiv(A::Array{Int,3}, B::Array{Int,3})
     r = size(A, 1)
     size(B, 1) == r || return nothing
@@ -364,7 +326,7 @@ function _permutation_vector_equiv(A::Array{Int,3}, B::Array{Int,3})
     backtrack(1) ? cur : nothing
 end
 
-#
+
 export fusion_ring_automorphisms
 """
     fusion_ring_automorphisms(fr) -> Vector{Vector{Int}}
@@ -372,38 +334,10 @@ export fusion_ring_automorphisms
 Return all permutations `p` with `_permute_multtab(N,p) == N`.
 Uses diagonal-channel pruning (same idea as Anyonica).
 """
+
+# TODO: test this
 function fusion_ring_automorphisms(fr::FusionRing)
-    N = multiplication_table(fr)
-    r = size(N, 1)
-
-    groups = _diag_channel_groups(N)
-    perms  = Vector{Vector{Int}}()
-    cur    = Vector{Int}(undef, r)
-    cur[1] = 1
-
-    function backtrack(gidx::Int)
-        if gidx > length(groups)
-            _permute_multtab(N, cur) == N && push!(perms, copy(cur))
-            return
-        end
-        G = groups[gidx]
-        for σ in Base.Iterators.permutations(G)
-			# TODO: the first element should always be 1 so no need to set 
-			# up special case
-            if 1 in G
-                σ[findfirst(==(1), G)] == 1 || continue
-            end
-            for (u, v) in zip(G, σ)
-                cur[u] = v
-            end
-            backtrack(gidx + 1)
-        end
-    end
-
-    backtrack(1)
-    unique!(perms)
-    sort!(perms, by = p -> (sum(p), p))
-    perms
+   which_permutation( fr, fr, all= true )
 end
 
 
@@ -530,10 +464,6 @@ Centralizer-style commutator of subring `sub = (S, RS)` inside `fr`:
 return all simples `i` with `FusionOutcomes(i ⊗ i*) ⊆ S`
 """
 
-#Update 2: Fixed version uploaded
-#Added: from from updates/automorphisms
-# TODO: need to addapt to definition EGNO
-# TODO: not sure whether you need a ⊗ b ⊗ a* ⊗ b*, isn't a ⊗ b* enough?
 function commutator(fr::FusionRing, sub::Tuple{Vector{Int},FusionRing})
     is_commutative(fr) || error("commutator: ring must be commutative")
 
@@ -879,6 +809,7 @@ export which_injection
 #1) enumerating fusion-closed subsets `S ⊂ ring` of size rank(subring) containing 1,
 #2) comparing multiplication tables up to permutation.
 """
+
 function which_injection(subring::FusionRing, ring::FusionRing)
     rs = rank(subring)
     rr = rank(ring)
@@ -887,7 +818,6 @@ function which_injection(subring::FusionRing, ring::FusionRing)
     Nbig = multiplication_table(ring)
     Nsub = multiplication_table(subring)
 
-	# TODO: should use sub_fusion_rings here
     for S in _internal_closed_subsets(ring, rs)
         Nres = @views Nbig[S, S, S]
         perm = _permutation_vector_equiv(Nsub, Nres)
@@ -920,7 +850,6 @@ end
 # - We partition indices by this invariant.
 # - Groups are sorted deterministically (increasing k, then index).
 
-# TODO: dont include channel for unit element in output. unit is always fixed
 """
     _diag_channel_groups(N) -> Vector{Vector{Int}}
 
@@ -956,7 +885,7 @@ function _diag_channel_groups(N::Array{Int,3})::Vector{Vector{Int}}
     out
 end
 
-# TODO: use the code to generate sub_fusion_rings 
+
 """
     _internal_closed_subsets(fr, k) -> Vector{Vector{Int}}
 

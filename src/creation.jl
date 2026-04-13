@@ -56,7 +56,6 @@ function zn_fusion_ring(n::Int)::FusionRing
     )
 end
 
-# TODO: implement 
 function group_rep_fusion_ring(g)
     m         = character_matrix(g)
     invm      = inv(m)

@@ -172,7 +172,6 @@ function permute_mult_tab(N::Array{Int,3}, p::Vector{Int})
 end
 
 """
-#might return false positives - only checks in 1direction
     is_equivalent(r1, r2) -> Bool
 
 Check graded ring isomorphism by brute force for rank ≤ 8,

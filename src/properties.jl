@@ -971,7 +971,7 @@ function derived_subring_commutator(fr::FusionRing, A::Vector{Int}, B::Vector{In
     return _restrict_subring(fr, S; check_closed=true)
 end
 
-
+# TODO:implement which_decompositions
 
 
 

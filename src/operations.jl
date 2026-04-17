@@ -32,7 +32,7 @@ function fusion_product(fr::FusionRing, a::Int, b::Int)
     out
 end
 
-
+#TODO: implement permute for permutations from OSCAR
 """permute(r, perm) – return a new `FusionRing` with all data
     permuted by `perm`.  `perm[1]` **must** equal 1 to keep the vacuum first."""
 function permute(r::FusionRing, perm::Vector{Int})::FusionRing

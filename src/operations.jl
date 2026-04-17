@@ -107,6 +107,8 @@ function perm_vec_sd_conj(r::FusionRing; order::Symbol = :increasing)::Vector{In
     vcat(1, self_dual, conjlist)
 end
 
+# TODO: implement sortedring
+
 
 function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
     m, n   = rank(r1), rank(r2)
@@ -224,3 +226,6 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing; max_rank_bruteforce
     end
     missing
 end
+
+# TODO: implement bicrossed product. @Szagha02: not a priority 
+# @gvercley will do this at some point

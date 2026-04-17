@@ -50,7 +50,6 @@ function tex_names(r::FusionRing)::Array{String,1}
   return r.texnames
 end
 
-
 #Added: from updates/commutator
 function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
     Sset = Set(S)
@@ -182,7 +181,7 @@ end
 
 export anyonwiki_code
 
-function anyonwiki_code(r::FusionRing)::Array{Int,1}
+function anyonwiki_code(r::FusionRing)::Union{Array{Int,1},Missing}
   return r.anyonwiki_code
 end
 

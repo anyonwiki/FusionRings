@@ -175,11 +175,9 @@ end
 Return the integer index of the dual (conjugate) simple object of `a`.
 Accepts an integer index, a `String`, or a `Symbol`.
 """
-function conjugate_element(fr::FusionRing, a)
-    imap = indexmap(fr)
-    ai = a isa Integer ? a : imap[String(a)]
+function conjugate_element(fr::FusionRing, a::Int64)::Int64
     C = conjugation_matrix(fr)
-    findfirst(==(1), C[ai, :])::Int
+    findfirst(==(1), C[a, :])
 end
 
 export anyonwiki_code

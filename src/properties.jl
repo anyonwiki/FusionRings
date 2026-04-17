@@ -357,6 +357,7 @@ function decompositions( fr::FusionRing, product="TensorProduct" )#::Vector{ Vec
     end
 end
 
+#TODO: implement
 function tensor_product_decompositions( r::FusionRing )
     error("Not implemented yet.")
 end

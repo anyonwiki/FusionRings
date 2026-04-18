@@ -18,7 +18,7 @@ function group_fusion_ring( grp::Group )::FusionRing
     group_fusion_ring( ct, names = [nm], checktable = false )
 end
 
-function group_fusion_ring( ct::Matrix{Int64}; names::Vector{String} = "G", checktable::Bool=true )::FusionRing 
+function group_fusion_ring( ct::Matrix{Int64}; names::Vector{String} = ["G"], checktable::Bool=true )::FusionRing 
     if checktable 
         _is_group_table(ct) || throw( ArgumentError("table must be a group multiplication table.") )
     end

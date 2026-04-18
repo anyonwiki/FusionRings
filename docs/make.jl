@@ -15,4 +15,5 @@ makedocs(;
     pages=[
         "Home" => "index.md",
     ],
+    repo=Remotes.GitLab
 )

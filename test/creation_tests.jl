@@ -117,7 +117,7 @@
       @testset "fusion_ring: rejects bad inverse condition" begin
         mt = make_z3_mt()
         # make both 1 and 2 appear as "duals" of 2 by forcing extra contribution to c=1
-        mt[2,2,2] = 1
+        mt[2,2,1] = 1
 
         check_throws(
             () -> fusion_ring(mt; labels = ["0", "1", "2"]),

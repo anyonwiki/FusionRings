@@ -525,7 +525,7 @@
                 "HI_fusion_ring on the Z2 Cayley table did not produce rank 4")
             check_equal(size(multiplication_table(r)), (4,4,4),
                 "HI_fusion_ring(Z2) multiplication table had wrong size")
-            check_equal(labels(r), ["1", "2", "ρ_1", "ρ_2"],
+            check_equal(labels(r), ["1", "2", "ρ₁", "ρ₂"],
                 "HI_fusion_ring(Z2) labels were incorrect")
         end
 

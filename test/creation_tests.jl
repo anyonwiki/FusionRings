@@ -531,6 +531,7 @@
 
         @testset "basic fusion behaviour on Z2 input" begin
             r = HI_fusion_ring(z2_tab)
+            mt1 = multiplication_table(r)
 
             # First two are group sector, last two are rho sector
             check_equal(mt1[1, 1, 1], 1,
@@ -545,10 +546,11 @@
                 "HI_fusion_ring accepted a table that was not a valid group table"
             )
 
-            check_throws(
-                () -> HI_fusion_ring(nonsymmetric_group_tab),
-                "HI_fusion_ring accepted a valid group table that was not symmetric as a matrix"
-            )
+            # TODO: z3 is symmetric, should try dihedral group of order 6 instead
+            #check_throws(
+            #    () -> HI_fusion_ring(nonsymmetric_group_tab),
+            #    "HI_fusion_ring accepted a valid group table that was not symmetric as a matrix"
+            #)
         end
     end
 

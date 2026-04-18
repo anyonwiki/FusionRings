@@ -173,59 +173,5 @@ function permute_mult_tab(N::Array{Int,3}, p::Vector{Int})
     M
 end
 
-"""
-    is_equivalent(r1, r2) -> Bool
-
-Check graded ring isomorphism by brute force for rank ≤ 8,
-else compare a spectral checksum of ∑_a N[a,:,:].
-"""
-function is_equivalent(r1::FusionRing, r2::FusionRing; max_rank_bruteforce::Int = 8)::Bool
-    which_permutation(r1, r2; max_rank_bruteforce) !== missing
-end
-
-"""
-    which_permutation(fr1, fr2; max_rank_bruteforce=8) -> Union{Vector{Int},Missing}
-
-Return a permutation vector `p` (with `p[1] == 1`) such that
-`permute_mult_tab(multiplication_table(fr1), p) == multiplication_table(fr2)`.
-
-For ranks above `max_rank_bruteforce`, this returns `missing` (conservative: avoids
-false positives).
-"""
-function which_permutation(fr1::FusionRing, fr2::FusionRing; max_rank_bruteforce::Int = 8)
-    r1 = rank(fr1)
-    r2 = rank(fr2)
-    r1 == r2 || return missing
-    r = r1
-
-    N1 = multiplication_table(fr1)
-    N2 = multiplication_table(fr2)
-    sum(N1) == sum(N2) || return missing
-
-    # Optional quick invariants (skip if unavailable)
-    try
-        nsdnsd(fr1) == nsdnsd(fr2) || return missing
-    catch
-    end
-
-    try
-        d1 = fpdims(fr1)
-        d2 = fpdims(fr2)
-        if length(d1) == r && length(d2) == r
-            sort(string.(d1)) == sort(string.(d2)) || return missing
-        end
-    catch
-    end
-
-    r <= max_rank_bruteforce || return missing
-
-    # Brute force over permutations fixing the vacuum (index 1)
-    for p in Iterators.permutations(2:r)
-        perm = vcat(1, collect(p))
-        permute_mult_tab(N1, perm) == N2 && return perm
-    end
-    missing
-end
-
 # TODO: implement bicrossed product. @Szagha02: not a priority 
 # @gvercley will do this at some point

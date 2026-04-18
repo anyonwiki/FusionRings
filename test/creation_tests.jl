@@ -429,7 +429,7 @@
 
     #FusionRing TY
 
-       @testset "FusionRingTY" begin
+       @testset "TY_fusion_ring" begin
         z2_tab = [
             1 2
             2 1
@@ -447,46 +447,46 @@
         ]
 
         @testset "basic construction" begin
-            r2 = FusionRingTY(z2_tab)
-            r3 = FusionRingTY(z3_tab)
+            r2 = TY_fusion_ring(z2_tab)
+            r3 = TY_fusion_ring(z3_tab)
 
             check_equal(rank(r2), 3,
-                "FusionRingTY on the Z2 Cayley table did not produce rank 3")
+                "TY_fusion_ring on the Z2 Cayley table did not produce rank 3")
             check_equal(rank(r3), 4,
-                "FusionRingTY on the Z3 Cayley table did not produce rank 4")
+                "TY_fusion_ring on the Z3 Cayley table did not produce rank 4")
 
             check_equal(labels(r2), ["1", "2", "m"],
-                "FusionRingTY(Z2) labels were incorrect")
+                "TY_fusion_ring(Z2) labels were incorrect")
             check_equal(labels(r3), ["1", "2", "3", "m"],
-                "FusionRingTY(Z3) labels were incorrect")
+                "TY_fusion_ring(Z3) labels were incorrect")
 
             check_equal(size(multiplication_table(r2)), (3,3,3),
-                "FusionRingTY(Z2) multiplication table had wrong size")
+                "TY_fusion_ring(Z2) multiplication table had wrong size")
             check_equal(size(multiplication_table(r3)), (4,4,4),
-                "FusionRingTY(Z3) multiplication table had wrong size")
+                "TY_fusion_ring(Z3) multiplication table had wrong size")
         end
 
         @testset "basic fusion rules" begin
-            r2 = FusionRingTY(z2_tab)
+            r2 = TY_fusion_ring(z2_tab)
 
             # last object is m
             m = rank(r2)
 
             # group element × m = m
             check_equal(fusion_product(r2, 1, m), Dict(m => 1),
-                "vacuum × m was not m in FusionRingTY(Z2)")
+                "vacuum × m was not m in TY_fusion_ring(Z2)")
             check_equal(fusion_product(r2, 2, m), Dict(m => 1),
-                "nontrivial group element × m was not m in FusionRingTY(Z2)")
+                "nontrivial group element × m was not m in TY_fusion_ring(Z2)")
 
             # m × m = sum of group elements
             check_equal(fusion_product(r2, m, m), Dict(1 => 1, 2 => 1),
-                "m × m in FusionRingTY(Z2) was not the sum of all group elements")
+                "m × m in TY_fusion_ring(Z2) was not the sum of all group elements")
         end
 
         @testset "invalid input" begin
             check_throws(
-                () -> FusionRingTY(bad_tab),
-                "FusionRingTY accepted an invalid group table"
+                () -> TY_fusion_ring(bad_tab),
+                "TY_fusion_ring accepted an invalid group table"
             )
         end
     end

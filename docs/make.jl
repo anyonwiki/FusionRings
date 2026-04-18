@@ -15,5 +15,5 @@ makedocs(;
     pages=[
         "Home" => "index.md",
     ],
-    repo=Remotes.GitLab
+    repo=Remotes.GitLab("gvercley","FusionRings.jl")
 )

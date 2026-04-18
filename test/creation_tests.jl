@@ -334,9 +334,9 @@
         end
     end
 
-    #fusion_ring_from_group:
+    #group_fusion_ring:
 
-     @testset "fusion_ring_from_group" begin
+     @testset "group_fusion_ring" begin
         z2_tab = [
             1 2
             2 1
@@ -354,43 +354,43 @@
         ]
 
         @testset "valid group tables" begin
-            r2 = fusion_ring_from_group(z2_tab)
-            r3 = fusion_ring_from_group(z3_tab)
+            r2 = group_fusion_ring(z2_tab)
+            r3 = group_fusion_ring(z3_tab)
 
             check_equal(rank(r2), 2,
-                "fusion_ring_from_group on the Z2 Cayley table did not produce rank 2")
+                "group_fusion_ring on the Z2 Cayley table did not produce rank 2")
             check_equal(rank(r3), 3,
-                "fusion_ring_from_group on the Z3 Cayley table did not produce rank 3")
+                "group_fusion_ring on the Z3 Cayley table did not produce rank 3")
 
             check_equal(size(multiplication_table(r2)), (2,2,2),
-                "fusion_ring_from_group on the Z2 Cayley table had wrong multiplication-table size")
+                "group_fusion_ring on the Z2 Cayley table had wrong multiplication-table size")
             check_equal(size(multiplication_table(r3)), (3,3,3),
-                "fusion_ring_from_group on the Z3 Cayley table had wrong multiplication-table size")
+                "group_fusion_ring on the Z3 Cayley table had wrong multiplication-table size")
 
             check_true(is_group_ring(r2),
-                "fusion_ring_from_group on the Z2 Cayley table was not detected as a group ring")
+                "group_fusion_ring on the Z2 Cayley table was not detected as a group ring")
             check_true(is_group_ring(r3),
-                "fusion_ring_from_group on the Z3 Cayley table was not detected as a group ring")
+                "group_fusion_ring on the Z3 Cayley table was not detected as a group ring")
             check_true(is_commutative(r2),
-                "fusion_ring_from_group on the Z2 Cayley table was not commutative")
+                "group_fusion_ring on the Z2 Cayley table was not commutative")
             check_true(is_commutative(r3),
-                "fusion_ring_from_group on the Z3 Cayley table was not commutative")
+                "group_fusion_ring on the Z3 Cayley table was not commutative")
         end
 
         @testset "matches zn_fusion_ring on cyclic examples" begin
-            r2 = fusion_ring_from_group(z2_tab)
-            r3 = fusion_ring_from_group(z3_tab)
+            r2 = group_fusion_ring(z2_tab)
+            r3 = group_fusion_ring(z3_tab)
 
             check_equal(multiplication_table(r2), multiplication_table(zn_fusion_ring(2)),
-                "fusion_ring_from_group(Z2 table) did not match zn_fusion_ring(2)")
+                "group_fusion_ring(Z2 table) did not match zn_fusion_ring(2)")
             check_equal(multiplication_table(r3), multiplication_table(zn_fusion_ring(3)),
-                "fusion_ring_from_group(Z3 table) did not match zn_fusion_ring(3)")
+                "group_fusion_ring(Z3 table) did not match zn_fusion_ring(3)")
         end
 
         @testset "invalid group table is rejected" begin
             check_throws(
-                () -> fusion_ring_from_group(bad_not_group),
-                "fusion_ring_from_group accepted a table that was not a valid Cayley table"
+                () -> group_fusion_ring(bad_not_group),
+                "group_fusion_ring accepted a table that was not a valid Cayley table"
             )
         end
     end

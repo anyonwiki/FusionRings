@@ -206,7 +206,7 @@
             # indices 1,2,3,4 ↔ 0,1,2,3
             # so 3×3 ↔ 2+2 = 0, i.e. vacuum
             mt2 = multiplication_table(z4)
-            check_equal(mt1[3, 3, 1], 1,
+            check_equal(mt2[3, 3, 1], 1,
                 "index 3 × index 3 in zn_fusion_ring(4) was not vacuum")
         end
     end

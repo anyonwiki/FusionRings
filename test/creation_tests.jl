@@ -194,17 +194,19 @@
 
         @testset "selected products" begin
             # In Z3: indices 1,2,3 correspond to 0,1,2 mod 3
-            check_equal(fusion_product(z3, 1, 1), Dict(1 => 1),
+            mt1 = multiplication_table(z3)
+            check_equal(mt1[1, 1, 1], 1,
                 "vacuum × vacuum was not vacuum in zn_fusion_ring(3)")
-            check_equal(fusion_product(z3, 2, 2), Dict(3 => 1),
+            check_equal(mt1[2, 2, 3], 1,
                 "index 2 × index 2 in zn_fusion_ring(3) was not index 3")
-            check_equal(fusion_product(z3, 2, 3), Dict(1 => 1),
+            check_equal(mt1[2, 3, 1], 1,
                 "index 2 × index 3 in zn_fusion_ring(3) was not vacuum")
 
             # In Z4: 2+2 = 0 mod 4? careful with indexing:
             # indices 1,2,3,4 ↔ 0,1,2,3
             # so 3×3 ↔ 2+2 = 0, i.e. vacuum
-            check_equal(fusion_product(z4, 3, 3), Dict(1 => 1),
+            mt2 = multiplication_table(z4)
+            check_equal(mt1[3, 3, 1], 1,
                 "index 3 × index 3 in zn_fusion_ring(4) was not vacuum")
         end
     end
@@ -246,12 +248,14 @@
 
         @testset "selected low-k products" begin
             # SU(2)_1 behaves like Z2
-            check_equal(fusion_product(r1, 2, 2), Dict(1 => 1),
+            mt1 = multiplication_table(r1)
+            check_equal(mt1[2, 2, 1], 1,
                 "nontrivial simple squared in su2k_fusion_ring(1) was not vacuum")
 
             # SU(2)_2 has labels 0,1,2.
             # Fusion rule: 1⊗1 = 0 + 2  (indices 2⊗2 = 1 + 3)
-            check_equal(fusion_product(r2, 2, 2), Dict(1 => 1, 3 => 1),
+            mt2 = multiplication_table(r2)
+            check_equal(mt2[2, 2, :], [ 1, 0, 1  ],
                 "index 2 × index 2 in su2k_fusion_ring(2) was not vacuum + top object")
         end
     end
@@ -285,7 +289,8 @@
 
         @testset "selected product" begin
             # PSU(2)_2 should also be rank 2 and behave like Z2
-            check_equal(fusion_product(r2, 2, 2), Dict(1 => 1),
+            mt1 = multiplication_table(r2)
+            check_equal(mt1[2, 2, 1], 1,
                 "nontrivial simple squared in psu2k_fusion_ring(2) was not vacuum")
         end
     end
@@ -473,13 +478,14 @@
             m = rank(r2)
 
             # group element × m = m
-            check_equal(fusion_product(r2, 1, m), Dict(m => 1),
+            mt1 = multiplication_table(r2)
+            check_equal(mt1[1, m, m ], 1,
                 "vacuum × m was not m in TY_fusion_ring(Z2)")
-            check_equal(fusion_product(r2, 2, m), Dict(m => 1),
+            check_equal(mt1[2, m, m ], 1,
                 "nontrivial group element × m was not m in TY_fusion_ring(Z2)")
 
             # m × m = sum of group elements
-            check_equal(fusion_product(r2, m, m), Dict(1 => 1, 2 => 1),
+            check_equal(mt1[m, m, : ], [ 1, 1, 0 ],
                 "m × m in TY_fusion_ring(Z2) was not the sum of all group elements")
         end
 
@@ -527,9 +533,9 @@
             r = HI_fusion_ring(z2_tab)
 
             # First two are group sector, last two are rho sector
-            check_equal(fusion_product(r, 1, 1), Dict(1 => 1),
+            check_equal(mt1[1, 1, 1], 1,
                 "vacuum × vacuum was not vacuum in HI_fusion_ring(Z2)")
-            check_equal(fusion_product(r, 1, 3), Dict(3 => 1),
+            check_equal(mt1[1, 3, 3], 1,
                 "vacuum × ρ_1 was not ρ_1 in HI_fusion_ring(Z2)")
         end
 

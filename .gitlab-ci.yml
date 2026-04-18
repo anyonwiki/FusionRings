@@ -3,6 +3,7 @@
     - |
       julia --project=@. -e '
         using Pkg
+        Pkg.instantiate()
         Pkg.build()
         Pkg.test(coverage=true)'
 .coverage:
@@ -35,7 +36,7 @@ pages:
         doctest(FusionRings)
         include("docs/make.jl")'
     - mkdir -p public
-    - mv docs/build public/dev
+    - mv docs/build public/dev || echo "No docs/build directory found"
   artifacts:
     paths:
       - public

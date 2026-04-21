@@ -34,6 +34,7 @@ pages:
         using FusionRings
         doctest(FusionRings)
         include("docs/make.jl")'
+    - mkdir -p /public/dev
     - mv docs/build public/dev 
   artifacts:
     paths:

@@ -125,23 +125,11 @@ end
 function sfrfromjs(js)
     srs = js["non_trivial_sub_fusion_rings"]
 
-    # if length(srs) == 0
-    #     return []
-    # end
+    function fix_type(d::Dict{String, Any})::Dict{String,Vector{Int64}}
+        Dict( k => Int64.(v) for (k,v) in d )
+    end
 
-    # intData =
-    #     [
-    #         [ Int.( sr["injection"] ), Int.( sr["anyonwiki_code"] ) ]
-    #         for sr in srs
-    #     ]
-
-    # [
-    #     Dict(
-    #         "injection"       => data[1],
-    #         "anyonwiki_code"  => data[2]
-    #     )
-    #     for data ∈ intData
-    # ]
+    map( fix_type, srs )
 end
 
 function vec_to_cflt( v::Vector{Any} )::ComplexF64

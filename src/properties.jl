@@ -50,7 +50,6 @@ function tex_names(r::FusionRing)::Array{String,1}
   return r.texnames
 end
 
-
 #Added: from updates/commutator
 function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
     Sset = Set(S)
@@ -182,7 +181,7 @@ end
 
 export anyonwiki_code
 
-function anyonwiki_code(r::FusionRing)::Array{Int,1}
+function anyonwiki_code(r::FusionRing)::Union{Array{Int,1},Missing}
   return r.anyonwiki_code
 end
 
@@ -358,6 +357,7 @@ function decompositions( fr::FusionRing, product="TensorProduct" )#::Vector{ Vec
     end
 end
 
+#TODO: implement
 function tensor_product_decompositions( r::FusionRing )
     error("Not implemented yet.")
 end
@@ -971,7 +971,6 @@ function derived_subring_commutator(fr::FusionRing, A::Vector{Int}, B::Vector{In
     return _restrict_subring(fr, S; check_closed=true)
 end
 
-# TODO:implement which_decompositions
 
 
 

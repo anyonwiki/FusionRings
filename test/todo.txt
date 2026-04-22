@@ -8,3 +8,6 @@
 * Test that permutations have the same effect as those in Anyonica.
   Input and desired output can be found in testdata/operations
 * Test that a permutation actually permutes all data
+
+## properties.jl
+* test whether sub_fusion_rings works

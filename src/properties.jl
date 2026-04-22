@@ -216,6 +216,7 @@ function sub_fusion_rings(r::FusionRing)
 
 end
 
+export is_sub_fusion_ring
 
 """
     is_sub_fusion_ring(fr, S) -> Bool
@@ -275,9 +276,13 @@ function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
     out
 end
 
+export is_equivalent_fusion_ring
+
 function is_equivalent_fusion_ring(ring1::FusionRing,ring2::FusionRing)::Bool
    which_permutation(ring1,ring2) !== nothing
 end
+
+export which_permutation
 
 function which_permutation( ring1::FusionRing, ring2::FusionRing, all=false )
     mt = multiplication_table
@@ -362,6 +367,7 @@ function tensor_product_decompositions( r::FusionRing )
     error("Not implemented yet.")
 end
 
+export adjoint_fusion_ring
 
 #Added: from updates/commutator
 export adjoint_fusion_ring
@@ -385,6 +391,8 @@ function adjoint_fusion_ring(ring::FusionRing)::Tuple{Vector{Int},FusionRing}
     end
 end
 
+export upper_central_series
+
 #Added: from branch feat/adjoint_upper
 function upper_central_series(fr::FusionRing)
     chain = Tuple{Vector{Int},FusionRing}[]
@@ -398,6 +406,8 @@ function upper_central_series(fr::FusionRing)
     chain
 end
 
+export is_nilpotent
+
 function is_nilpotent(r::FusionRing)::Bool
     chain = upper_central_series(r)
     # Nilpotent ⇔ iterated adjoint subring reaches the trivial (rank-1) subring.
@@ -405,6 +415,8 @@ function is_nilpotent(r::FusionRing)::Bool
     return length(last_set) == 1 && rank(last_ring) == 1
 end
 
+
+# TODO: implement this
 function adjoint_irreps(r::FusionRing)::Array{Array{Int,1},1}
     error("adjoint_irreps not implemented yet")
 end
@@ -420,6 +432,7 @@ Multiplication table on the grading group is:
     mt[a,b,c] = 1  iff  FusionOutcomes(i ⊗ j) ⊆ irreps[c]
 for all i ∈ irreps[a], j ∈ irreps[b].
 """
+export universal_grading
 
 function universal_grading(fr::FusionRing)
     irreps = adjoint_irreps(fr)
@@ -460,7 +473,7 @@ function all_gradings(fr::FusionRing)
     error("all_gradings not implemented yet")
 end
 
-
+export commutator
 
 """ commutator(fr, sub) -> (els, subring)
 

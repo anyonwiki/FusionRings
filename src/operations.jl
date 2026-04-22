@@ -167,5 +167,24 @@ function permute_mult_tab(N::Array{Int,3}, p::Vector{Int})
     M
 end
 
+export permutation_group
+
+function to_group( fr::FusionRing )
+  ct = cayley_table(fr)
+  gm( a, b ) = ct[a,b]
+  permutation_group( generic_group( [ 1, 2, 3, 4], gm )[1] )
+end
+
+export cayley_table
+
+function cayley_table( fr::FusionRing )
+  !is_group_ring(fr) && message("Ring must be group ring")
+
+  mt = multiplication_table(fr)
+  r  = rank(fr)
+  return [ findfirst( ==(1), mt[a,b,:] ) for a in 1:r, b in 1:r ]
+end
+
+
 # TODO: implement bicrossed product. @Szagha02: not a priority 
 # @gvercley will do this at some point

@@ -21,22 +21,22 @@ Julia 1.12:
   extends:
     - .script
     - .coverage
-pages:
-  image: julia:1.12
-  stage: deploy
-  script:
-    - |
-      julia --project=docs -e '
-        using Pkg
-        Pkg.develop(PackageSpec(path=pwd()))
-        Pkg.instantiate()
-        using Documenter: doctest
-        using FusionRings
-        doctest(FusionRings)
-        include("docs/make.jl")'
-    - mv docs/build public/dev 
-  artifacts:
-    paths:
-      - public
-  only:
-    - main
+#pages:
+#  image: julia:1.12
+#  stage: deploy
+#  script:
+#    - |
+#      julia --project=docs -e '
+#        using Pkg
+#        Pkg.develop(PackageSpec(path=pwd()))
+#        Pkg.instantiate()
+#        using Documenter: doctest
+#        using FusionRings
+#        doctest(FusionRings)
+#        include("docs/make.jl")'
+#    - mv docs/build public/dev 
+#  artifacts:
+#    paths:
+#      - public
+#  only:
+#    - main

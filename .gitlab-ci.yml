@@ -26,7 +26,7 @@ Julia 1.12:
 #  stage: deploy
 #  script:
 #    - |
-#      julia --project=docs -e '
+#       julia --project=docs -e '
 #        using Pkg
 #        Pkg.develop(PackageSpec(path=pwd()))
 #        Pkg.instantiate()
@@ -34,6 +34,7 @@ Julia 1.12:
 #        using FusionRings
 #        doctest(FusionRings)
 #        include("docs/make.jl")'
+#    - mkdir -p /public/dev
 #    - mv docs/build public/dev 
 #  artifacts:
 #    paths:

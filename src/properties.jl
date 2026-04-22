@@ -423,7 +423,7 @@ end
 
 
 #Added: from updates/commutator
-"""
+#=
 Compute `irreps = adjoint_irreps(fr)` (partition of simples).
 
 Create group object with `n = length(irreps)` elements.
@@ -431,7 +431,8 @@ Create group object with `n = length(irreps)` elements.
 Multiplication table on the grading group is:
     mt[a,b,c] = 1  iff  FusionOutcomes(i ⊗ j) ⊆ irreps[c]
 for all i ∈ irreps[a], j ∈ irreps[b].
-"""
+=#
+
 export universal_grading
 
 function universal_grading(fr::FusionRing)
@@ -466,6 +467,7 @@ function universal_grading(fr::FusionRing)
 end
 
 export UG
+
 UG(fr::FusionRing) = universal_grading(fr)
 
 

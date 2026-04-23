@@ -167,7 +167,7 @@ function permute_mult_tab(N::Array{Int,3}, p::Vector{Int})
     M
 end
 
-export permutation_group
+export to_group
 
 function to_group( fr::FusionRing )
   ct = cayley_table(fr)

@@ -499,7 +499,6 @@ function _son2_rules_odd(m::Integer)::Array{Int,3}
     return _mats_to_mt(mats)
 end
 
-
 # index convention (matches  Evaluate[...] = IdentityMatrix[rank]):
 @inline 𝟙  = 1
 @inline Θ  = 2

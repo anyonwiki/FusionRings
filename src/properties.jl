@@ -926,6 +926,10 @@ end
 """
 note due to bell numbers (number of ways to partition set of n els into non-empty disjoint subsets)
 this grows exponentially 
+for rank 8 - this is 4140 partitions, for rank 10 - 115975 partitions
+butt i think i can optimize the partition generation by only generating partitions of the set of irreps (which is usually much smaller than rank) 
+and then merging the corresponding blocks of simples, 
+which should be much more efficient in practice for the fusion rings we care about
 """
 function _set_partitions(n::Int)
     if n == 0

@@ -172,7 +172,7 @@ export to_group
 function to_group( fr::FusionRing )
   ct = cayley_table(fr)
   gm( a, b ) = ct[a,b]
-  permutation_group( generic_group( [ 1, 2, 3, 4], gm )[1] )
+  permutation_group( generic_group(1:rank(fr), gm )[1] )
 end
 
 export cayley_table

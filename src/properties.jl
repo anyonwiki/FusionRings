@@ -531,9 +531,98 @@ function is_nilpotent(r::FusionRing)::Bool
 end
 
 
-# TODO: implement this
-function adjoint_irreps(r::FusionRing)::Array{Array{Int,1},1}
-    error("adjoint_irreps not implemented yet")
+export adjoint_irreps
+
+"""
+    adjoint_irreps(ring::FusionRing) -> Vector{Vector{Int}}
+
+Return the partition of the simple objects of `ring` into subsets invariant
+under left and right action of the adjoint subring.
+
+- compute  adjoint subring `(subEl, subRing) = adjoint_fusion_ring(ring)`
+- for each simple `e`, take  fixed-point closure of `{e}` under:
+      X -> Action[(ring, adjoint), X] ∪ Action[X, (ring, adjoint)]
+- remove duplicates
+
+More simply (this is mostly for me to remember lol): 
+let (S,A) be adjoint subring of R where S is set of simple indices in that subring
+For subset X of simples def:
+    Left action: S*X = $⋃_{a∈S, x∈X} Sup(a⊗x)
+    Right action: X*S = $⋃_{x∈X, a∈S} Sup(x⊗a)
+    combined : $\theta(X) = S*X ∪ X*S$
+So for each simple e I start w/ {e} and apply that until stabilizes:
+    X₀ = {e}
+    X₁ = θ(X₀)
+    X₂ = θ(X₁)
+    ...
+    Xₙ = θ(Xₙ₋₁) until Xₙ == Xₙ₋₁ 
+    Then obv remove duplicates at the end
+
+Note: the code is slightly different than that in anyonica but ive highlighted/commented the parts that match
+"""
+function adjoint_irreps(ring::FusionRing)::Vector{Vector{Int}}
+    adRing = adjoint_fusion_ring(ring)   # Tuple{Vector{Int}, FusionRing}
+
+    # Action[{ring, adRing}, elements]
+    function _left_action(
+        pair::Tuple{FusionRing,Tuple{Vector{Int},FusionRing}},
+        elements::Vector{Int}
+    )::Vector{Int}
+        fr, (subEl, _) = pair
+        seen = falses(rank(fr))
+        @inbounds for a in subEl, el in elements
+            for c in fusion_outcomes(fr, a, el)
+                seen[c] = true
+            end
+        end
+        return findall(seen)
+    end
+
+    # Action[elements, {ring, adRing}]
+    function _right_action(
+        elements::Vector{Int},
+        pair::Tuple{FusionRing,Tuple{Vector{Int},FusionRing}}
+    )::Vector{Int}
+        fr, (subEl, _) = pair
+        seen = falses(rank(fr))
+        @inbounds for el in elements, a in subEl
+            for c in fusion_outcomes(fr, el, a)
+                seen[c] = true
+            end
+        end
+        return findall(seen)
+    end
+
+    # CombinedAction[{ring, adRing}][elements]
+    function _combined_action(
+        pair::Tuple{FusionRing,Tuple{Vector{Int},FusionRing}},
+        elements::Vector{Int}
+    )::Vector{Int}
+        sort!(unique!(vcat(
+            _left_action(pair, elements),
+            _right_action(elements, pair)
+        )))
+    end
+
+    pair = (ring, adRing)
+
+    # FixedPoint[CombinedAction[pair], [e]]
+    function _closure(seed::Int)::Vector{Int}
+        cur = [seed]
+        while true
+            nxt = _combined_action(pair, cur)
+            nxt == cur && return cur
+            cur = nxt
+        end
+    end
+
+    blocks = Vector{Vector{Int}}()
+    for e in 1:rank(ring)
+        blk = _closure(e)
+        blk in blocks || push!(blocks, blk)
+    end
+
+    return blocks
 end
 
 

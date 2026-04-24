@@ -41,3 +41,7 @@ Julia 1.12:
 #      - public
 #  only:
 #    - main
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'  

@@ -121,30 +121,22 @@
                     () -> fusion_ring(mt_bad_unit; labels = ["0", "1"]),
                     "fusion_ring accepted a multiplication table whose first basis element was not a unit"
                 )
+                mt_bad_inverse = make_z2_mt()
+                mt_bad_inverse[2,2,2] = 1
+                check_throws(
+                    () -> fusion_ring(mt_bad_inverse; labels = ["0", "1"]),
+                    "fusion_ring accepted a multiplication table violating the unique inverse condition"
+                )
 
-      @testset "fusion_ring: rejects bad inverse condition" begin
-        mt = make_z3_mt()
-        # make both 1 and 2 appear as "duals" of 2 by forcing extra contribution to c=1
-        mt[2,2,1] = 1
-
-        check_throws(
-            () -> fusion_ring(mt; labels = ["0", "1", "2"]),
-            "fusion_ring accepted a multiplication table violating the unique inverse condition"
-        )
-    end
-
-    @testset "fusion_ring: rejects non-associative tables" begin
-        mt = zeros(Int, 2, 2, 2)
-        mt[1,1,1] = 1
-        mt[1,2,2] = 1
-        mt[2,1,2] = 1
-        mt[2,2,2] = 1   # x⊗x = x, this breaks inverse condition / associativity expectations
-
-        check_throws(
-            () -> fusion_ring(mt; labels = ["0", "1"]),
-            "fusion_ring accepted a non-fusion multiplication table that should fail validation"
-        )
-    end
+                mt_bad_assoc = zeros(Int, 2, 2, 2)
+                mt_bad_assoc[1,1,1] = 1
+                mt_bad_assoc[1,2,2] = 1
+                mt_bad_assoc[2,1,2] = 1
+                mt_bad_assoc[2,2,2] = 1
+                check_throws(
+                    () -> fusion_ring(mt_bad_assoc; labels = ["0", "1"]),
+                    "fusion_ring accepted a non-fusion multiplication table that should fail validation"
+                )
 
                 mt_good = make_z2_mt()
                 check_throws(
@@ -200,7 +192,6 @@
             check_true(is_group_ring(z3), "zn_fusion_ring(3) was not detected as a group ring")
             check_true(is_group_ring(z4), "zn_fusion_ring(4) was not detected as a group ring")
 
-        @testset "selected products" begin
             # In Z3: indices 1,2,3 correspond to 0,1,2 mod 3
             mt1 = multiplication_table(z3)
             check_equal(mt1[1, 1, 1], 1,
@@ -263,7 +254,6 @@
             check_true(is_commutative(r2), "su2k_fusion_ring(2) was not commutative")
             check_true(is_commutative(r3), "su2k_fusion_ring(3) was not commutative")
 
-        @testset "selected low-k products" begin
             # SU(2)_1 behaves like Z2
             mt1 = multiplication_table(r1)
             check_equal(mt1[2, 2, 1], 1,
@@ -312,7 +302,6 @@
             check_true(is_commutative(r4), "psu2k_fusion_ring(4) was not commutative")
             check_true(is_commutative(r6), "psu2k_fusion_ring(6) was not commutative")
 
-        @testset "selected product" begin
             # PSU(2)_2 should also be rank 2 and behave like Z2
             mt1 = multiplication_table(r2)
             check_equal(mt1[2, 2, 1], 1,
@@ -383,7 +372,7 @@
 
     #group_fusion_ring:
 
-     @testset "group_fusion_ring" begin
+    @testset "group_fusion_ring" begin
         z2_tab = [
             1 2
             2 1
@@ -401,22 +390,22 @@
         ]
 
         maybe_testset("basic", "1. basic construction") do
-            r2 = fusion_ring_from_group(z2_tab)
-            r3 = fusion_ring_from_group(z3_tab)
+            r2 = group_fusion_ring(z2_tab)
+            r3 = group_fusion_ring(z3_tab)
 
             check_true(r2 isa FusionRing,
-                "fusion_ring_from_group(Z2 table) did not return a FusionRing")
+                "group_fusion_ring(Z2 table) did not return a FusionRing")
             check_true(r3 isa FusionRing,
-                "fusion_ring_from_group(Z3 table) did not return a FusionRing")
+                "group_fusion_ring(Z3 table) did not return a FusionRing")
 
             check_equal(size(multiplication_table(r2)), (rank(r2), rank(r2), rank(r2)),
-                "fusion_ring_from_group(Z2 table) did not produce a cubic multiplication table")
+                "group_fusion_ring(Z2 table) did not produce a cubic multiplication table")
             check_equal(size(multiplication_table(r3)), (rank(r3), rank(r3), rank(r3)),
-                "fusion_ring_from_group(Z3 table) did not produce a cubic multiplication table")
+                "group_fusion_ring(Z3 table) did not produce a cubic multiplication table")
             check_equal(length(labels(r2)), rank(r2),
-                "fusion_ring_from_group(Z2 table) did not produce the correct number of labels")
+                "group_fusion_ring(Z2 table) did not produce the correct number of labels")
             check_equal(length(labels(r3)), rank(r3),
-                "fusion_ring_from_group(Z3 table) did not produce the correct number of labels")
+                "group_fusion_ring(Z3 table) did not produce the correct number of labels")
         end
 
         maybe_testset("intermediate", "2. intermediate correctness") do
@@ -441,9 +430,7 @@
                 "group_fusion_ring on the Z2 Cayley table was not commutative")
             check_true(is_commutative(r3),
                 "group_fusion_ring on the Z3 Cayley table was not commutative")
-        end
 
-        @testset "matches zn_fusion_ring on cyclic examples" begin
             r2 = group_fusion_ring(z2_tab)
             r3 = group_fusion_ring(z3_tab)
 
@@ -461,8 +448,8 @@
         if want_level("basic") || want_level("intermediate")
             @testset "invalid input" begin
                 check_throws(
-                    () -> fusion_ring_from_group(bad_not_group),
-                    "fusion_ring_from_group accepted a table that was not a valid Cayley table"
+                    () -> group_fusion_ring(bad_not_group),
+                    "group_fusion_ring accepted a table that was not a valid Cayley table"
                 )
             end
         end
@@ -512,10 +499,10 @@
     end
 
     # ============================================================
-    # FusionRingTY
+    # TY_fusion_ring
     # ============================================================
 
-       @testset "TY_fusion_ring" begin
+    @testset "TY_fusion_ring" begin
         z2_tab = [
             1 2
             2 1
@@ -533,27 +520,27 @@
         ]
 
         maybe_testset("basic", "1. basic construction") do
-            r2 = FusionRingTY(z2_tab)
-            r3 = FusionRingTY(z3_tab)
+            r2 = TY_fusion_ring(z2_tab)
+            r3 = TY_fusion_ring(z3_tab)
 
             check_true(r2 isa FusionRing,
-                "FusionRingTY(Z2 table) did not return a FusionRing")
+                "TY_fusion_ring(Z2 table) did not return a FusionRing")
             check_true(r3 isa FusionRing,
-                "FusionRingTY(Z3 table) did not return a FusionRing")
+                "TY_fusion_ring(Z3 table) did not return a FusionRing")
 
             check_equal(size(multiplication_table(r2)), (rank(r2), rank(r2), rank(r2)),
-                "FusionRingTY(Z2) did not produce a cubic multiplication table")
+                "TY_fusion_ring(Z2) did not produce a cubic multiplication table")
             check_equal(size(multiplication_table(r3)), (rank(r3), rank(r3), rank(r3)),
-                "FusionRingTY(Z3) did not produce a cubic multiplication table")
+                "TY_fusion_ring(Z3) did not produce a cubic multiplication table")
             check_equal(length(labels(r2)), rank(r2),
-                "FusionRingTY(Z2) did not produce the correct number of labels")
+                "TY_fusion_ring(Z2) did not produce the correct number of labels")
             check_equal(length(labels(r3)), rank(r3),
-                "FusionRingTY(Z3) did not produce the correct number of labels")
+                "TY_fusion_ring(Z3) did not produce the correct number of labels")
         end
 
         maybe_testset("intermediate", "2. intermediate correctness") do
-            r2 = FusionRingTY(z2_tab)
-            r3 = FusionRingTY(z3_tab)
+            r2 = TY_fusion_ring(z2_tab)
+            r3 = TY_fusion_ring(z3_tab)
 
             check_equal(rank(r2), 3,
                 "TY_fusion_ring on the Z2 Cayley table did not produce rank 3")
@@ -569,9 +556,7 @@
                 "TY_fusion_ring(Z2) multiplication table had wrong size")
             check_equal(size(multiplication_table(r3)), (4,4,4),
                 "TY_fusion_ring(Z3) multiplication table had wrong size")
-        end
 
-        @testset "basic fusion rules" begin
             r2 = TY_fusion_ring(z2_tab)
 
             # last object is m
@@ -597,8 +582,8 @@
         if want_level("basic") || want_level("intermediate")
             @testset "invalid input" begin
                 check_throws(
-                    () -> FusionRingTY(bad_tab),
-                    "FusionRingTY accepted an invalid group table"
+                    () -> TY_fusion_ring(bad_tab),
+                    "TY_fusion_ring accepted an invalid group table"
                 )
             end
         end
@@ -626,18 +611,18 @@
         ]
 
         maybe_testset("basic", "1. basic construction") do
-            r = FusionRingHI(z2_tab)
+            r = HI_fusion_ring(z2_tab)
 
             check_true(r isa FusionRing,
-                "FusionRingHI(Z2 table) did not return a FusionRing")
+                "HI_fusion_ring(Z2 table) did not return a FusionRing")
             check_equal(size(multiplication_table(r)), (rank(r), rank(r), rank(r)),
-                "FusionRingHI(Z2) did not produce a cubic multiplication table")
+                "HI_fusion_ring(Z2) did not produce a cubic multiplication table")
             check_equal(length(labels(r)), rank(r),
-                "FusionRingHI(Z2) did not produce the correct number of labels")
+                "HI_fusion_ring(Z2) did not produce the correct number of labels")
         end
 
         maybe_testset("intermediate", "2. intermediate correctness") do
-            r = FusionRingHI(z2_tab)
+            r = HI_fusion_ring(z2_tab)
 
             check_equal(rank(r), 4,
                 "HI_fusion_ring on the Z2 Cayley table did not produce rank 4")
@@ -645,9 +630,7 @@
                 "HI_fusion_ring(Z2) multiplication table had wrong size")
             check_equal(labels(r), ["1", "2", "ρ₁", "ρ₂"],
                 "HI_fusion_ring(Z2) labels were incorrect")
-        end
 
-        @testset "basic fusion behaviour on Z2 input" begin
             r = HI_fusion_ring(z2_tab)
             mt1 = multiplication_table(r)
 
@@ -666,13 +649,13 @@
         if want_level("basic") || want_level("intermediate")
             @testset "invalid input" begin
                 check_throws(
-                    () -> FusionRingHI(bad_tab),
-                    "FusionRingHI accepted a table that was not a valid group table"
+                    () -> HI_fusion_ring(bad_tab),
+                    "HI_fusion_ring accepted a table that was not a valid group table"
                 )
 
                 check_throws(
-                    () -> FusionRingHI(nonsymmetric_group_tab),
-                    "FusionRingHI accepted a valid group table that was not symmetric as a matrix"
+                    () -> HI_fusion_ring(nonsymmetric_group_tab),
+                    "HI_fusion_ring accepted a valid group table that was not symmetric as a matrix"
                 )
             end
         end

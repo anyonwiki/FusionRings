@@ -435,50 +435,223 @@ function _decomp_key(decomp::Vector{FusionRing})
 end
 
 
-#Completed
 
-"""
-    tensor_product_decompositions(r::FusionRing) -> Vector{Vector{FusionRing}}
+# Strategy:
+#   1. Known-ring search:
+#       Try tensor products of rings from known_rings().
+#
+#   2. Discovery search:
+#        Look for subfusion rings A,B inside R such that:
+#            rank(A) * rank(B) = rank(R)
+#        and such that every product a ⊗ b, with a ∈ A and b ∈ B,
+#        is a single simple object, and these products cover all simples
+#        of R exactly once.
+#
+#   This detects clean tensor decompositions where the two factors appear
+#   inside R as A⊗1 and 1⊗B.
 
-Return decompositions of r as tensor product of known fusion rings.
 
- searches among `known_rings()`, so it only finds decompositions whose
-factors are already registered/known.
-"""
-function tensor_product_decompositions(r::FusionRing)
-    R = rank(r)
-    R == 1 && return Vector{Vector{FusionRing}}()
+export tensor_product_decompositions
+
+function _known_ring_list()
+    ks = known_rings()
+    if ks isa AbstractDict
+        return collect(values(ks))
+    else
+        return collect(ks)
+    end
+end
+
+function _tensor_product_many(rings::Vector{FusionRing})::FusionRing
+    isempty(rings) && error("_tensor_product_many: empty ring list")
+    out = rings[1]
+    for R in rings[2:end]
+        out = tensor_product(out, R)
+    end
+    return out
+end
+
+function _multiplicative_partitions(n::Int; minfactor::Int = 2)
+    out = Vector{Vector{Int}}()
+
+    function go(rem::Int, start::Int, acc::Vector{Int})
+        if rem == 1
+            push!(out, copy(acc))
+            return
+        end
+
+        for d in start:rem
+            rem % d == 0 || continue
+            push!(acc, d)
+            go(rem ÷ d, d, acc)
+            pop!(acc)
+        end
+    end
+
+    go(n, minfactor, Int[])
+    return out
+end
+
+function _cartesian_choices(lists::Vector{Vector{FusionRing}})
+    isempty(lists) && return Vector{Vector{FusionRing}}()
+
+    out = Vector{Vector{FusionRing}}()
+    cur = Vector{FusionRing}(undef, length(lists))
+
+    function go(i::Int)
+        if i > length(lists)
+            push!(out, copy(cur))
+            return
+        end
+
+        for x in lists[i]
+            cur[i] = x
+            go(i + 1)
+        end
+    end
+
+    go(1)
+    return out
+end
+
+function _known_tensor_product_decompositions(r::FusionRing)
+    Rrank = rank(r)
+    Rrank <= 1 && return Vector{Vector{FusionRing}}()
 
     candidates = _known_ring_list()
 
     by_rank = Dict{Int,Vector{FusionRing}}()
     for K in candidates
         rk = rank(K)
-        rk == R && continue
         rk <= 1 && continue
-        R % rk == 0 || continue
+        rk == Rrank && continue
+        Rrank % rk == 0 || continue
         push!(get!(by_rank, rk, FusionRing[]), K)
     end
 
     decomps = Vector{Vector{FusionRing}}()
 
-    for parts in _multiplicative_partitions(R)
+    for parts in _multiplicative_partitions(Rrank)
         length(parts) <= 1 && continue
-
-        haskey_all = all(p -> haskey(by_rank, p), parts)
-        haskey_all || continue
+        all(p -> haskey(by_rank, p), parts) || continue
 
         lists = [by_rank[p] for p in parts]
 
         for choice in _cartesian_choices(lists)
-            T = _tensor_product_ring(choice)
+            T = _tensor_product_many(choice)
             if is_equivalent_fusion_ring(r, T)
                 push!(decomps, replace_by_known.(choice))
             end
         end
     end
 
-    unique!(decomps, by = _decomp_key)
+    unique!(decomps, by = ds -> sort([rank(x) for x in ds]))
+    return decomps
+end
+
+function _all_subring_sets_for_factorization(fr::FusionRing)
+    r = rank(fr)
+
+    sets = Vector{Vector{Int}}()
+    push!(sets, [1])
+    append!(sets, sub_fusion_ring_subsets(fr))
+    push!(sets, collect(1:r))
+
+    unique!(sets)
+    sort!(sets, by = S -> (length(S), S))
+    return sets
+end
+
+function _unique_product_grid(fr::FusionRing, Aset::Vector{Int}, Bset::Vector{Int})
+    r = rank(fr)
+
+    grid = Dict{Tuple{Int,Int},Int}()
+    seen = falses(r)
+
+    @inbounds for a in Aset, b in Bset
+        outs = fusion_outcomes(fr, a, b)
+
+        # In a clean tensor product, (a,1) ⊗ (1,b) = (a,b),
+        # so the product should be exactly one simple object.
+        length(outs) == 1 || return nothing
+
+        x = only(outs)
+
+        # Each pair (a,b) should give a different simple object.
+        seen[x] && return nothing
+
+        grid[(a,b)] = x
+        seen[x] = true
+    end
+
+    # The products Aset ⊗ Bset should cover every simple object of fr.
+    all(seen) || return nothing
+
+    return grid
+end
+
+function _discover_tensor_product_decompositions(r::FusionRing)
+    Rrank = rank(r)
+    Rrank <= 1 && return Vector{Vector{FusionRing}}()
+
+    subrings = _all_subring_sets_for_factorization(r)
+    decomps = Vector{Vector{FusionRing}}()
+
+    for Aset in subrings, Bset in subrings
+        # Ignore trivial and whole-ring factors.
+        length(Aset) <= 1 && continue
+        length(Bset) <= 1 && continue
+        length(Aset) == Rrank && continue
+        length(Bset) == Rrank && continue
+
+        # Rank condition for a tensor product.
+        length(Aset) * length(Bset) == Rrank || continue
+
+        # Check whether products a⊗b form a unique Cartesian grid.
+        grid = _unique_product_grid(r, Aset, Bset)
+        grid === nothing && continue
+
+        A = _restrict_subring(r, copy(Aset); check_closed = true)
+        B = _restrict_subring(r, copy(Bset); check_closed = true)
+
+        T = tensor_product(A, B)
+
+        # Final verification.
+        is_equivalent_fusion_ring(r, T) || continue
+
+        push!(decomps, [replace_by_known(A), replace_by_known(B)])
+    end
+
+    unique!(decomps, by = ds -> sort([rank(x) for x in ds]))
+    return decomps
+end
+
+"""
+    tensor_product_decompositions(r::FusionRing) -> Vector{Vector{FusionRing}}
+
+Return decompositions of `r` as tensor products of fusion rings.
+
+ combines two methods:
+
+1. Known-ring recognition:
+   tries tensor products of rings already available in `known_rings()`.
+
+2. Internal factor discovery:
+   searches for subfusion rings A and B inside `r` such that
+   every product `a ⊗ b`, with `a ∈ A` and `b ∈ B`, is a unique simple object
+   and the products cover all simples of `r`.
+
+The second method can discover actual tensor factors even when they are not
+already registered as known rings, provided the factors appear as subrings
+inside `r`.
+"""
+function tensor_product_decompositions(r::FusionRing)
+    known = _known_tensor_product_decompositions(r)
+    discovered = _discover_tensor_product_decompositions(r)
+
+    decomps = vcat(known, discovered)
+
+    unique!(decomps, by = ds -> sort([rank(x) for x in ds]))
     return decomps
 end
 
@@ -547,9 +720,9 @@ under left and right action of the adjoint subring.
 More simply (this is mostly for me to remember lol): 
 let (S,A) be adjoint subring of R where S is set of simple indices in that subring
 For subset X of simples def:
-    Left action: S*X = $⋃_{a∈S, x∈X} Sup(a⊗x)
-    Right action: X*S = $⋃_{x∈X, a∈S} Sup(x⊗a)
-    combined : $\theta(X) = S*X ∪ X*S$
+    Left action: S*X = \$⋃_{a∈S, x∈X} Sup(a⊗x)
+    Right action: X*S = \$⋃_{x∈X, a∈S} Sup(x⊗a)
+    combined : \$\\theta(X) = S*X ∪ X*S\$
 So for each simple e I start w/ {e} and apply that until stabilizes:
     X₀ = {e}
     X₁ = θ(X₀)

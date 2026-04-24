@@ -848,8 +848,111 @@ export UG
 UG(fr::FusionRing) = universal_grading(fr)
 
 
+export all_gradings
+
+"""
+    all_gradings(fr::FusionRing)
+
+Return all gradings of the fusion ring.
+
+Each grading is returned as:
+    (partition, group_ring)
+
+where:
+- partition = Vector of blocks (Vector{Vector{Int}})
+- group_ring = the grading group as a fusion ring
+
+note to self:
+grading is: simples g∈G⨆​Cg​
+s.t i ∈ C_{a} , j ∈ C_{b} ⇒ i ⊗ j ⊂ C_{a ⋅ b}
+"""
 function all_gradings(fr::FusionRing)
-    error("all_gradings not implemented yet")
+    irreps = adjoint_irreps(fr)   # base partition
+    n = length(irreps)
+
+    # generate all partitions of {1,...,n}
+    parts = _set_partitions(n)
+
+    gradings = []
+
+    for P in parts
+        # merge irreps according to partition P
+        blocks = [
+            sort!(reduce(vcat, irreps[I]))
+            for I in P
+        ]
+
+        # test if this defines a grading
+        mt = zeros(Int, length(blocks), length(blocks), length(blocks))
+
+        function valid_product(a, b)
+            S = Set(blocks[b])
+            for i in blocks[a], j in blocks[b]
+                for c in fusion_outcomes(fr, i, j)
+                    c in S || return false
+                end
+            end
+            return true
+        end
+
+        valid = true
+
+        for a in eachindex(blocks), b in eachindex(blocks)
+            found = false
+            for c in eachindex(blocks)
+                if valid_product(a, c)
+                    mt[a,b,c] = 1
+                    found = true
+                    break
+                end
+            end
+            if !found
+                valid = false
+                break
+            end
+        end
+
+        valid || continue
+
+        push!(gradings, (
+            blocks,
+            fusion_ring(mt; labels = string.(1:length(blocks)))
+        ))
+    end
+
+    return gradings
+end
+
+"""
+note due to bell numbers (number of ways to partition set of n els into non-empty disjoint subsets)
+this grows exponentially 
+"""
+function _set_partitions(n::Int)
+    if n == 0
+        return [[]]
+    end
+
+    result = []
+
+    function backtrack(i, current)
+        if i > n
+            push!(result, deepcopy(current))
+            return
+        end
+
+        for j in eachindex(current)
+            push!(current[j], i)
+            backtrack(i + 1, current)
+            pop!(current[j])
+        end
+
+        push!(current, [i])
+        backtrack(i + 1, current)
+        pop!(current)
+    end
+
+    backtrack(1, Vector{Vector{Int}}())
+    return result
 end
 
 export commutator

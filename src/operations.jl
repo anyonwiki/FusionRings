@@ -141,6 +141,22 @@ function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
     )
 end
 
+
+function tensor_product(rings::Vector{FusionRing})::FusionRing
+    isempty(rings) && error("Need at least one fusion ring")
+    length(rings) == 1 && return rings[1]
+
+    out = rings[1]
+    for R in rings[2:end]
+        out = tensor_product(out, R)
+    end
+    return out
+end
+
+function tensor_product(rings...)::FusionRing 
+    return tensor_product([rings...])
+end
+
 "Return vector of simple indices with positive multiplicity in `a ⊗ b`."
 function fusion_outcomes(fr::FusionRing, a::Int, b::Int)::Vector{Int}
     [c for (c,m) in fusion_product(fr,a,b) if m>0]

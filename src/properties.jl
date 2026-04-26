@@ -444,24 +444,6 @@ end
 
 export tensor_product_decompositions
 
-function _known_ring_list()
-    ks = known_rings()
-    if ks isa AbstractDict
-        return collect(values(ks))
-    else
-        return collect(ks)
-    end
-end
-
-function _tensor_product_many(rings::Vector{FusionRing})::FusionRing
-    isempty(rings) && error("_tensor_product_many: empty ring list")
-    out = rings[1]
-    for R in rings[2:end]
-        out = tensor_product(out, R)
-    end
-    return out
-end
-
 function _multiplicative_partitions(n::Int; minfactor::Int = 2)
     out = Vector{Vector{Int}}()
 

@@ -491,10 +491,8 @@ function _known_tensor_product_decompositions(r::FusionRing)
     Rrank = rank(r)
     Rrank <= 1 && return Vector{Vector{FusionRing}}()
 
-    candidates = _known_ring_list()
-
     by_rank = Dict{Int,Vector{FusionRing}}()
-    for K in candidates
+    for K in frl
         rk = rank(K)
         rk <= 1 && continue
         rk == Rrank && continue

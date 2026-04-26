@@ -1,8 +1,3 @@
-export permute, permute_mult_tab, sort, perm_vec_qd, perm_vec_sd_conj,
-       tensor_product, ⊗, which_permutation,
-       register_known_ring!, known_rings, replace_by_known
-
-
 # TODO: implement replace_by_known
 # hint: use rank, mult, nnsd to compute first 3 indices of the formal code 
 
@@ -33,6 +28,8 @@ function fusion_product(fr::FusionRing, a::Int, b::Int)
 end
 
 #TODO: implement permute for permutations from OSCAR
+export permute
+
 """permute(r, perm) – return a new `FusionRing` with all data
     permuted by `perm`.  `perm[1]` **must** equal 1 to keep the vacuum first."""
 function permute(r::FusionRing, perm::Vector{Int})::FusionRing
@@ -109,6 +106,8 @@ end
 
 # TODO: implement sortedring
 
+
+export tensor_product
 
 function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
     m, n   = rank(r1), rank(r2)

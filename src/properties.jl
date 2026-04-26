@@ -35,7 +35,7 @@ end
 export rank
 
 function rank(r::FusionRing)::Int
-  size(multiplication_table(r))[1]
+  size(multiplication_table(r),1)
 end
 
 export names 

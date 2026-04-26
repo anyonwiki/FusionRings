@@ -365,16 +365,7 @@ end
 #TODO: implement
 export tensor_product_decompositions
 
-function _known_ring_list()
-    ks = known_rings()
-    if ks isa AbstractDict
-        return collect(values(ks))
-    else
-        return collect(ks)
-    end
-end
-
-function _tensor_product_ring(rings::Vector{FusionRing})::FusionRing
+function tensor_product(rings::Vector{FusionRing})::FusionRing
     isempty(rings) && error("Need at least one fusion ring")
     length(rings) == 1 && return rings[1]
 

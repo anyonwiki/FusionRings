@@ -365,16 +365,6 @@ end
 #TODO: implement
 export tensor_product_decompositions
 
-function tensor_product(rings::Vector{FusionRing})::FusionRing
-    isempty(rings) && error("Need at least one fusion ring")
-    length(rings) == 1 && return rings[1]
-
-    out = rings[1]
-    for R in rings[2:end]
-        out = tensor_product(out, R)
-    end
-    return out
-end
 
 function _multiplicative_partitions(n::Int; minfactor::Int=2)
     n == 1 && return [Int[]]

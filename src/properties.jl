@@ -617,7 +617,7 @@ function _known_tensor_product_decompositions(r::FusionRing)
         end
     end
 
-    unique!(decomps, by = ds -> sort([rank(x) for x in ds]))
+    unique!( ds -> sort([rank(x) for x in ds]), decomps )
     return decomps
 end
 
@@ -694,7 +694,7 @@ function _discover_tensor_product_decompositions(r::FusionRing)
         push!(decomps, [replace_by_known(A), replace_by_known(B)])
     end
 
-    unique!(decomps, by = ds -> sort([rank(x) for x in ds]))
+    unique!(ds -> sort([rank(x) for x in ds]), decomps )
     return decomps
 end
 
@@ -723,7 +723,7 @@ function tensor_product_decompositions(r::FusionRing)
 
     decomps = vcat(known, discovered)
 
-    unique!(decomps, by = ds -> sort([rank(x) for x in ds]))
+    unique!(ds -> sort([rank(x) for x in ds]), decomps)
     return decomps
 end
 

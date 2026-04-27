@@ -6,6 +6,9 @@ import Combinatorics: combinations
 
 #end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                            multiplication_table                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export multiplication_table
 
@@ -13,17 +16,29 @@ function multiplication_table(r::FusionRing)::Array{Int,3}
   return r.multiplication_table
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    rank                                         ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export rank
 
 function rank(r::FusionRing)::Int
   size(multiplication_table(r),1)
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    names                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export names 
 
 function names(r::FusionRing)::Array{String,1}
   return r.names
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  tex_names                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export tex_names
 
@@ -41,6 +56,10 @@ function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
     end
     true
 end
+ 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    labels                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export labels
 
@@ -48,17 +67,29 @@ function labels(r::FusionRing)::Array{String,1}
   return r.labels
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               conjugation_matrix                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export conjugation_matrix
 
 function conjugation_matrix(fr::FusionRing)
     @views multiplication_table(fr)[:, :, 1]
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  multiplicity                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export multiplicity
 
 function multiplicity(r::FusionRing)::Int
   maximum(multiplication_table(r))
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           nonzero_structure_constants                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export nonzero_structure_constants
 
@@ -67,15 +98,17 @@ function nonzero_structure_constants(r::FusionRing)::Vector{Tuple{Int64, Int64, 
   Tuple.( findall( x -> x > 0, mt ) ) 
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                      nzsc                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export nzsc
 
 nzsc = nonzero_structure_constants
 
-function num_nonzero_structure_constants(r::FusionRing)::Int64
-  length(nzsc(r))
-end
-
-nnzsc = num_nonzero_structure_constants
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           frobenius_perron_dimensions                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export frobenius_perron_dimensions
 
@@ -90,9 +123,17 @@ function frobenius_perron_dimensions(r::FusionRing)::Vector{QQBarFieldElem}
   end
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     fpdims                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export fpdims 
 
 fpdims = frobenius_perron_dimensions
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           frobenius_perron_dimension                            ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export frobenius_perron_dimension
 
@@ -100,9 +141,44 @@ function frobenius_perron_dimension(r::FusionRing)::QQBarFieldElem
   return sum( fpdims(r).^2 )
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     fpdim                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export fpdim
 
 fpdim = frobenius_perron_dimension
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  numeric_fpdims                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export numeric_fpdims
+
+function numeric_fpdims(fr::FusionRing)
+    r = rank(fr)
+    S = zeros(Float64, r, r)
+    N = multiplication_table(fr)
+    for a in 1:r
+        @views S .+= N[a, :, :]
+    end
+    vals, vecs = eigen(S)
+    idx = argmax(vals)
+    v = abs.(vecs[:, idx])
+    v ./ v[1]
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                   numeric_fpdim                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export numeric_fpdim
+
+numeric_fpdim(fr::FusionRing) = sum(x->x*x, numeric_fpdims(fr))
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           num_self_dual_non_self_dual                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export num_self_dual_non_self_dual
 
@@ -112,9 +188,18 @@ function num_self_dual_non_self_dual(r::FusionRing)::Array{Int,1}
     return Int[sd, nsd]
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     nsdnsd                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export nsdnsd
 
 nsdnsd = num_self_dual_non_self_dual
+
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  num_self_dual                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export num_self_dual
 
@@ -122,9 +207,17 @@ function num_self_dual(r::FusionRing)::Int
   first( nsdnsd(r) )
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                      nsd                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export nsd
 
 nsd = num_self_dual
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                num_non_self_dual                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export num_non_self_dual 
 
@@ -132,15 +225,27 @@ function num_non_self_dual(r::FusionRing)::Int
   last( nsdnsd(r) )
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     nnsd                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export nnsd 
 
 nnsd = num_non_self_dual
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_group_ring                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export is_group_ring
 
 function is_group_ring(r::FusionRing)::Bool
   return sum( multiplication_table(r) ) == rank(r)^2
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                   cayley_table                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export cayley_table
 
@@ -152,8 +257,11 @@ function cayley_table( fr::FusionRing )
   return [ findfirst( ==(1), mt[a,b,:] ) for a in 1:r, b in 1:r ]
 end
 
-export conjugate_element
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                conjugate_element                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+export conjugate_element
 
 function conjugate_element(r::FusionRing)
     return a -> conjugate_element(r, a)
@@ -170,11 +278,20 @@ function conjugate_element(fr::FusionRing, a::Int64)::Int64
     findfirst(==(1), C[a, :])
 end
 
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                 anyonwiki_code                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export anyonwiki_code
 
 function anyonwiki_code(r::FusionRing)::Union{Array{Int,1},Missing}
   return r.anyonwiki_code
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    barcode                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export barcode 
 
@@ -189,6 +306,10 @@ end
 export sub_fusion_rings
 
 #TODO needs to be implemented for when data is not available
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               sub_fusion_rings                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 function sub_fusion_rings(r::FusionRing)
     dictvec = r.sub_fusion_rings
@@ -206,6 +327,10 @@ function sub_fusion_rings(r::FusionRing)
     end
 
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              is_sub_fusion_ring                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export is_sub_fusion_ring
 
@@ -243,7 +368,10 @@ function is_sub_fusion_ring(fr::FusionRing, S::AbstractVector)::Bool
     _internal_multiplication(fr, unique(inds))
 end
 
-#Added
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                             sub_fusion_ring_subsets                             ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export sub_fusion_ring_subsets
 
 """
@@ -269,11 +397,20 @@ function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
     out
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                            is_equivalent_fusion_ring                            ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export is_equivalent_fusion_ring
 
 function is_equivalent_fusion_ring(ring1::FusionRing,ring2::FusionRing)::Bool
    which_permutation(ring1,ring2) !== nothing
 end
+
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                which_permutation                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export which_permutation
 
@@ -282,7 +419,6 @@ function which_permutation( ring1::FusionRing, ring2::FusionRing, all=false )
     _permutation_vector_equiv(mt(ring1),mt(ring2),all=all)
 end
 
-#Added: from updates/commutator
 """
     _permutation_vector_equiv(A, B) -> Vector{Int} or nothing
 
@@ -327,13 +463,25 @@ function _permutation_vector_equiv(A::Array{Int,3}, B::Array{Int,3})
     backtrack(1) ? cur : nothing
 end
 
+# Apply permutation P on all three indices: A'[i,j,k] = A[P[i],P[j],P[k]]
+function _permute_multtab(A::Array{Int,3}, P::Vector{Int})::Array{Int,3}
+    r = size(A, 1)
+    B = similar(A)
+    @inbounds for i in 1:r, j in 1:r, k in 1:r
+        B[i,j,k] = A[P[i], P[j], P[k]]
+    end
+    B
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                            fusion_ring_automorphisms                            ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export fusion_ring_automorphisms
 """
     fusion_ring_automorphisms(fr) -> Vector{Vector{Int}}
 
-Return all permutations `p` with `_permute_multtab(N,p) == N`.
-Uses diagonal-channel pruning (same idea as Anyonica).
+Return all permutations `p` whose action on the indices leave the structure constants invariant.
 """
 
 # TODO: test this
@@ -341,6 +489,9 @@ function fusion_ring_automorphisms(fr::FusionRing)
    which_permutation( fr, fr, all= true )
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  decompositions                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export decompositions
 
@@ -354,6 +505,10 @@ function decompositions( fr::FusionRing, product="TensorProduct" )#::Vector{ Vec
         tensor_product_decompositions(fr)
     end
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           tensor_product_decompositions                         ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 #TODO: implement
 export tensor_product_decompositions
@@ -543,8 +698,8 @@ function _discover_tensor_product_decompositions(r::FusionRing)
         grid = _unique_product_grid(r, Aset, Bset)
         grid === nothing && continue
 
-        A = _restrict_subring(r, copy(Aset); check_closed = true)
-        B = _restrict_subring(r, copy(Bset); check_closed = true)
+        A = restrict_subring(r, copy(Aset); check_closed = true)
+        B = restrict_subring(r, copy(Bset); check_closed = true)
 
         T = tensor_product(A, B)
 
@@ -587,6 +742,11 @@ function tensor_product_decompositions(r::FusionRing)
     return decomps
 end
 
+ 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                adjoint_fusion_ring                              ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export adjoint_fusion_ring
 
 #Added: from updates/commutator
@@ -607,9 +767,36 @@ function adjoint_fusion_ring(ring::FusionRing)::Tuple{Vector{Int},FusionRing}
     if length(generatedEl) == rank(ring)
         return (generatedEl, ring)
     else
-        return (generatedEl, _restrict_subring(ring, generatedEl; check_closed = true))
+        return (generatedEl, restrict_subring(ring, generatedEl; check_closed = true))
     end
 end
+
+# closure of a subset of elements of a fusion ring under fusion
+function _fusion_closure(fr::FusionRing, S0::Vector{Int})::Vector{Int}
+    r = rank(fr)
+    seen = falses(r)
+    @inbounds for s in S0
+        seen[s] = true
+    end
+    changed = true
+    while changed
+        changed = false
+        current = findall(seen)
+        @inbounds for a in current, b in current
+            for c in fusion_outcomes(fr, a, b)
+                if !seen[c]
+                    seen[c] = true
+                    changed = true
+                end
+            end
+        end
+    end
+    findall(seen)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               upper_central_series                              ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export upper_central_series
 
@@ -635,6 +822,9 @@ function is_nilpotent(r::FusionRing)::Bool
     return length(last_set) == 1 && rank(last_ring) == 1
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  adjoint_irreps                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export adjoint_irreps
 
@@ -742,6 +932,10 @@ Multiplication table on the grading group is:
 for all i ∈ irreps[a], j ∈ irreps[b].
 =#
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                universal_grading                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export universal_grading
 
 function universal_grading(fr::FusionRing)
@@ -775,10 +969,20 @@ function universal_grading(fr::FusionRing)
     return grading, replace_by_known(groupRing)
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                        UG                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export UG
 
 UG(fr::FusionRing) = universal_grading(fr)
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                   all_gradings                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+# TODO all gradings can be obtained as normal subgroups of the universal grading. No 
+# need to generate all partitions here. 
 
 export all_gradings
 
@@ -891,6 +1095,10 @@ function _set_partitions(n::Int)
     return result
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    commutator                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export commutator
 
 """ commutator(fr, sub) -> (els, subring)
@@ -915,13 +1123,16 @@ function commutator(fr::FusionRing, sub::Tuple{Vector{Int},FusionRing})
     isempty(els0) && (els0 = [1])
 
     els = _fusion_closure(fr, els0)
-    return els, _restrict_subring(fr, els; check_closed=true)
+    return els, restrict_subring(fr, els; check_closed=true)
 end
 
 function commutator(fr::FusionRing)
-    return derived_subring_commutator(fr)
+    return commutator(fr, ( collect( 1:rank(fr) ), fr ) )
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    characters                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export characters 
 
@@ -1066,11 +1277,9 @@ function is_diagonalizing_matrix( mat, ring::FusionRing )
   all( is_diagonal( mat * m * inv(mat) ) for m in mats )
 end
 
-#export numeric_characters
-# There are some issues with the numeric characters function. 
-# Mainly the fact that the rows aren't sorted according to some 
-# criterion
-
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               numeric_characters                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export numeric_characters
 """
@@ -1117,9 +1326,12 @@ function num_char_sort_crit( v )
 	( - are_real(v) , angl(v), absval(v) )
 end
 
-# finds diagonalizing matrix using floating point arithmetic
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              projective_SL2Z_reps                               ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-export projective_SL_2_ZZ_reps
+#TODO: function not yet ready for export: not even sure I want to keep it...
+#export projective_SL_2_ZZ_reps
 
 function projective_SL_2_ZZ_reps( fr::FusionRing )
     md = fr.projective_SL2Z_reps
@@ -1130,24 +1342,9 @@ function projective_SL_2_ZZ_reps( fr::FusionRing )
     end
 end
 
-export numeric_fpdims
-
-function numeric_fpdims(fr::FusionRing)
-    r = rank(fr)
-    S = zeros(Float64, r, r)
-    N = multiplication_table(fr)
-    for a in 1:r
-        @views S .+= N[a, :, :]
-    end
-    vals, vecs = eigen(S)
-    idx = argmax(vals)
-    v = abs.(vecs[:, idx])
-    v ./ v[1]
-end
-
-export numeric_fpdim
-
-numeric_fpdim(fr::FusionRing) = sum(x->x*x, numeric_fpdims(fr))
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_commutative                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export is_commutative
 
@@ -1172,7 +1369,9 @@ end
 #Use `conjugate_label` if you need the string form.
 """
 
-
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                            categories_with_properties                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export categories_with_properties
 
@@ -1180,13 +1379,18 @@ function categories_with_properties( fr::FusionRing )
     return fr.has_categories_with_props
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                is_categorifiable                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 export is_categorifiable
 
 function is_categorifiable( fr::FusionRing )
     return fr.categorifiable
 end
 
-
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                restrict_subring                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export restrict_subring
 #Added: from pushed files branch
@@ -1213,6 +1417,10 @@ function restrict_subring(fr::FusionRing, S::Vector{Int}; check_closed::Bool = t
     # it's better to wait until all fields of the FusionRing struct are finalized
     fusion_ring( Nsub )
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                 which_injection                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export which_injection
 """
@@ -1245,16 +1453,6 @@ function which_injection(subring::FusionRing, ring::FusionRing)
     nothing
 end
 
-#Added: from updates/commutator
-# Apply permutation P on all three indices: A'[i,j,k] = A[P[i],P[j],P[k]]
-function _permute_multtab(A::Array{Int,3}, P::Vector{Int})::Array{Int,3}
-    r = size(A, 1)
-    B = similar(A)
-    @inbounds for i in 1:r, j in 1:r, k in 1:r
-        B[i,j,k] = A[P[i], P[j], P[k]]
-    end
-    B
-end
 
 
 #Added: from updates/commutator

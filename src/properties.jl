@@ -1186,34 +1186,12 @@ function is_categorifiable( fr::FusionRing )
     return fr.categorifiable
 end
 
-#Added: from pushed files branch
-# closure of a subset of elements of a fusion ring under fusion
-function _fusion_closure(fr::FusionRing, S0::Vector{Int})::Vector{Int}
-    r = rank(fr)
-    seen = falses(r)
-    @inbounds for s in S0
-        seen[s] = true
-    end
-    changed = true
-    while changed
-        changed = false
-        current = findall(seen)
-        @inbounds for a in current, b in current
-            for c in fusion_outcomes(fr, a, b)
-                if !seen[c]
-                    seen[c] = true
-                    changed = true
-                end
-            end
-        end
-    end
-    findall(seen)
-end
 
 
+export restrict_subring
 #Added: from pushed files branch
 # restrict ring to subindices S (Anyonica's MT[ring][[el,el,el]])
-function _restrict_subring(fr::FusionRing, S::Vector{Int}; check_closed::Bool = true)::FusionRing
+function restrict_subring(fr::FusionRing, S::Vector{Int}; check_closed::Bool = true)::FusionRing
     sort!(S)
     N = multiplication_table(fr)
     @views Nsub = N[S, S, S]

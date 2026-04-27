@@ -315,22 +315,22 @@
     end
 
     # ============================================================
-    # _fusion_closure / _restrict_subring / _internal_closed_subsets / which_injection
+    # _fusion_closure / restrict_subring / _internal_closed_subsets / which_injection
     # ============================================================
 
-    @testset "_fusion_closure / _restrict_subring / _internal_closed_subsets / which_injection" begin
+    @testset "_fusion_closure / restrict_subring / _internal_closed_subsets / which_injection" begin
         maybe_testset("basic", "1. basic construction") do
             z4 = zn_fusion_ring(4)
 
             cl = _fusion_closure(z4, [3])
-            sub = _restrict_subring(z4, [1,3])
+            sub = restrict_subring(z4, [1,3])
             css = _internal_closed_subsets(z4, 2)
             inj = which_injection(zn_fusion_ring(2), z4)
 
             check_true(cl isa Vector{Int},
                 "_fusion_closure(z4, [3]) did not return a Vector{Int}")
             check_true(sub isa FusionRing,
-                "_restrict_subring(z4, [1,3]) did not return a FusionRing")
+                "restrict_subring(z4, [1,3]) did not return a FusionRing")
             check_true(css isa Vector{Vector{Int}},
                 "_internal_closed_subsets(z4, 2) did not return Vector{Vector{Int}}")
             check_true(inj === nothing || inj isa Dict{Int,Int},
@@ -346,11 +346,11 @@
             check_equal(_fusion_closure(z4, [2]), [1,2,3,4],
                 "_fusion_closure(z4, [2]) was not the whole ring")
 
-            sub = _restrict_subring(z4, [1,3])
+            sub = restrict_subring(z4, [1,3])
             check_equal(rank(sub), 2,
-                "_restrict_subring(z4, [1,3]) did not produce a rank-2 ring")
+                "restrict_subring(z4, [1,3]) did not produce a rank-2 ring")
             check_equal(multiplication_table(sub), multiplication_table(z2),
-                "_restrict_subring(z4, [1,3]) did not match zn_fusion_ring(2)")
+                "restrict_subring(z4, [1,3]) did not match zn_fusion_ring(2)")
 
             check_equal(_internal_closed_subsets(z4, 1), [[1]],
                 "_internal_closed_subsets(z4, 1) was not [[1]]")

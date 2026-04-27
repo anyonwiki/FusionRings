@@ -321,8 +321,6 @@ end
 
 export is_sub_fusion_ring
 
-# TODO: this one still uses strings
-
 """
     is_sub_fusion_ring(fr, S) -> Bool
 
@@ -361,9 +359,15 @@ export sub_fusion_ring_subsets
 
 Enumerate all **proper, nontrivial** fusion-closed subsets of elements containing
 the unit (index 1), returned as **index vectors**.
-
-This is exponential in `rank(fr)`.
 """
+
+function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
+    r = rank(fr)
+    r <= 2 && return Vector{Vector{Int}}()
+
+end
+
+#=
 function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
     r = rank(fr)
     r <= 2 && return Vector{Vector{Int}}()
@@ -378,6 +382,7 @@ function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
     end
     out
 end
+=#
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                            is_equivalent_fusion_ring                            ┃

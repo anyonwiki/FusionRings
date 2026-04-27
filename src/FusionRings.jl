@@ -3,7 +3,7 @@ module FusionRings
 using Oscar, Combinatorics, JSON, Base.Threads, Accessors
 using LinearAlgebra: eigen, eigvals, diag
 import Oscar: multiplication_table, is_commutative, rank, multiplicity, group
-import Base.names
+import Base.names, Base.sort
 
 include("general_functions.jl")
 include("structs.jl")

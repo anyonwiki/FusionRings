@@ -335,39 +335,23 @@ Return `true` iff `S` is a fusion-closed subset of simples containing the unit.
 (`String`/`Symbol`).
 """
 function is_sub_fusion_ring(fr::FusionRing, S::AbstractVector)::Bool
+    # any subring must contain unit
     isempty(S) && return false
+    1 ∉ S && return false
+
+    # indices in S must lie in range 1, ...,  r
     r = rank(fr)
+    !all(i -> 1 <= i <= r, inds) && return false
 
-    inds::Vector{Int} = if all(x -> x isa Integer, S)
-        Int.(S)
-    else
-        imap = indexmap(fr)
-        out = Vector{Int}(undef, length(S))
-        for (k, x) in pairs(S)
-            lab = x isa String ? x : String(x)
-            idx = get(imap, lab, 0)
-            idx == 0 && return false
-            out[k] = idx
-        end
-        out
-    end
+    mt = multiplication_table(fr)[S,S,S]
 
-    all(i -> 1 <= i <= r, inds) || return false
-    (1 in inds) || return false
-
-    _internal_multiplication(fr, unique(inds))
+    check_struct_const(mt) && 
+    check_mt_dims(mt) &&
+    check_unit(mt) && 
+    check_inverse(mt) &&
+    check_associativity(mt)
 end
 
-# checks whether multiplication of elements in S is internal in fusion ring fr
-function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
-    Sset = Set(S)
-    @inbounds for i in S, j in S
-        for c in fusion_outcomes(fr, i, j)
-            c in Sset || return false
-        end
-    end
-    true
-end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                             sub_fusion_ring_subsets                             ┃
@@ -1518,6 +1502,18 @@ function _internal_closed_subsets(fr::FusionRing, k::Int)::Vector{Vector{Int}}
         _internal_multiplication(fr, S) && push!(candidates, S)
     end
     return candidates
+end
+
+
+# checks whether multiplication of elements in S is internal in fusion ring fr
+function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
+    Sset = Set(S)
+    @inbounds for i in S, j in S
+        for c in fusion_outcomes(fr, i, j)
+            c in Sset || return false
+        end
+    end
+    true
 end
 
 #Added from: updates/automorphisms_which_injections

@@ -1,12 +1,18 @@
 # TODO: implement replace_by_known
 # hint: use rank, mult, nnsd to compute first 3 indices of the formal code 
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                          various helper functions                               ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+# TODO: function is not used except in tests...
 "Return the fusion matrix (left multiplication by `a`)."
 function fusion_matrix(fr::FusionRing, a::Int)::Matrix{Int}
     @views multiplication_table(fr)[a, :, :]
 end
 
 "Structure constant N[a,b,c]."
+# TODO: function is not used except in tests...
 function fusion_coeff(fr::FusionRing, a::Int, b::Int, c::Int)::Int
     multiplication_table(fr)[a,b,c]
 end
@@ -26,6 +32,21 @@ function fusion_product(fr::FusionRing, a::Int, b::Int)
     end
     out
 end
+
+"Return vector of simple indices with positive multiplicity in `a × b`."
+function fusion_outcomes(fr::FusionRing, a::Int, b::Int)::Vector{Int}
+    [c for (c,m) in fusion_product(fr,a,b) if m>0]
+end
+
+"Ordered list form of `a × b`."
+# TODO: function is not used except in tests...
+function decompose(fr::FusionRing, a::Int, b::Int) 
+    [ (k,v) for (k,v) in fusion_product(fr,a,b) ]
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    permute                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 #TODO: implement permute for permutations from OSCAR
 export permute
@@ -61,8 +82,43 @@ function permute(r::FusionRing, perm::Vector{Int})::FusionRing
     )
 end
 
+"""
+    permute_mult_tab(N, p)
+
+Apply permutation `p` (fixing 1) to all three indices of `N`.
+"""
+function permute_mult_tab(N::Array{Int,3}, p::Vector{Int})
+    p[1]==1 || error("Permutation must fix the unit at index 1")
+    r = size(N,1)
+    M = fill(0, r, r, r)
+    @inbounds for a in 1:r, b in 1:r, c in 1:r
+        M[p[a], p[b], p[c]] = N[a,b,c]
+    end
+    M
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     sort                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+#TODO: figure out which one is best: string or symbol as named input 
+#TODO: make sort function have secondary sort method based on e.g. grouping dual 
+# elements together
+
+export sort
+
+function sort( fr::FusionRing; by="fpdims", order::Symbol = :increasing )
+    if by == "fpdims"
+        return permute( fr, perm_vec_qd(fr,order=order) )
+    elseif by == "sd_conj"
+        return permute( fr, perm_vec_sd_conj(fr,order=order) )
+    else
+        message("by= argument was not \"fpdims\" or \"sd_conj\".")
+    end
+end
+
 """perm_vec_qd(r; order = :increasing) – permutation that sorts the non‑vacuum
-    particles by Frobenius–Perron dimension."""
+    elements by Frobenius–Perron dimension."""
 function perm_vec_qd(r::FusionRing; order::Symbol = :increasing)::Vector{Int}
     idx = collect(2:rank(r))
     qd  = fpdims(r)
@@ -104,8 +160,10 @@ function perm_vec_sd_conj(r::FusionRing; order::Symbol = :increasing)::Vector{In
     vcat(1, self_dual, conjlist)
 end
 
-# TODO: implement sortedring
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                tensor_product                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export tensor_product
 
@@ -141,7 +199,6 @@ function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
     )
 end
 
-
 function tensor_product(rings::Vector{FusionRing})::FusionRing
     isempty(rings) && error("Need at least one fusion ring")
     length(rings) == 1 && return rings[1]
@@ -157,30 +214,9 @@ function tensor_product(rings...)::FusionRing
     return tensor_product([rings...])
 end
 
-"Return vector of simple indices with positive multiplicity in `a ⊗ b`."
-function fusion_outcomes(fr::FusionRing, a::Int, b::Int)::Vector{Int}
-    [c for (c,m) in fusion_product(fr,a,b) if m>0]
-end
-
-"Ordered list form of `a ⊗ b`."
-function decompose(fr::FusionRing, a::Int, b::Int) 
-    [ (k,v) for (k,v) in fusion_product(fr,a,b) ]
-end
-
-"""
-    permute_mult_tab(N, p)
-
-Apply permutation `p` (fixing 1) to all three indices of `N`.
-"""
-function permute_mult_tab(N::Array{Int,3}, p::Vector{Int})
-    p[1]==1 || error("Permutation must fix the unit at index 1")
-    r = size(N,1)
-    M = fill(0, r, r, r)
-    @inbounds for a in 1:r, b in 1:r, c in 1:r
-        M[p[a], p[b], p[c]] = N[a,b,c]
-    end
-    M
-end
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                   to_group                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export to_group
 
@@ -190,15 +226,6 @@ function to_group( fr::FusionRing )
   permutation_group( generic_group(1:rank(fr), gm )[1] )
 end
 
-export cayley_table
-
-function cayley_table( fr::FusionRing )
-  !is_group_ring(fr) && message("Ring must be group ring")
-
-  mt = multiplication_table(fr)
-  r  = rank(fr)
-  return [ findfirst( ==(1), mt[a,b,:] ) for a in 1:r, b in 1:r ]
-end
 
 
 # TODO: implement bicrossed product. @Szagha02: not a priority 

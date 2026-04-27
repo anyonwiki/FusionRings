@@ -161,6 +161,16 @@ function is_group_ring(r::FusionRing)::Bool
   return sum( multiplication_table(r) ) == rank(r)^2
 end
 
+export cayley_table
+
+function cayley_table( fr::FusionRing )
+  !is_group_ring(fr) && message("Ring must be group ring")
+
+  mt = multiplication_table(fr)
+  r  = rank(fr)
+  return [ findfirst( ==(1), mt[a,b,:] ) for a in 1:r, b in 1:r ]
+end
+
 export conjugate_element
 
 

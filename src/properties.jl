@@ -46,16 +46,6 @@ function tex_names(r::FusionRing)::Array{String,1}
   return r.texnames
 end
 
-#Added: from updates/commutator
-function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
-    Sset = Set(S)
-    @inbounds for i in S, j in S
-        for c in fusion_outcomes(fr, i, j)
-            c in Sset || return false
-        end
-    end
-    true
-end
  
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                    labels                                       ┃
@@ -366,6 +356,17 @@ function is_sub_fusion_ring(fr::FusionRing, S::AbstractVector)::Bool
     (1 in inds) || return false
 
     _internal_multiplication(fr, unique(inds))
+end
+
+# checks whether multiplication of elements in S is internal in fusion ring fr
+function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
+    Sset = Set(S)
+    @inbounds for i in S, j in S
+        for c in fusion_outcomes(fr, i, j)
+            c in Sset || return false
+        end
+    end
+    true
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

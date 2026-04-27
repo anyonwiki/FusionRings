@@ -7,25 +7,6 @@ import Combinatorics: combinations
 #end
 
 
-export indexmap
-"""
-    indexmap(fr::FusionRing) -> Dict{String,Int}
-
-Return (and cache per-session) a dictionary mapping each simple object label
-to its index. This centralizes repeated constructions that previously
-occurred inline in multiple operations.
-
-The mapping is inexpensive to build for small ranks, but many functions call
-it repeatedly; having a single helper makes future memoization trivial if
-benchmarks suggest it matters.
-"""
-module_indexmaps = IdDict{FusionRing,Dict{String,Int}}()
-function indexmap(fr::FusionRing)
-    get!(module_indexmaps, fr) do
-        Dict(l=>i for (i,l) in enumerate(labels(fr)))
-    end
-end
-
 export multiplication_table
 
 function multiplication_table(r::FusionRing)::Array{Int,3}
@@ -227,6 +208,8 @@ function sub_fusion_rings(r::FusionRing)
 end
 
 export is_sub_fusion_ring
+
+# TODO: this one still uses strings
 
 """
     is_sub_fusion_ring(fr, S) -> Bool
@@ -442,28 +425,6 @@ end
 #   inside R as A⊗1 and 1⊗B.
 
 
-export tensor_product_decompositions
-
-function _multiplicative_partitions(n::Int; minfactor::Int = 2)
-    out = Vector{Vector{Int}}()
-
-    function go(rem::Int, start::Int, acc::Vector{Int})
-        if rem == 1
-            push!(out, copy(acc))
-            return
-        end
-
-        for d in start:rem
-            rem % d == 0 || continue
-            push!(acc, d)
-            go(rem ÷ d, d, acc)
-            pop!(acc)
-        end
-    end
-
-    go(n, minfactor, Int[])
-    return out
-end
 
 function _cartesian_choices(lists::Vector{Vector{FusionRing}})
     isempty(lists) && return Vector{Vector{FusionRing}}()

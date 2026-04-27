@@ -362,7 +362,7 @@ export sub_fusion_ring_subsets
 """
     sub_fusion_ring_subsets(fr::FusionRing) -> Vector{Vector{Int}}
 
-Enumerate all **proper, nontrivial** fusion-closed subsets of simples containing
+Enumerate all **proper, nontrivial** fusion-closed subsets of elements containing
 the unit (index 1), returned as **index vectors**.
 
 This is exponential in `rank(fr)`.

@@ -1,6 +1,3 @@
-import Combinatorics: combinations
-
-#TODO: should get rid of Combinatorics dependency
 
 #function change_fusion_ring_property(r::FusionRing, dict)
 

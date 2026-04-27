@@ -96,8 +96,4 @@ weekly_funcdeps_architecture:
     when: always
     paths:
       - funcdeps_artifacts/
-<<<<<<< HEAD
     expire_in: 4 weeks
-=======
-    expire_in: 4 weeks
->>>>>>> implemented_functions

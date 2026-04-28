@@ -45,7 +45,7 @@ end
 
 export print_multiplication_table
 
-#TODO: 
+# TO DO: 
 # * no nlonger use names - should be labels
 # * labels should be printed as bold integers
 # """

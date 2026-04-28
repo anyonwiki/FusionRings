@@ -1,5 +1,3 @@
-# TODO: implement replace_by_known
-# hint: use rank, mult, nnsd to compute first 3 indices of the formal code 
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                          various helper functions                               ┃
@@ -100,7 +98,7 @@ export permute
 
 """permute(r, perm) – return a new `FusionRing` with all data
     permuted by `perm`.  `perm[1]` **must** equal 1 to keep the vacuum first."""
-function permute(r::FusionRing, perm::Vector{Int})::FusionRing
+function permute( perm::Vector{Int}, r::FusionRing)::FusionRing
     n = rank(r)
     n == length(perm)      || throw(ArgumentError("perm length ≠ rank"))
     sort(perm) == collect(1:n) || throw(ArgumentError("perm must be a true permutation"))
@@ -156,9 +154,9 @@ export sort
 
 function sort( fr::FusionRing; by="fpdims", order::Symbol = :increasing )
     if by == "fpdims"
-        return permute( fr, perm_vec_qd(fr,order=order) )
+        return permute( perm_vec_qd(fr,order=order), fr )
     elseif by == "sd_conj"
-        return permute( fr, perm_vec_sd_conj(fr,order=order) )
+        return permute( perm_vec_sd_conj(fr,order=order), fr )
     else
         message("by= argument was not \"fpdims\" or \"sd_conj\".")
     end

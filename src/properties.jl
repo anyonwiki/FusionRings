@@ -302,9 +302,6 @@ function mult_tab_code(mat::Array{Int,2},mult::Int)::Int
     error("mult_tab_code not implemented yet")
 end
 
-export sub_fusion_rings
-
-#TODO needs to be implemented for when data is not available
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                               sub_fusion_rings                                  ┃

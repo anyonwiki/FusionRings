@@ -265,6 +265,18 @@ function conjugate_element(fr::FusionRing, a::Int64)::Int64
     findfirst(==(1), C[a, :])
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                 conjugate_pairs                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export conjugate_pairs
+
+function conjugate_pairs( fr::FusionRing )::Vector{Vector{Int}}
+    d  = conjugate_element(fr);
+    us = unique ∘ sort
+    unique([ us( [ a, d(a) ] ) for a in 1:rank(fr) ])
+end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                 anyonwiki_code                                  ┃

@@ -385,14 +385,14 @@ Return `true` iff `S` is a fusion-closed subset of simples containing the unit.
 `S` may be a vector of indices (`Int`/`Integer`) or a vector of labels
 (`String`/`Symbol`).
 """
-function is_sub_fusion_ring(fr::FusionRing, S::AbstractVector)::Bool
+function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
     # any subring must contain unit
     isempty(S) && return false
     1 ∉ S && return false
 
     # indices in S must lie in range 1, ...,  r
     r = rank(fr)
-    !all(i -> 1 <= i <= r, inds) && return false
+    !all(i -> 1 <= i <= r, S) && return false
 
     mt = multiplication_table(fr)[S,S,S]
 

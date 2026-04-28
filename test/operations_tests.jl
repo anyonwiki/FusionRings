@@ -205,46 +205,46 @@
     @testset "permute" begin
         maybe_testset("basic", "1. basic construction") do
             z3 = zn_fusion_ring(3)
-            pz3 = permute(z3, [1,3,2])
+            pz3 = permute( [1,3,2], z3)
 
             check_true(pz3 isa FusionRing,
-                "permute(z3, [1,3,2]) did not return a FusionRing")
+                "permute([1,3,2],z3) did not return a FusionRing")
             check_equal(
                 size(multiplication_table(pz3)),
                 (rank(pz3), rank(pz3), rank(pz3)),
-                "permute(z3, ...) did not produce a cubic multiplication table"
+                "permute([1,3,2],z3) did not produce a cubic multiplication table"
             )
             check_equal(length(labels(pz3)), rank(pz3),
-                "permute(z3, ...) did not preserve label count")
+                "permute([1,3,2],z3) did not preserve label count")
         end
 
         maybe_testset("intermediate", "2. intermediate correctness") do
             z3 = zn_fusion_ring(3)
-            pz3 = permute(z3, [1,3,2])
+            pz3 = permute([1,3,2],z3)
 
             check_equal(
                 labels(pz3),
                 ["0", "2", "1"],
-                "permute(z3, [1,3,2]) did not permute labels correctly"
+                "permute([1,3,2],z3) did not permute labels correctly"
             )
 
             check_true(
                 is_equivalent(z3, pz3),
-                "permute(z3, [1,3,2]) did not produce an equivalent fusion ring"
+                "permute([1,3,2],z3) did not produce an equivalent fusion ring"
             )
 
             check_throws(
-                () -> permute(z3, [1,1,2]),
+                () -> permute( [1,1,2],z3),
                 "permute accepted a non-permutation vector"
             )
 
             check_throws(
-                () -> permute(z3, [2,1,3]),
+                () -> permute([2,1,3],z3),
                 "permute accepted a permutation that did not fix the vacuum"
             )
 
             check_throws(
-                () -> permute(z3, [1,2]),
+                () -> permute([1,2],z3),
                 "permute accepted a permutation of the wrong length"
             )
         end

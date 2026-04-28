@@ -405,42 +405,6 @@ end
 
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                             sub_fusion_ring_subsets                             ┃
-#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-export sub_fusion_ring_subsets
-
-"""
-    sub_fusion_ring_subsets(fr::FusionRing) -> Vector{Vector{Int}}
-
-Enumerate all **proper, nontrivial** fusion-closed subsets of elements containing
-the unit (index 1), returned as **index vectors**.
-"""
-
-function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
-    r = rank(fr)
-    r <= 2 && return Vector{Vector{Int}}()
-
-end
-
-#=
-function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
-    r = rank(fr)
-    r <= 2 && return Vector{Vector{Int}}()
-
-    out = Vector{Vector{Int}}()
-    base = collect(2:r)
-    for k in 1:(r - 2)
-        for T in combinations(base, k)
-            S = vcat(1, collect(T))
-            is_sub_fusion_ring(fr, S) && push!(out, S)
-        end
-    end
-    out
-end
-=#
-
-#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                            is_equivalent_fusion_ring                            ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 

@@ -318,10 +318,57 @@ function sub_fusion_rings(r::FusionRing)
             for dict in dictvec
         ]
     else
-        # note: for injection, use which_injection
-        error("Method sub_fusion_rings not full implemented yet")
+        subsets = sub_fusion_ring_subsets
+        [
+            Dict( 
+                "injection" -> s,
+                "fusion_ring" -> replace_by_known(fusion_ring(mt[s,s,s]))
+            )
+            for s in subsets
+        ]
     end
+end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                             sub_fusion_ring_subsets                             ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export sub_fusion_ring_subsets
+
+"""
+    sub_fusion_ring_subsets(fr::FusionRing) -> Vector{Vector{Int}}
+
+Enumerate all **proper, nontrivial** fusion-closed subsets of elements containing
+the unit (index 1), returned as **index vectors**.
+"""
+
+function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
+    r = rank(fr)
+    r <= 2 && return Vector{Int}[]
+
+
+    result = Vector{Int}[]
+    
+    # group elements by conjugacy since if a is part of subring a* also has to be
+    pairs = conjugate_pairs(fr)[2:end] 
+    np    = size(pairs,1)
+
+    # flatten conjugate_pairs back to 1D vector
+    function flatten(l::Vector{Vector{Int}})
+        res = Int[]
+        for vec ∈ l, el ∈ vec 
+            push!(res,el)
+        end
+        return res
+    end
+    
+    for k ∈ 1:(np-1), subset in combinations(pairs, k)
+        S = vcat( [1], flatten(collect(subset)) )
+        if is_sub_fusion_ring(fr, S )
+            push!(result, S)
+        end
+    end
+    return result
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

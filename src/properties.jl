@@ -307,6 +307,8 @@ end
 #┃                               sub_fusion_rings                                  ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+export sub_fusion_rings
+
 function sub_fusion_rings(r::FusionRing)
     dictvec = r.sub_fusion_rings
     if dictvec !== missing

@@ -432,53 +432,140 @@ end
 
 export which_permutation
 
-function which_permutation( ring1::FusionRing, ring2::FusionRing, all=false )
-    mt = multiplication_table
-    _permutation_vector_equiv(mt(ring1),mt(ring2),all=all)
-end
-
 """
-    _permutation_vector_equiv(A, B) -> Vector{Int} or nothing
+    which_permutation(fr1, fr2, all=false, short_circuit=true)::Union{Nothing,Vector{Int64}} 
 
-Find `perm` such that `_permute_multtab(A, perm) == B`, using diagonal-channel
-groups for pruning. Returns `nothing` if not found.
+    Returns a list with a permutation such that `permute( perm, fr1 ) == fr2` or nothing if none exist.
+    If all=true, returns all permutations such that `permute( perm, fr1 ) == fr2` or nothing if none exist.
+    If short_circuit=false, doesn't compute invariants to determine whether rings are  
+    not equivalent. This saves time if it is known a priori that the rings have to be equivalent.
 """
-# TODO: rewrite using group functionality of OSCAR
-function _permutation_vector_equiv(A::Array{Int,3}, B::Array{Int,3})
-    r = size(A, 1)
-    size(B, 1) == r || return nothing
+function which_permutation(fr1::FusionRing, fr2::FusionRing; 
+    all=false, 
+    short_circuit = true)::Union{Nothing,Vector{Vector{Int64}}}
 
-    grpA = _diag_channel_groups(A)
-    grpB = _diag_channel_groups(B)
-    sort(map(length, grpA)) == sort(map(length, grpB)) || return nothing
+    r = rank(fr1)
 
-    used = falses(length(grpB))
-    cur  = Vector{Int}(undef, r)
-    cur[1] = 1  # unit fixed
+    # if ranks are different we can't compare so necessary to short_circuit
+    # since computation of number selfdual & non-selfdual elements is as 
+    # fast and gives stronger invariant, we use that one instead 
+    nsdnsd(fr1) != nsdnsd(fr2) && return nothing 
 
-    function backtrack(gidx::Int)::Bool
-        if gidx > length(grpA)
-            return _permute_multtab(A, cur) == B
-        end
-        GA = grpA[gidx]
-        for j in eachindex(grpB)
-            (used[j] || length(grpB[j]) != length(GA)) && continue
-            used[j] = true
-            for σ in Base.Iterators.permutations(grpB[j])
-                if 1 in GA
-                    σ[findfirst(==(1), GA)] == 1 || continue
-                end
-                for (u, v) in zip(GA, σ)
-                    cur[u] = v
-                end
-                backtrack(gidx + 1) && return true
-            end
-            used[j] = false
-        end
-        false
+
+    # check whether rings have same multiplicity and number of selfdual elements
+    if short_circuit && ( mult(fr1) != mult(fr2) || fpdim(fr1) != fpdim(fr2) )
+        return nothing
     end
 
-    backtrack(1) ? cur : nothing
+    # check whether number of fusion outcomes per multiplicity 
+    # is the same for each element of fr1 and fr2 
+    m1 = multiplication_table(fr1)
+    m2 = multiplication_table(fr2)
+
+    grp1 = diag_channel_count(m1)
+    grp2 = diag_channel_count(m2)
+
+    short_circuit && sort(grp1) ≠ sort(grp2) && return nothing
+
+    # rings must have same fpdims
+    fpd1 = fpdims(fr1)
+    fpd2 = fpdims(fr2)
+
+    short_circuit && sort(fpd1) ≠ sort(fpd2) && return nothing
+
+    # construct invariants for all elements of both rings
+    # these are couples of their fusion outcome count and 
+    # their fpdims
+
+    inv1 = collect( zip( grp1, fpd1 ) )
+    inv2 = collect( zip( grp2, fpd2 ) )
+
+    #sort invA and invB such that equal elements are next to each other.
+    σ1 = sortperm(inv1)
+    σ2 = sortperm(inv2)
+
+    sm1 = m1[ σ1, σ1, σ1 ]
+    sm2 = m2[ σ2, σ2, σ2 ]
+
+    sorted_inv1 = inv1[σ1] 
+
+    S, _ = symmetries(sorted_inv1, sorted = true)
+    
+    if !all  # only need first permutation
+        for σ ∈ S 
+            p = Vector(σ,r)
+            if sm1[p,p,p] == sm2
+                iσ2 = invperm(σ2)
+                return [ iσ2[p[σ1]] ]
+            end
+        end
+    else # want all permutations 
+        allperms = Vector{Int}[]
+
+        for σ ∈ S 
+            p = Vector(σ,r)
+            if sm1[p,p,p] == sm2
+                iσ2 = invperm(σ2)
+                push!(allperms, iσ2[p[σ1]])
+            end
+        end
+
+        return allperms
+    end
+end
+
+# returns the symmetry group S of the sorted vector v together with 
+# the permutation σv that sorts v. The symmetries are thus of the form
+# inverseperm(σv) ∘ g ∘ σv
+
+function symmetries( v::AbstractVector; sorted = false )::Tuple{PermGroup,Vector{Int64}}
+    is_empty(v) && return nothing
+
+    n = size(v,1)
+
+    n == 1 && return symmetric_group(1)
+
+    if sorted 
+        return ( _sorted_symmetries( v ), collect(1:n) )
+    else
+        σv = sortperm(v)
+        vs = v[σv]
+        return ( _sorted_symmetries(vs), σv )
+    end
+end
+
+function _sorted_symmetries( v::AbstractVector)::PermGroup
+    # compute the sizes n of the individual S_n
+    n = size(v,1)
+
+    degrees = Int64[1]
+
+    g_ind = 1
+    for i in 2:n
+        if v[i] == v[i-1] 
+            degrees[g_ind] = degrees[g_ind] + 1
+        else
+            push!(degrees,1)
+            g_ind = g_ind + 1
+        end
+    end
+    
+    return inner_direct_product( symmetric_group.( degrees ) )
+
+end
+
+
+"""
+    _diag_channel_groups(N) -> Vector{Vector{Int}}
+
+Partition indices by invariant k(i)=|{c : N[i,i,c]>0}|.
+
+Return groups in deterministic order:
+- increasing k
+- increasing indices within each group
+"""
+function diag_channel_count(N::Array{Int,3})::Vector{Tuple{Vector{Int},Vector{Int}}}
+    [ tally( N[i,i,:], sort=true ) for i in 1:size(N,1) ]
 end
 
 # Apply permutation P on all three indices: A'[i,j,k] = A[P[i],P[j],P[k]]
@@ -1478,41 +1565,6 @@ end
 #       k(i) = |{ c : N[i,i,c] > 0 }|
 # - We partition indices by this invariant.
 # - Groups are sorted deterministically (increasing k, then index).
-
-"""
-    _diag_channel_groups(N) -> Vector{Vector{Int}}
-
-Partition indices by invariant k(i)=|{c : N[i,i,c]>0}|.
-
-Return groups in deterministic order:
-- increasing k
-- increasing indices within each group
-"""
-function _diag_channel_groups(N::Array{Int,3})::Vector{Vector{Int}}
-    r = size(N, 1)
-
-    k = Vector{Int}(undef, r)
-    @inbounds for i in 1:r
-        cnt = 0
-        for c in 1:r
-            (N[i,i,c] > 0) && (cnt += 1)
-        end
-        k[i] = cnt
-    end
-
-    groups = Dict{Int,Vector{Int}}()
-    @inbounds for i in 1:r
-        push!(get!(groups, k[i], Int[]), i)
-    end
-
-    out = Vector{Vector{Int}}()
-    for kk in sort!(collect(keys(groups)))
-        g = groups[kk]
-        sort!(g)
-        push!(out, g)
-    end
-    out
-end
 
 
 """

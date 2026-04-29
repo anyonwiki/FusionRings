@@ -967,6 +967,7 @@ function adjoint_irreps(ring::FusionRing)::Vector{Vector{Int}}
         pair::Tuple{FusionRing,Tuple{Vector{Int},FusionRing}},
         elements::Vector{Int}
     )::Vector{Int}
+
         fr, (subEl, _) = pair
         seen = falses(rank(fr))
         @inbounds for a in subEl, el in elements

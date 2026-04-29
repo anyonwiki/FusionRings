@@ -854,9 +854,7 @@ end
 
 export adjoint_fusion_ring
 
-#Added: from updates/commutator
-export adjoint_fusion_ring
-function adjoint_fusion_ring(ring::FusionRing)::Tuple{Vector{Int},FusionRing}
+function adjoint_fusion_ring(ring::FusionRing;represent_by_known=true)::Tuple{Vector{Int},FusionRing}
     d(i) = conjugate_element(ring, i)
 
     el_seen = falses(rank(ring))
@@ -869,10 +867,12 @@ function adjoint_fusion_ring(ring::FusionRing)::Tuple{Vector{Int},FusionRing}
 
     generatedEl = _fusion_closure(ring, el)
 
+    rbk = represent_by_known ? replace_by_known : identity
+
     if length(generatedEl) == rank(ring)
-        return (generatedEl, ring)
+        return (generatedEl, rbk( ring ) )
     else
-        return (generatedEl, restrict_subring(ring, generatedEl; check_closed = true))
+        return (generatedEl, rbk( restrict_subring(ring, generatedEl; check_closed = true) ) )
     end
 end
 

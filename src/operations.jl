@@ -89,6 +89,43 @@ function replace_by_known( fr::FusionRing; keep_order=true, safe_return=true )
     end
 
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                restrict_subring                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export restrict_subring
+
+# restrict ring to subindices S (Anyonica's MT[ring][[el,el,el]])
+function restrict_subring(fr::FusionRing, S::Vector{Int}; check_closed::Bool = true)::FusionRing
+    sS = sort(S)
+
+    sS == collect(1:rank(fr)) && return fr
+    
+    unique(sS) != sS && error("vector should contain each element only once")
+
+
+    N = multiplication_table(fr)
+    Nsub = N[sS, sS, sS]
+
+    if check_closed
+        # sanity: S must be fusion-closed
+        rmap = zeros(Int, rank(fr))
+        @inbounds for (k, v) in enumerate(sS)
+            rmap[v] = k
+        end
+        @inbounds for a in sS, b in S
+            for c in findall(>(0), N[a, b, :])
+                rmap[c] != 0 || error("subset not fusion-closed")
+            end
+        end
+    end
+
+    # TODO: might want to conserve as much information as possible, but 
+    # it's better to wait until all fields of the FusionRing struct are finalized
+    fusion_ring( Nsub ) 
+end
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                    permute                                      ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

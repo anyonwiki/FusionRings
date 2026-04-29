@@ -43,9 +43,10 @@ function decompose(fr::FusionRing, a::Int, b::Int)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                          various helper functions                               ┃
+#┃                                replace_by_known                                 ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-export(replace_by_known)
+
+export replace_by_known
 
 # keep_order=true permutes the elements of the known ring to match the
 # elements of the given ring.
@@ -56,13 +57,10 @@ function replace_by_known( fr::FusionRing; keep_order=true, safe_return=true )
     r = rank(fr)
     m = multiplicity(fr)
     n = nnsd(fr)
-    fpds = sort( fpdims(fr) )
-    
+
     function possibly_equivalent( R::FusionRing )::Bool 
         fc = anyonwiki_code(R)
         fc[1] == r && fc[2] == m && fc[3] == n && return true
-        
-        return sort(fpdims(R)) == fpds
     end
 
     proposals = filter( possibly_equivalent, frl )
@@ -75,15 +73,17 @@ function replace_by_known( fr::FusionRing; keep_order=true, safe_return=true )
     # find the permutation
     ring_perm_couples = map( ring -> ( ring, which_permutation( ring, fr ) ), proposals )
 
-    target = findfirst( tuple -> tuple[2] !== nothing, ring_perm_couples )
+    target_ind = findfirst( tuple -> tuple[2] !== nothing, ring_perm_couples )
 
-    if target === nothing 
+    if target_ind === nothing 
         safe_return && return fr
         return missing
     end
 
+    target = ring_perm_couples[target_ind]
+
     if keep_order
-        permute( target[2], target[1] )
+        permute( target[2][1], target[1] )
     else
         return target
     end

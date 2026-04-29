@@ -332,8 +332,8 @@ function sub_fusion_rings(r::FusionRing)
         subsets = sub_fusion_ring_subsets
         [
             Dict( 
-                "injection" -> s,
-                "fusion_ring" -> replace_by_known(fusion_ring(mt[s,s,s]))
+                "injection"   => s,
+                "fusion_ring" => replace_by_known(fusion_ring(mt[s,s,s]))
             )
             for s in subsets
         ]

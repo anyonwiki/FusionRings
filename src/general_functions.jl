@@ -1,4 +1,24 @@
 
+#= counts the number of times an element apears in a vector and 
+ returns a couple of vectors (els, counts) where els = unique 
+ elements of v and counts = number of times they apear in v.
+ If sort = false the elements in els are ordered by their first encounter 
+ in the original original vector 
+=#
+function tally( v::AbstractVector; sort=false, sort_fun=identity )
+    els = unique(v)
+
+    counter(el) = count( ==(el) , v )
+    
+    counts = counter.(els)
+
+    !sort && return ( els, counts )
+    
+    s = sortperm(els,by=identity)
+    
+    return ( els[s], counts[s])
+end
+
 function is_constant_array( arr; equalfunc = === ) 
   if isempty(arr)
     return true 

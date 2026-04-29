@@ -922,9 +922,8 @@ export is_nilpotent
 
 function is_nilpotent(r::FusionRing)::Bool
     chain = upper_central_series(r)
-    # Nilpotent ⇔ iterated adjoint subring reaches the trivial (rank-1) subring.
     last_set, last_ring = last(chain)
-    return length(last_set) == 1 && rank(last_ring) == 1
+    return length(last_set) == 1 
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

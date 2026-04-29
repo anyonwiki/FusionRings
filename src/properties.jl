@@ -523,7 +523,7 @@ function symmetries( v::AbstractVector; sorted = false )::Tuple{PermGroup,Vector
 
     n = size(v,1)
 
-    n == 1 && return symmetric_group(1)
+    n == 1 && return ( symmetric_group(1), [ 1 ] )
 
     if sorted 
         return ( _sorted_symmetries( v ), collect(1:n) )

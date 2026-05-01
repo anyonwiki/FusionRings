@@ -451,6 +451,7 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
     # fast and gives stronger invariant, we use that one instead 
     nsdnsd(fr1) != nsdnsd(fr2) && return nothing 
 
+    r == 1 && return [ [1] ]
 
     # check whether rings have same multiplicity and number of selfdual elements
     if short_circuit && ( mult(fr1) != mult(fr2) || fpdim(fr1) != fpdim(fr2) )
@@ -480,37 +481,44 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
     # construct invariants for all elements of both rings
     # these are couples of their fusion outcome count and 
     # their fpdims
+    # we remove the first element since it needs to be fixed
 
-    inv1 = collect( zip( grp1, fpd1, sc1 ) )
-    inv2 = collect( zip( grp2, fpd2, sc2 ) )
+    inv1 = collect( zip( grp1, fpd1, sc1 ) )[2:end]
+    inv2 = collect( zip( grp2, fpd2, sc2 ) )[2:end]
+
+    # for some operations the unit needs to be added again
+    addunit( perm_vec ) = vcat( 1, perm_vec .+1 )
 
     #sort invA and invB such that equal elements are next to each other.
     σ1 = sortperm(inv1)
     σ2 = sortperm(inv2)
 
-    sm1 = m1[ σ1, σ1, σ1 ]
-    sm2 = m2[ σ2, σ2, σ2 ]
+    #permute the mult tabs so their invariants are sorted
+    uσ1 = addunit( σ1 )
+    uσ2 = addunit( σ2 )
+    sm1 = m1[ uσ1, uσ1, uσ1 ]
+    sm2 = m2[ uσ2, uσ2, uσ2 ]
 
     sorted_inv1 = inv1[σ1] 
 
     S, _ = symmetries(sorted_inv1, sorted = true)
-    
+
     if !all  # only need first permutation
         for σ ∈ S 
-            p = Vector(σ,r)
+            p = addunit( Vector(σ,r-1) )
             if sm1[p,p,p] == sm2
-                iσ2 = invperm(σ2)
-                return [ iσ2[p[σ1]] ]
+                iuσ2 = invperm(uσ2)
+                return [ iuσ2[p[uσ1]] ]
             end
         end
     else # want all permutations 
         allperms = Vector{Int}[]
 
         for σ ∈ S 
-            p = Vector(σ,r)
+            p = addunit( Vector(σ,r-1) )
             if sm1[p,p,p] == sm2
-                iσ2 = invperm(σ2)
-                push!(allperms, iσ2[p[σ1]])
+                iuσ2 = invperm(uσ2)
+                push!(allperms, iuσ2[p[uσ1]])
             end
         end
 
@@ -866,7 +874,8 @@ function adjoint_fusion_ring(ring::FusionRing;represent_by_known=true)::Tuple{Ve
     if length(generatedEl) == rank(ring)
         return (generatedEl, rbk( ring ) )
     else
-        return (generatedEl, rbk( restrict_subring(ring, generatedEl; check_closed = true) ) )
+        sr = restrict_subring(ring, generatedEl; check_closed = true)
+        return (generatedEl, rbk( sr ) )
     end
 end
 

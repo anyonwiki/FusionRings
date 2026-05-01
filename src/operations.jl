@@ -65,6 +65,7 @@ function replace_by_known( fr::FusionRing; keep_order=true, safe_return=true )
 
     proposals = filter( possibly_equivalent, frl )
 
+
     if isempty(proposals) 
         safe_return && return fr
         return missing

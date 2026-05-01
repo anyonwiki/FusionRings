@@ -14,9 +14,9 @@ function tally( v::AbstractVector; sort=false, sort_fun=identity )
 
     !sort && return ( els, counts )
     
-    s = sortperm(els,by=identity)
+    s = sortperm(els,by=sort_fun)
     
-    return ( els[s], counts[s])
+    return ( els[s], counts[s] )
 end
 
 function is_constant_array( arr; equalfunc = === ) 

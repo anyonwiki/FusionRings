@@ -1040,34 +1040,134 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                   all_gradings                                  ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-# TODO all gradings can be obtained as normal subgroups of the universal grading. No 
-# need to generate all partitions here. 
-
 export all_gradings
 
 """
     all_gradings(fr::FusionRing)
 
-Return all gradings of the fusion ring.
+Return all gradings of fr
 
-Each grading is returned as:
-    (partition, group_ring)
+Every grading  obtained from  universal grading by quotienting 
+universal grading group by a normal subgroup.
 
-where:
-- partition = Vector of blocks (Vector{Vector{Int}})
-- group_ring = the grading group as a fusion ring
 
-note to self:
-grading is: simples g∈G⨆​Cg​
-s.t i ∈ C_{a} , j ∈ C_{b} ⇒ i ⊗ j ⊂ C_{a ⋅ b}
+
+    C = ⨁_{g ∈ U} C_g
+
+is  universal grading,  every grading  obtained from U/N,
+where N is a normal subgroup of U.
 """
 function all_gradings(fr::FusionRing)
-    irreps = adjoint_irreps(fr)   # base partition
-    n = length(irreps)
-    error("Not implemented yet")
+    grading, universal_group = universal_grading(fr)
+
+    universal_blocks = blocks_from_grading_pairs(grading)
+
+    G = to_group(universal_group)
+    mult = cayley_table(universal_group)
+
+    gradings = Vector{Dict{String, Any}}()
+
+    for N in normal_subgroups(G)
+        cosets = cosets_as_index_blocks(G, N)
+
+        partition = merge_universal_blocks(universal_blocks, cosets)
+
+        quotient_mult = quotient_mult_table(mult, cosets)
+        quotient_group_ring = group_ring_from_cayley_table(quotient_mult)
+
+        Q, proj = quo(G, N)
+
+        push!(
+            gradings,
+            Dict{String, Any}(
+                "partition" => partition,
+                "group_ring" => quotient_group_ring,
+                "normal_subgroup" => N,
+                "quotient_group" => Q,
+                "quotient_projection" => proj,
+                "cosets" => cosets,
+            ),
+        )
+    end
+
+    sort!(gradings, by = g -> -length(g["partition"]))
+
+    return gradings
 end
 
+
+function blocks_from_grading_pairs(grading::Vector{Pair{Int,Int}})
+    ngrades = maximum(last.(grading))
+    blocks = [Int[] for _ in 1:ngrades]
+
+    for p in grading
+        simple = first(p)
+        grade = last(p)
+        push!(blocks[grade], simple)
+    end
+
+    foreach(sort!, blocks)
+    return blocks
+end
+
+function merge_universal_blocks(universal_blocks::Vector{Vector{Int}}, cosets::Vector{Vector{Int}})
+    partition = Vector{Vector{Int}}()
+
+    for C in cosets
+        block = Int[]
+
+        for g in C
+            append!(block, universal_blocks[g])
+        end
+
+        push!(partition, sort(unique(block)))
+    end
+
+    sort!(partition, by = B -> minimum(B))
+
+    return partition
+end
+
+function quotient_mult_table(mult::AbstractMatrix{<:Integer}, cosets::Vector{Vector{Int}})
+    q = length(cosets)
+
+    element_to_coset = Dict{Int, Int}()
+
+    for (i, C) in pairs(cosets)
+        for g in C
+            element_to_coset[g] = i
+        end
+    end
+
+    quotient_mult = zeros(Int, q, q)
+
+    for A in 1:q
+        for B in 1:q
+            a = cosets[A][1]
+            b = cosets[B][1]
+            c = mult[a, b]
+
+            quotient_mult[A, B] = element_to_coset[c]
+        end
+    end
+
+    return quotient_mult
+end
+
+function group_ring_from_cayley_table(mult::AbstractMatrix{<:Integer})
+    q = size(mult, 1)
+
+    mt = zeros(Int, q, q, q)
+
+    for a in 1:q
+        for b in 1:q
+            c = mult[a, b]
+            mt[a, b, c] = 1
+        end
+    end
+
+    return replace_by_known(fusion_ring(mt))
+end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                    commutator                                   ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

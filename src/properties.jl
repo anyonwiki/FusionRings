@@ -473,12 +473,16 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
 
     short_circuit && sort(fpd1) ≠ sort(fpd2) && return nothing
 
+    # being self_conjugate is an invariant
+    sc1 = is_self_conjugate(fr1).(collect(1:r))
+    sc2 = is_self_conjugate(fr2).(collect(1:r))
+
     # construct invariants for all elements of both rings
     # these are couples of their fusion outcome count and 
     # their fpdims
 
-    inv1 = collect( zip( grp1, fpd1 ) )
-    inv2 = collect( zip( grp2, fpd2 ) )
+    inv1 = collect( zip( grp1, fpd1, sc1 ) )
+    inv2 = collect( zip( grp2, fpd2, sc2 ) )
 
     #sort invA and invB such that equal elements are next to each other.
     σ1 = sortperm(inv1)
@@ -514,44 +518,30 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
     end
 end
 
-# returns the symmetry group S of the sorted vector v together with 
+# returns the symmetry group S of the vector v together with 
 # the permutation σv that sorts v. The symmetries are thus of the form
-# inverseperm(σv) ∘ g ∘ σv
+# inverseperm(σv) ∘ g ∘ σv. If sorted=true it is assumed that v is sorted
 
-function symmetries( v::AbstractVector; sorted = false )::Tuple{PermGroup,Vector{Int64}}
+function symmetries( v; sorted = false )::Tuple{PermGroup,PermGroupElem}
     is_empty(v) && return nothing
 
     n = size(v,1)
 
-    n == 1 && return ( symmetric_group(1), [ 1 ] )
+    tocycles(v) = perm( symmetric_group(n), v )
+
+    n == 1 && return ( symmetric_group(1), tocycles( [1] )  )
 
     if sorted 
-        return ( _sorted_symmetries( v ), collect(1:n) )
+        return ( _sorted_symmetries(v), tocycles(1:n) )
     else
         σv = sortperm(v)
         vs = v[σv]
-        return ( _sorted_symmetries(vs), σv )
+        return ( _sorted_symmetries(vs), tocycles(σv) )
     end
 end
 
-function _sorted_symmetries( v::AbstractVector)::PermGroup
-    # compute the sizes n of the individual S_n
-    n = size(v,1)
-
-    degrees = Int64[1]
-
-    g_ind = 1
-    for i in 2:n
-        if v[i] == v[i-1] 
-            degrees[g_ind] = degrees[g_ind] + 1
-        else
-            push!(degrees,1)
-            g_ind = g_ind + 1
-        end
-    end
-    
-    return inner_direct_product( symmetric_group.( degrees ) )
-
+function _sorted_symmetries( v )::PermGroup
+    return inner_direct_product( symmetric_group.( tally(v)[2] ) )
 end
 
 

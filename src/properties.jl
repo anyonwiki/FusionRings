@@ -558,6 +558,10 @@ function diag_channel_count(N::Array{Int,3})::Vector{Tuple{Vector{Int},Vector{In
     [ tally( N[i,i,:], sort=true ) for i in 1:size(N,1) ]
 end
 
+function is_self_conjugate( fr )
+    x -> ( x == conjugate_element(fr,x) )
+end
+
 # Apply permutation P on all three indices: A'[i,j,k] = A[P[i],P[j],P[k]]
 function _permute_multtab(A::Array{Int,3}, P::Vector{Int})::Array{Int,3}
     r = size(A, 1)
@@ -949,83 +953,52 @@ So for each simple e I start w/ {e} and apply that until stabilizes:
 
 Note: the code is slightly different than that in anyonica but ive highlighted/commented the parts that match
 """
-function adjoint_irreps(ring::FusionRing)::Vector{Vector{Int}}
-    adRing = adjoint_fusion_ring(ring)   # Tuple{Vector{Int}, FusionRing}
+function adjoint_irreps(fr::FusionRing)::Vector{Vector{Int}}
+    adj_el, adj_ring = adjoint_fusion_ring(fr)   
 
-    # Action[{ring, adRing}, elements]
-    function _left_action(
-        pair::Tuple{FusionRing,Tuple{Vector{Int},FusionRing}},
-        elements::Vector{Int}
-    )::Vector{Int}
+    r = rank(fr)
 
-        fr, (subEl, _) = pair
-        seen = falses(rank(fr))
-        @inbounds for a in subEl, el in elements
-            for c in fusion_outcomes(fr, a, el)
+    # Functions that return all elements obtained by acting with adj_ring on some elements
+    # Left action
+    function left_action(elements::Vector{Int})::Vector{Int}
+        seen = falses(r)
+        @inbounds for a in adj_el, b in elements
+            for c in fusion_outcomes(fr, a, b)
                 seen[c] = true
             end
         end
         return findall(seen)
     end
 
-    # Action[elements, {ring, adRing}]
-    function _right_action(
-        elements::Vector{Int},
-        pair::Tuple{FusionRing,Tuple{Vector{Int},FusionRing}}
-    )::Vector{Int}
-        fr, (subEl, _) = pair
-        seen = falses(rank(fr))
-        @inbounds for el in elements, a in subEl
-            for c in fusion_outcomes(fr, el, a)
+    # Right action
+    function right_action(elements::Vector{Int})::Vector{Int}
+        seen = falses(r)
+        @inbounds for b in elements, a in adj_el 
+            for c in fusion_outcomes(fr, b, a)
                 seen[c] = true
             end
         end
         return findall(seen)
     end
 
-    # CombinedAction[{ring, adRing}][elements]
-    function _combined_action(
-        pair::Tuple{FusionRing,Tuple{Vector{Int},FusionRing}},
-        elements::Vector{Int}
-    )::Vector{Int}
-        sort!(unique!(vcat(
-            _left_action(pair, elements),
-            _right_action(elements, pair)
-        )))
+    # Combined action
+    function combined_action(elements::Vector{Int})::Vector{Int}
+        sort!(unique!(vcat( left_action(elements),right_action(elements))))
     end
-
-    pair = (ring, adRing)
 
     # FixedPoint[CombinedAction[pair], [e]]
-    function _closure(seed::Int)::Vector{Int}
+    function closure(seed::Int)::Vector{Int}
         cur = [seed]
         while true
-            nxt = _combined_action(pair, cur)
+            nxt = combined_action(cur)
             nxt == cur && return cur
             cur = nxt
         end
     end
 
-    blocks = Vector{Vector{Int}}()
-    for e in 1:rank(ring)
-        blk = _closure(e)
-        blk in blocks || push!(blocks, blk)
-    end
-
-    return blocks
+    return unique(closure.( collect(1:r) ) )
 end
 
-
-#Added: from updates/commutator
-#=
-Compute `irreps = adjoint_irreps(fr)` (partition of simples).
-
-Create group object with `n = length(irreps)` elements.
-`grading` maps each simple `x` to block index `a`.
-Multiplication table on the grading group is:
-    mt[a,b,c] = 1  iff  FusionOutcomes(i ⊗ j) ⊆ irreps[c]
-for all i ∈ irreps[a], j ∈ irreps[b].
-=#
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                universal_grading                                ┃
@@ -1035,7 +1008,7 @@ export universal_grading
 
 function universal_grading(fr::FusionRing)
     irreps = adjoint_irreps(fr)
-    n = length(irreps)
+    n = size(irreps,1)
 
     grading = Pair{Int,Int}[]
     @inbounds for a in 1:n
@@ -1046,10 +1019,9 @@ function universal_grading(fr::FusionRing)
     sort!(grading, by = p -> first(p))
 
     function _cond(l1::Vector{Int}, l2::Vector{Int}, l3::Vector{Int})::Bool
-        S = Set(l3)
         @inbounds for i in l1, j in l2
             for c in fusion_outcomes(fr, i, j)
-                c in S || return false
+                c ∉ l3 && return false
             end
         end
         true
@@ -1060,17 +1032,10 @@ function universal_grading(fr::FusionRing)
         mt[a,b,c] = _cond(irreps[a], irreps[b], irreps[c]) ? 1 : 0
     end
 
-    groupRing = fusion_ring(mt; labels = string.(1:n))
+    groupRing = fusion_ring(mt)
     return grading, replace_by_known(groupRing)
 end
 
-#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                                        UG                                       ┃
-#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-export UG
-
-UG(fr::FusionRing) = universal_grading(fr)
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                   all_gradings                                  ┃

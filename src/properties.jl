@@ -692,7 +692,7 @@ end
        use this because if rank(R) = 12, then possible tensor-factor ranks
       could be 2 and 6, or 3 and 4, or 2, 2, and 3.
 
-````
+```
 function multiplicative_partitions(n::Int; minfactor::Int=2)
     n == 1 && return [Int[]]
 

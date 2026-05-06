@@ -553,15 +553,6 @@ function _sorted_symmetries( v )::PermGroup
 end
 
 
-"""
-    _diag_channel_groups(N) -> Vector{Vector{Int}}
-
-Partition indices by invariant k(i)=|{c : N[i,i,c]>0}|.
-
-Return groups in deterministic order:
-- increasing k
-- increasing indices within each group
-"""
 function diag_channel_count(N::Array{Int,3})::Vector{Tuple{Vector{Int},Vector{Int}}}
     [ tally( N[i,i,:], sort=true ) for i in 1:size(N,1) ]
 end

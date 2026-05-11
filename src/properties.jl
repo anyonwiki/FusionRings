@@ -17,6 +17,8 @@ end
 #┃                                    rank                                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+#TODO: write test: rank(ring) = anyonwiki_code(ring)[1] 
+
 export rank
 
 function rank(r::FusionRing)::Int
@@ -67,6 +69,7 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  multiplicity                                   ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#TODO: write test: multiplicity(r) = anyonwiki_code(r)[2]
 
 export multiplicity
 
@@ -86,6 +89,9 @@ mult = multiplicity
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                           nonzero_structure_constants                           ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+#TODO: write test: check whether number of nonzero struct const is same as for data in 
+# folder test/testdata/properties/
 
 export nonzero_structure_constants
 
@@ -176,6 +182,7 @@ numeric_fpdim(fr::FusionRing) = sum(x->x*x, numeric_fpdims(fr))
 #┃                           num_self_dual_non_self_dual                           ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+
 export num_self_dual_non_self_dual
 
 function num_self_dual_non_self_dual(r::FusionRing)::Array{Int,1}
@@ -215,6 +222,7 @@ nsd = num_self_dual
 #┃                                num_non_self_dual                                ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+#TODO: write test: num_non_self_dual(ring) == anyonwiki_code(ring)[3] 
 export num_non_self_dual 
 
 function num_non_self_dual(r::FusionRing)::Int
@@ -388,6 +396,9 @@ end
 
 export is_sub_fusion_ring
 
+#TODO: write test that checks whether all fusion rings obained via sub_fusion_rings are fusion rings 
+#TODO: write test: pick some rings that are not sub fusion rings and check whether this is recognized
+
 """
     is_sub_fusion_ring(fr, S) -> Bool
 
@@ -418,6 +429,8 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                            is_equivalent_fusion_ring                            ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#TODO: write test: permute some rings and check whether is_equivalent_fusion_ring returns true
+#TODO: write test: take some rings with different codes and check whether we get false 
 
 export is_equivalent_fusion_ring
 
@@ -429,6 +442,8 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                which_permutation                                ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#TODO: write test: permute ring using a vector and check whether which_permutation(..., all=true) 
+# containts this vector 
 
 export which_permutation
 
@@ -581,8 +596,8 @@ export fusion_ring_automorphisms
 
 Return all permutations `p` whose action on the indices leave the structure constants invariant.
 """
+#TODO: write test: should match data in test/testdata/properties
 
-# TODO: test this
 function fusion_ring_automorphisms(fr::FusionRing)
    which_permutation( fr, fr, all= true )
 end

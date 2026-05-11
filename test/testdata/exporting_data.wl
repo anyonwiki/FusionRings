@@ -176,6 +176,10 @@ tptabs = tojson[
 exportjson[ "tensor_product_tables", tptabs ]
 
 
+(* ::Section:: *)
+(*Properties*)
+
+
 (* ::Subsection:: *)
 (*sub rings*)
 
@@ -337,6 +341,24 @@ exportjson[ "upper_central_series", json ]
 inputrings = FRBC/@codes;
 input = codes;
 output = Sort[Sort/@AdjointIrreps[#]]&/@inputrings/.r_FusionRing:>FC[r];
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: partition of basis of fusion ring into adjoint irreps. Each subset is sorted and the partition is sorted lexicographically on the subsets"
+];
+
+exportjson[ "adjoint_irreps", json ]
+
+
+(* ::Subsection:: *)
+(*universal grading*)
+
+
+inputrings = FRBC/@codes;
+input = codes;
+output = PMap[ UniversalGrading, inputrings]/.r_FusionRing:>FC[r];
 
 json = tojson[ 
 	input,

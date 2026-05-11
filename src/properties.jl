@@ -114,9 +114,9 @@ nzsc = nonzero_structure_constants
 
 export frobenius_perron_dimensions
 
-function frobenius_perron_dimensions(r::FusionRing)::Vector{QQBarFieldElem}
+function frobenius_perron_dimensions(r::FusionRing; force_compute=false)::Vector{QQBarFieldElem}
   stored_dims = r.frobenius_perron_dimensions 
-  if stored_dims===missing
+  if stored_dims===missing || force_compute
     mt = multiplication_table(r)
     multmats = [ matrix( ZZ, mt[i,:,:] ) for i in 1:rank(r) ]
     return [ first(eigenvalues(QQBar, A)) for A in multmats ]

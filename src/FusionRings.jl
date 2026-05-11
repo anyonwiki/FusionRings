@@ -31,13 +31,14 @@ This requires package data to be loaded (normally happens during `__init__`).
 """
 function from_anyonwiki_code(r::Integer, m::Integer, nnsd::Integer, i::Integer)
     _ensure_frd_initialized()
-    frd[Int[r, m, nnsd, i]]
+    frd[Int[r, m, nnsd][i]]
 end
 
 function from_anyonwiki_code(v::AbstractVector{<:Integer})
     _ensure_frd_initialized()
     length(v) == 4 || error("anyonwiki_code expects a vector of 4 integers.")
-    frd[Int.(collect(v))]
+    r, m, nnsd, i  = Int.collect(v)
+    frd[r,m,nnsd][i]
 end
 
 const fawc = from_anyonwiki_code
@@ -66,7 +67,24 @@ function __init__()
         )
     global frl = fusion_ring_list
 
-    global fusion_ring_dict = Dict( anyonwiki_code(r) => r for r in frl )
+    
+    # for unknown rings the first 3 indices of the anyonwiki_code can 
+    # be determined quickly. We will group the known fusion rings by 
+    # the first 3 indices and then, separately, by the 4th
+
+    grouped_by_first3 = Dict{Vector{Int64}, Vector{FusionRing}}()
+    for ring in frl
+        key = anyonwiki_code(ring)[1:3]
+        if !haskey(grouped_by_first3, key)
+            grouped_by_first3[key] = FusionRing[]
+        end
+        push!(grouped_by_first3[key], ring)
+    end
+
+    fourth_to_dict( v::Vector{FusionRing} ) = Dict( (r.anyonwiki_code)[4] => r for r in v )
+
+    global fusion_ring_dict = Dict( k => fourth_to_dict(v) for (k,v) in grouped_by_first3 )
+    #Dict( anyonwiki_code(r) => r for r in frl )
     global frd = fusion_ring_dict
 end
 

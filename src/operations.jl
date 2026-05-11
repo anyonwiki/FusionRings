@@ -53,38 +53,36 @@ export replace_by_known
 # safe_return=true makes the function return the original ring in case no built-in 
 # ring is found
 
-function replace_by_known( fr::FusionRing; keep_order=true, safe_return=true )
+function replace_by_known( fr::FusionRing; keep_order=true, safe_return=true )::FusionRing
     r = rank(fr)
     m = multiplicity(fr)
     n = nnsd(fr)
 
-    function possibly_equivalent( R::FusionRing )::Bool 
-        fc = anyonwiki_code(R)
-        fc[1] == r && fc[2] == m && fc[3] == n && return true
-    end
-
-    proposals = filter( possibly_equivalent, frl )
-
-
-    if isempty(proposals) 
+    if !haskey(frd, [r,m,n] )
         safe_return && return fr
         return missing
     end
+
+    proposals = collect(values(frd[[r,m,n]]))
 
     # find the permutation
-    ring_perm_couples = map( ring -> ( ring, which_permutation( ring, fr ) ), proposals )
+    p      = nothing
+    target = nothing
+    for ring in proposals 
+        p = which_permutation( ring, fr )
+        if p ≠ nothing 
+            target = ring 
+            break
+        end
+    end
 
-    target_ind = findfirst( tuple -> tuple[2] !== nothing, ring_perm_couples )
-
-    if target_ind === nothing 
+    if p === nothing 
         safe_return && return fr
         return missing
     end
 
-    target = ring_perm_couples[target_ind]
-
     if keep_order
-        permute( target[2][1], target[1] )
+        permute( p[1], target )
     else
         return target
     end

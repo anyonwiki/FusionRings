@@ -468,10 +468,14 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
 
     r == 1 && return [ [1] ]
 
-    # check whether rings have same multiplicity and number of selfdual elements
-    if short_circuit && ( mult(fr1) != mult(fr2) || fpdim(fr1) != fpdim(fr2) )
-        return nothing
-    end
+    # check whether rings have same multiplicity 
+    short_circuit &&  mult(fr1) != mult(fr2) && return nothing
+
+    # rings must have same fpdims
+    fpd1 = fpdims(fr1)
+    fpd2 = fpdims(fr2)
+
+    short_circuit && sort(fpd1) ≠ sort(fpd2) && return nothing
 
     # check whether number of fusion outcomes per multiplicity 
     # is the same for each element of fr1 and fr2 
@@ -483,20 +487,14 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
 
     short_circuit && sort(grp1) ≠ sort(grp2) && return nothing
 
-    # rings must have same fpdims
-    fpd1 = fpdims(fr1)
-    fpd2 = fpdims(fr2)
-
-    short_circuit && sort(fpd1) ≠ sort(fpd2) && return nothing
-
-    # being self_conjugate is an invariant
-    sc1 = is_self_conjugate(fr1).(collect(1:r))
-    sc2 = is_self_conjugate(fr2).(collect(1:r))
 
     # construct invariants for all elements of both rings
-    # these are couples of their fusion outcome count and 
-    # their fpdims
+    # these are triples of their fusion outcome count, fpdims
+    # and being self-conjugate or not
     # we remove the first element since it needs to be fixed
+
+    sc1 = is_self_conjugate(fr1).(collect(1:r))
+    sc2 = is_self_conjugate(fr2).(collect(1:r))
 
     inv1 = collect( zip( grp1, fpd1, sc1 ) )[2:end]
     inv2 = collect( zip( grp2, fpd2, sc2 ) )[2:end]

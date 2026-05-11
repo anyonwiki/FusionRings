@@ -625,7 +625,7 @@ end
 export tensor_product_decompositions
 
 
-
+###
 """
     tensor_product_decompositions(r::FusionRing; digits::Int=10)
 

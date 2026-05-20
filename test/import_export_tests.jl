@@ -1,4 +1,24 @@
 @testset "Import / export" begin
+#TODO: changes to import/export tests:
+#Added reference tests for mttojs and ring_to_dict
+#Used multiplication-table outputs from:
+#tensor_product_tables.json
+#to build FusionRing objects, export them to temporary JSON files, import them back, and compare multiplication tables.
+#For full multiplication tables, replaced ordinary check_equal with:
+#check_equal_tensor
+#Used creation/zn_tables.json
+#to verify that Anyonica-style nested multiplication tables can be decoded with:
+#mtfromjs(Dict("mult_tab" => ...))
+#Used rings from:fpdim.json
+#to check:
+#from_qqb_id(qqb_id(fpdim(r))) == fpdim(r)
+#Uses Anyonica multiplication tables from:
+#zn_tables.json
+#to build rings and check:
+
+#mttojs(r)
+#ring_to_dict(r)
+#mtfromjs(ring_to_dict(r))
 
     # ============================================================
     # QQBar ID helpers
@@ -7,7 +27,7 @@
     @testset "qqb_id / from_qqb_id" begin
         maybe_testset("basic", "1. basic construction") do
             r = zn_fusion_ring(2)
-            d = fpdim(r)   # should be a QQBarFieldElem
+            d = fpdim(r)
             s = qqb_id(d)
 
             check_true(s isa AbstractString,
@@ -34,8 +54,17 @@
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("fpdim.json")
+
+            for idx in oracle_case_indices("fpdim.json", data; max_cases = 8)
+                r = ring_from_anyonica_code(data["Input"][idx])
+                d = fpdim(r)
+                s = qqb_id(d)
+                d2 = from_qqb_id(s)
+
+                check_equal(d2, d,
+                    "from_qqb_id(qqb_id(fpdim(r))) failed for Anyonica fpdim.json case $idx")
+            end
         end
     end
 
@@ -97,7 +126,8 @@
             expected_mt[1,2,2] = 1
             expected_mt[2,1,2] = 1
             expected_mt[2,2,1] = 1
-            check_equal(mtfromjs(js_mt), expected_mt,
+
+            check_equal_tensor(mtfromjs(js_mt), expected_mt,
                 "mtfromjs did not reconstruct the expected Z2 multiplication table")
 
             js_bc = Dict("barcode" => "123456789")
@@ -157,8 +187,30 @@
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            # Creation fixtures give raw multiplication-table outputs.
+            # This tests that mtfromjs can decode Anyonica-style nested mult_tab data.
+            data = load_anyonica_data("zn_tables.json")
+
+            for idx in oracle_case_indices("zn_tables.json", data)
+                expected = json_int_3tensor(data["Output"][idx])
+                js = Dict("mult_tab" => data["Output"][idx])
+
+                check_equal_tensor(mtfromjs(js), expected,
+                    "mtfromjs failed to decode Anyonica zn_tables.json output case $idx")
+            end
+
+            # Properties fixtures use formal codes.  This tests both supported keys:
+            # formal_code and legacy anyonwiki_code.
+            props = load_anyonica_data("is_group_ring.json")
+
+            for idx in oracle_case_indices("is_group_ring.json", props; max_cases = 8)
+                code = json_int_vector(props["Input"][idx])
+
+                check_equal(fcfromjs(Dict("formal_code" => code)), code,
+                    "fcfromjs failed on formal_code for Anyonica properties case $idx")
+                check_equal(fcfromjs(Dict("anyonwiki_code" => code)), code,
+                    "fcfromjs failed on anyonwiki_code for Anyonica properties case $idx")
+            end
         end
     end
 
@@ -216,8 +268,16 @@
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("fpdims.json")
+
+            for idx in oracle_case_indices("fpdims.json", data; max_cases = 8)
+                expected = numeric_vector_from_json(data["Output"][idx])
+                encoded = [[x, 0.0] for x in expected]
+                decoded = nfpdsfromjs(Dict("numeric_frobenius_perron_dimensions" => encoded))
+
+                check_equal(decoded, ComplexF64[x + 0.0im for x in expected],
+                    "nfpdsfromjs failed to decode Anyonica-style FP dimensions case $idx")
+            end
         end
     end
 
@@ -292,8 +352,20 @@
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("zn_tables.json")
+
+            for idx in oracle_case_indices("zn_tables.json", data)
+                r = fusion_ring(json_int_3tensor(data["Output"][idx]); skip_check = true)
+
+                check_equal(mttojs(r), data["Output"][idx],
+                    "mttojs did not reproduce Anyonica zn_tables.json output case $idx")
+
+                d = ring_to_dict(r)
+                check_true(haskey(d, "mult_tab"),
+                    "ring_to_dict output did not include mult_tab for Anyonica zn_tables.json case $idx")
+                check_equal_tensor(mtfromjs(d), multiplication_table(r),
+                    "mtfromjs(ring_to_dict(r)) failed for Anyonica zn_tables.json case $idx")
+            end
         end
     end
 
@@ -325,7 +397,7 @@
                 export_ring(file, r)
                 r2 = import_ring(file)
 
-                check_equal(multiplication_table(r2), multiplication_table(r),
+                check_equal_tensor(multiplication_table(r2), multiplication_table(r),
                     "import_ring(export_ring(r)) did not preserve the multiplication table")
                 check_equal(rank(r2), rank(r),
                     "import_ring(export_ring(r)) did not preserve the rank")
@@ -335,9 +407,23 @@
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO:
-            # Add parity against exported Anyonica JSON fixtures
-            @test true
+            data = load_anyonica_data("tensor_product_tables.json")
+
+            for idx in oracle_case_indices("tensor_product_tables.json", data; max_cases = 6)
+                r = fusion_ring(json_int_3tensor(data["Output"][idx]); skip_check = true)
+
+                mktempdir() do dir
+                    file = joinpath(dir, "anyonica_tensor_product_case_$idx.json")
+
+                    export_ring(file, r)
+                    r2 = import_ring(file)
+
+                    check_equal_tensor(multiplication_table(r2), multiplication_table(r),
+                        "import_ring(export_ring(r)) failed for Anyonica tensor_product_tables.json output case $idx")
+                    check_equal(rank(r2), rank(r),
+                        "import_ring(export_ring(r)) did not preserve rank for Anyonica tensor_product_tables.json output case $idx")
+                end
+            end
         end
     end
 
@@ -370,7 +456,6 @@
             check_true(haskey(d, "info"),
                 "rings_to_dict output did not contain key \"info\"")
 
-            # Depending on current import_rings JSON shape assumptions, this may expose a bug.
             mktempdir() do dir
                 file = joinpath(dir, "rings.json")
                 export_rings(file, rs)
@@ -378,13 +463,34 @@
                 loaded = import_rings(file)
                 check_equal(length(loaded), length(rs),
                     "import_rings(export_rings(rs)) did not preserve the number of rings")
+
+                for i in eachindex(rs)
+                    check_equal_tensor(multiplication_table(loaded[i]), multiplication_table(rs[i]),
+                        "import_rings(export_rings(rs)) did not preserve multiplication table for ring $i")
+                end
             end
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("is_group_ring.json")
+            inds = oracle_case_indices("is_group_ring.json", data; max_cases = 5)
+
+            rs = [ring_from_anyonica_code(data["Input"][idx]) for idx in inds]
+
+            mktempdir() do dir
+                file = joinpath(dir, "anyonica_rings.json")
+
+                export_rings(file, rs)
+                loaded = import_rings(file)
+
+                check_equal(length(loaded), length(rs),
+                    "import_rings(export_rings(rs)) did not preserve number of Anyonica reference rings")
+
+                for i in eachindex(rs)
+                    check_equal_tensor(multiplication_table(loaded[i]), multiplication_table(rs[i]),
+                        "import_rings(export_rings(rs)) did not preserve Anyonica reference ring $i")
+                end
+            end
         end
     end
-
 end

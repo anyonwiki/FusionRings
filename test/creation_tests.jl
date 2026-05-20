@@ -85,8 +85,15 @@
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO: add imported reference cases
-            @test true
+            data = load_anyonica_data("zn_tables.json")
+
+            for idx in oracle_case_indices("zn_tables.json", data)
+                mt = json_int_3tensor(data["Output"][idx])
+                r = fusion_ring(mt; skip_check = true)
+
+                check_equal_tensor(multiplication_table(r), mt,
+                    "fusion_ring could not reconstruct Anyonica zn_tables.json table case $idx")
+            end
         end
 
         if want_level("basic") || want_level("intermediate")
@@ -121,6 +128,7 @@
                     () -> fusion_ring(mt_bad_unit; labels = ["0", "1"]),
                     "fusion_ring accepted a multiplication table whose first basis element was not a unit"
                 )
+
                 mt_bad_inverse = make_z2_mt()
                 mt_bad_inverse[2,2,2] = 1
                 check_throws(
@@ -192,7 +200,6 @@
             check_true(is_group_ring(z3), "zn_fusion_ring(3) was not detected as a group ring")
             check_true(is_group_ring(z4), "zn_fusion_ring(4) was not detected as a group ring")
 
-            # In Z3: indices 1,2,3 correspond to 0,1,2 mod 3
             mt1 = multiplication_table(z3)
             check_equal(mt1[1, 1, 1], 1,
                 "vacuum × vacuum was not vacuum in zn_fusion_ring(3)")
@@ -201,17 +208,20 @@
             check_equal(mt1[2, 3, 1], 1,
                 "index 2 × index 3 in zn_fusion_ring(3) was not vacuum")
 
-            # In Z4: 2+2 = 0 mod 4? careful with indexing:
-            # indices 1,2,3,4 ↔ 0,1,2,3
-            # so 3×3 ↔ 2+2 = 0, i.e. vacuum
             mt2 = multiplication_table(z4)
             check_equal(mt2[3, 3, 1], 1,
                 "index 3 × index 3 in zn_fusion_ring(4) was not vacuum")
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("zn_tables.json")
+
+            for idx in oracle_case_indices("zn_tables.json", data)
+                n = json_int(data["Input"][idx])
+
+                check_mt_equal(zn_fusion_ring(n), data["Output"][idx],
+                    "zn_fusion_ring($n) did not match Anyonica zn_tables.json case $idx")
+            end
         end
     end
 
@@ -254,21 +264,24 @@
             check_true(is_commutative(r2), "su2k_fusion_ring(2) was not commutative")
             check_true(is_commutative(r3), "su2k_fusion_ring(3) was not commutative")
 
-            # SU(2)_1 behaves like Z2
             mt1 = multiplication_table(r1)
             check_equal(mt1[2, 2, 1], 1,
                 "nontrivial simple squared in su2k_fusion_ring(1) was not vacuum")
 
-            # SU(2)_2 has labels 0,1,2.
-            # Fusion rule: 1⊗1 = 0 + 2  (indices 2⊗2 = 1 + 3)
             mt2 = multiplication_table(r2)
-            check_equal(mt2[2, 2, :], [ 1, 0, 1  ],
+            check_equal(mt2[2, 2, :], [1, 0, 1],
                 "index 2 × index 2 in su2k_fusion_ring(2) was not vacuum + top object")
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("su2k_tables.json")
+
+            for idx in oracle_case_indices("su2k_tables.json", data)
+                k = json_int(data["Input"][idx])
+
+                check_mt_equal(su2k_fusion_ring(k), data["Output"][idx],
+                    "su2k_fusion_ring($k) did not match Anyonica su2k_tables.json case $idx")
+            end
         end
     end
 
@@ -302,15 +315,20 @@
             check_true(is_commutative(r4), "psu2k_fusion_ring(4) was not commutative")
             check_true(is_commutative(r6), "psu2k_fusion_ring(6) was not commutative")
 
-            # PSU(2)_2 should also be rank 2 and behave like Z2
             mt1 = multiplication_table(r2)
             check_equal(mt1[2, 2, 1], 1,
                 "nontrivial simple squared in psu2k_fusion_ring(2) was not vacuum")
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("psu2k_tables.json")
+
+            for idx in oracle_case_indices("psu2k_tables.json", data)
+                k = json_int(data["Input"][idx])
+
+                check_mt_equal(psu2k_fusion_ring(k), data["Output"][idx],
+                    "psu2k_fusion_ring($k) did not match Anyonica psu2k_tables.json case $idx")
+            end
         end
     end
 
@@ -351,13 +369,28 @@
 
             check_equal(rank(meta), rank(odd),
                 "metaplectic_fusion_ring(5) did not have the same rank as son2_fusion_ring(5)")
-            check_equal(multiplication_table(meta), multiplication_table(odd),
+            check_equal_tensor(multiplication_table(meta), multiplication_table(odd),
                 "metaplectic_fusion_ring(5) did not match son2_fusion_ring(5)")
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("son2_tables.json")
+
+            for idx in oracle_case_indices("son2_tables.json", data)
+                N = json_int(data["Input"][idx])
+                expected = data["Output"][idx]
+
+                if N < 4
+                    # Anyonica exports SO(N)_2 for N = 1,2,3, but the
+                    # current Julia constructor intentionally requires N ≥ 4.
+                    @test_broken multiplication_table(son2_fusion_ring(N)) == json_int_3tensor(expected)
+                else
+                    check_mt_equal(son2_fusion_ring(N), expected,
+                        "son2_fusion_ring($N) did not match Anyonica son2_tables.json case $idx")
+                    check_mt_equal(metaplectic_fusion_ring(N), expected,
+                        "metaplectic_fusion_ring($N) did not match Anyonica son2_tables.json case $idx")
+                end
+            end
         end
 
         if want_level("basic") || want_level("intermediate")
@@ -370,7 +403,9 @@
         end
     end
 
-    #group_fusion_ring:
+    # ============================================================
+    # group_fusion_ring
+    # ============================================================
 
     @testset "group_fusion_ring" begin
         z2_tab = [
@@ -431,18 +466,21 @@
             check_true(is_commutative(r3),
                 "group_fusion_ring on the Z3 Cayley table was not commutative")
 
-            r2 = group_fusion_ring(z2_tab)
-            r3 = group_fusion_ring(z3_tab)
-
-            check_equal(multiplication_table(r2), multiplication_table(zn_fusion_ring(2)),
+            check_equal_tensor(multiplication_table(r2), multiplication_table(zn_fusion_ring(2)),
                 "group_fusion_ring(Z2 table) did not match zn_fusion_ring(2)")
-            check_equal(multiplication_table(r3), multiplication_table(zn_fusion_ring(3)),
+            check_equal_tensor(multiplication_table(r3), multiplication_table(zn_fusion_ring(3)),
                 "group_fusion_ring(Z3 table) did not match zn_fusion_ring(3)")
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("grouptables.json")
+
+            for idx in oracle_case_indices("grouptables.json", data)
+                tab = json_int_matrix(data["Input"][idx])
+
+                check_mt_equal(group_fusion_ring(tab), data["Output"][idx],
+                    "group_fusion_ring did not match Anyonica grouptables.json case $idx")
+            end
         end
 
         if want_level("basic") || want_level("intermediate")
@@ -493,8 +531,18 @@
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("grouptables.json")
+
+            for idx in oracle_case_indices("grouptables.json", data)
+                tab = json_int_matrix(data["Input"][idx])
+
+                check_true(FusionRings._is_group_table(tab),
+                    "_is_group_table rejected Anyonica grouptables.json input case $idx")
+
+                inv = FusionRings._inverse_vector(tab)
+                check_true(all(i -> tab[i, inv[i]] == 1 && tab[inv[i], i] == 1, 1:size(tab, 1)),
+                    "_inverse_vector did not return two-sided inverses for Anyonica grouptables.json case $idx")
+            end
         end
     end
 
@@ -557,26 +605,27 @@
             check_equal(size(multiplication_table(r3)), (4,4,4),
                 "TY_fusion_ring(Z3) multiplication table had wrong size")
 
-            r2 = TY_fusion_ring(z2_tab)
-
-            # last object is m
             m = rank(r2)
-
-            # group element × m = m
             mt1 = multiplication_table(r2)
-            check_equal(mt1[1, m, m ], 1,
+
+            check_equal(mt1[1, m, m], 1,
                 "vacuum × m was not m in TY_fusion_ring(Z2)")
-            check_equal(mt1[2, m, m ], 1,
+            check_equal(mt1[2, m, m], 1,
                 "nontrivial group element × m was not m in TY_fusion_ring(Z2)")
 
-            # m × m = sum of group elements
-            check_equal(mt1[m, m, : ], [ 1, 1, 0 ],
+            check_equal(mt1[m, m, :], [1, 1, 0],
                 "m × m in TY_fusion_ring(Z2) was not the sum of all group elements")
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("TY_tables.json")
+
+            for idx in oracle_case_indices("TY_tables.json", data)
+                tab = json_int_matrix(data["Input"][idx])
+
+                check_mt_equal(TY_fusion_ring(tab), data["Output"][idx],
+                    "TY_fusion_ring did not match Anyonica TY_tables.json case $idx")
+            end
         end
 
         if want_level("basic") || want_level("intermediate")
@@ -589,9 +638,10 @@
         end
     end
 
-    #FusiongRingHI:
+    # ============================================================
+    # HI_fusion_ring
+    # ============================================================
 
-    
     @testset "HI_fusion_ring" begin
         z2_tab = [
             1 2
@@ -631,10 +681,8 @@
             check_equal(labels(r), ["1", "2", "ρ₁", "ρ₂"],
                 "HI_fusion_ring(Z2) labels were incorrect")
 
-            r = HI_fusion_ring(z2_tab)
             mt1 = multiplication_table(r)
 
-            # First two are group sector, last two are rho sector
             check_equal(mt1[1, 1, 1], 1,
                 "vacuum × vacuum was not vacuum in HI_fusion_ring(Z2)")
             check_equal(mt1[1, 3, 3], 1,
@@ -642,8 +690,14 @@
         end
 
         maybe_testset("reference", "3. reference / Anyonica parity") do
-            # TODO
-            @test true
+            data = load_anyonica_data("HI_tables.json")
+
+            for idx in oracle_case_indices("HI_tables.json", data)
+                tab = json_int_matrix(data["Input"][idx])
+
+                check_mt_equal(HI_fusion_ring(tab), data["Output"][idx],
+                    "HI_fusion_ring did not match Anyonica HI_tables.json case $idx")
+            end
         end
 
         if want_level("basic") || want_level("intermediate")
@@ -660,5 +714,4 @@
             end
         end
     end
-
 end

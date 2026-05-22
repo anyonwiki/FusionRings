@@ -40,6 +40,8 @@ function comap( arr, arg )
   [ f(arg) for f in arr ]
 end
 
+# For more info on working with number fields, see Hecke/src/Map/Numfield.jl
+
 export to_composite_field
 
 function to_composite_field(

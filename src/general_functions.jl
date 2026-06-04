@@ -42,6 +42,8 @@ end
 
 # For more info on working with number fields, see Hecke/src/Map/Numfield.jl
 
+Base.adjoint(z::QQBarFieldElem) = adj(z)
+
 export to_composite_field
 
 function to_composite_field(

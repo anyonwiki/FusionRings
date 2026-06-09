@@ -17,7 +17,7 @@ end
 #┃                                    rank                                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-#TODO: write test: rank(ring) = anyonwiki_code(ring)[1] 
+#TODO: write test: rank(ring) = anyonwiki_code(ring)[1]
 
 export rank
 
@@ -29,7 +29,7 @@ end
 #┃                                    names                                        ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-export names 
+export names
 
 function names(r::FusionRing)::Array{String,1}
   return r.names
@@ -45,7 +45,7 @@ function tex_names(r::FusionRing)::Array{String,1}
   return r.texnames
 end
 
- 
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                    labels                                       ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -90,14 +90,14 @@ mult = multiplicity
 #┃                           nonzero_structure_constants                           ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-#TODO: write test: check whether number of nonzero struct const is same as for data in 
+#TODO: write test: check whether number of nonzero struct const is same as for data in
 # folder test/testdata/properties/
 
 export nonzero_structure_constants
 
 function nonzero_structure_constants(r::FusionRing)::Vector{Tuple{Int64, Int64, Int64}}
   mt = multiplication_table(r)
-  Tuple.( findall( x -> x > 0, mt ) ) 
+  Tuple.( findall( x -> x > 0, mt ) )
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -115,7 +115,7 @@ nzsc = nonzero_structure_constants
 export frobenius_perron_dimensions
 
 function frobenius_perron_dimensions(r::FusionRing; force_compute=false)::Vector{QQBarFieldElem}
-  stored_dims = r.frobenius_perron_dimensions 
+  stored_dims = r.frobenius_perron_dimensions
   if stored_dims===missing || force_compute
     mt = multiplication_table(r)
     multmats = [ matrix( ZZ, mt[i,:,:] ) for i in 1:rank(r) ]
@@ -129,7 +129,7 @@ end
 #┃                                     fpdims                                      ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-export fpdims 
+export fpdims
 
 fpdims = frobenius_perron_dimensions
 
@@ -222,8 +222,8 @@ nsd = num_self_dual
 #┃                                num_non_self_dual                                ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-#TODO: write test: num_non_self_dual(ring) == anyonwiki_code(ring)[3] 
-export num_non_self_dual 
+#TODO: write test: num_non_self_dual(ring) == anyonwiki_code(ring)[3]
+export num_non_self_dual
 
 function num_non_self_dual(r::FusionRing)::Int
   last( nsdnsd(r) )
@@ -233,7 +233,7 @@ end
 #┃                                     nnsd                                        ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-export nnsd 
+export nnsd
 
 nnsd = num_non_self_dual
 
@@ -309,7 +309,7 @@ end
 #┃                                    barcode                                      ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-export barcode 
+export barcode
 
 function barcode(r::FusionRing)
   return r.barcode
@@ -339,7 +339,7 @@ function sub_fusion_rings(r::FusionRing)
     else
         subsets = sub_fusion_ring_subsets
         [
-            Dict( 
+            Dict(
                 "injection"   => s,
                 "fusion_ring" => replace_by_known(fusion_ring(mt[s,s,s]))
             )
@@ -367,20 +367,20 @@ function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
 
 
     result = Vector{Int}[]
-    
+
     # group elements by conjugacy since if a is part of subring a* also has to be
-    pairs = conjugate_pairs(fr)[2:end] 
+    pairs = conjugate_pairs(fr)[2:end]
     np    = size(pairs,1)
 
     # flatten conjugate_pairs back to 1D vector
     function flatten(l::Vector{Vector{Int}})
         res = Int[]
-        for vec ∈ l, el ∈ vec 
+        for vec ∈ l, el ∈ vec
             push!(res,el)
         end
         return res
     end
-    
+
     for k ∈ 1:(np-1), subset in combinations(pairs, k)
         S = vcat( [1], flatten(collect(subset)) )
         if is_sub_fusion_ring(fr, S )
@@ -396,7 +396,7 @@ end
 
 export is_sub_fusion_ring
 
-#TODO: write test that checks whether all fusion rings obained via sub_fusion_rings are fusion rings 
+#TODO: write test that checks whether all fusion rings obained via sub_fusion_rings are fusion rings
 #TODO: write test: pick some rings that are not sub fusion rings and check whether this is recognized
 
 """
@@ -418,9 +418,9 @@ function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
 
     mt = multiplication_table(fr)[S,S,S]
 
-    check_struct_const(mt) && 
+    check_struct_const(mt) &&
     check_mt_dims(mt) &&
-    check_unit(mt) && 
+    check_unit(mt) &&
     check_inverse(mt) &&
     check_associativity(mt)
 end
@@ -430,7 +430,7 @@ end
 #┃                            is_equivalent_fusion_ring                            ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 #TODO: write test: permute some rings and check whether is_equivalent_fusion_ring returns true
-#TODO: write test: take some rings with different codes and check whether we get false 
+#TODO: write test: take some rings with different codes and check whether we get false
 
 export is_equivalent_fusion_ring
 
@@ -442,33 +442,33 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                which_permutation                                ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#TODO: write test: permute ring using a vector and check whether which_permutation(..., all=true) 
-# containts this vector 
+#TODO: write test: permute ring using a vector and check whether which_permutation(..., all=true)
+# containts this vector
 
 export which_permutation
 
 """
-    which_permutation(fr1, fr2, all=false, short_circuit=true)::Union{Nothing,Vector{Int64}} 
+    which_permutation(fr1, fr2, all=false, short_circuit=true)::Union{Nothing,Vector{Int64}}
 
     Returns a list with a permutation such that `permute( perm, fr1 ) == fr2` or nothing if none exist.
     If all=true, returns all permutations such that `permute( perm, fr1 ) == fr2` or nothing if none exist.
-    If short_circuit=false, doesn't compute invariants to determine whether rings are  
+    If short_circuit=false, doesn't compute invariants to determine whether rings are
     not equivalent. This saves time if it is known a priori that the rings have to be equivalent.
 """
-function which_permutation(fr1::FusionRing, fr2::FusionRing; 
-    all=false, 
+function which_permutation(fr1::FusionRing, fr2::FusionRing;
+    all=false,
     short_circuit = true)::Union{Nothing,Vector{Vector{Int64}}}
 
     r = rank(fr1)
 
     # if ranks are different we can't compare so necessary to short_circuit
-    # since computation of number selfdual & non-selfdual elements is as 
-    # fast and gives stronger invariant, we use that one instead 
-    nsdnsd(fr1) != nsdnsd(fr2) && return nothing 
+    # since computation of number selfdual & non-selfdual elements is as
+    # fast and gives stronger invariant, we use that one instead
+    nsdnsd(fr1) != nsdnsd(fr2) && return nothing
 
     r == 1 && return [ [1] ]
 
-    # check whether rings have same multiplicity 
+    # check whether rings have same multiplicity
     short_circuit &&  mult(fr1) != mult(fr2) && return nothing
 
     # rings must have same fpdims
@@ -477,8 +477,8 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
 
     short_circuit && sort(fpd1) ≠ sort(fpd2) && return nothing
 
-    # check whether number of fusion outcomes per multiplicity 
-    # is the same for each element of fr1 and fr2 
+    # check whether number of fusion outcomes per multiplicity
+    # is the same for each element of fr1 and fr2
     m1 = multiplication_table(fr1)
     m2 = multiplication_table(fr2)
 
@@ -512,22 +512,22 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
     sm1 = m1[ uσ1, uσ1, uσ1 ]
     sm2 = m2[ uσ2, uσ2, uσ2 ]
 
-    sorted_inv1 = inv1[σ1] 
+    sorted_inv1 = inv1[σ1]
 
     S, _ = symmetries(sorted_inv1, sorted = true)
 
     if !all  # only need first permutation
-        for σ ∈ S 
+        for σ ∈ S
             p = addunit( Vector(σ,r-1) )
             if sm1[p,p,p] == sm2
                 iuσ2 = invperm(uσ2)
                 return [ iuσ2[p[uσ1]] ]
             end
         end
-    else # want all permutations 
+    else # want all permutations
         allperms = Vector{Int}[]
 
-        for σ ∈ S 
+        for σ ∈ S
             p = addunit( Vector(σ,r-1) )
             if sm1[p,p,p] == sm2
                 iuσ2 = invperm(uσ2)
@@ -539,7 +539,7 @@ function which_permutation(fr1::FusionRing, fr2::FusionRing;
     end
 end
 
-# returns the symmetry group S of the vector v together with 
+# returns the symmetry group S of the vector v together with
 # the permutation σv that sorts v. The symmetries are thus of the form
 # inverseperm(σv) ∘ g ∘ σv. If sorted=true it is assumed that v is sorted
 
@@ -552,7 +552,7 @@ function symmetries( v; sorted = false )::Tuple{PermGroup,PermGroupElem}
 
     n == 1 && return ( symmetric_group(1), tocycles( [1] )  )
 
-    if sorted 
+    if sorted
         return ( _sorted_symmetries(v), tocycles(1:n) )
     else
         σv = sortperm(v)
@@ -629,7 +629,7 @@ export tensor_product_decompositions
 
 Return decompositions of `r` as tensor products of fusion rings.
 
-combines: 
+combines:
 1. known-ring search;
 2. internal subring discovery;
 3. Frobenius-Perron dimension signatures.
@@ -1080,7 +1080,7 @@ function discover_tensor_product_decompositions(r::FusionRing; digits::Int=10)
 end
 
 
- 
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                adjoint_fusion_ring                              ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -1160,7 +1160,7 @@ export is_nilpotent
 function is_nilpotent(r::FusionRing)::Bool
     chain = upper_central_series(r)
     last_set, last_ring = last(chain)
-    return length(last_set) == 1 
+    return length(last_set) == 1
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1190,13 +1190,13 @@ So for each simple e I start w/ {e} and apply that until stabilizes:
     X₁ = θ(X₀)
     X₂ = θ(X₁)
     ...
-    Xₙ = θ(Xₙ₋₁) until Xₙ == Xₙ₋₁ 
+    Xₙ = θ(Xₙ₋₁) until Xₙ == Xₙ₋₁
     Then obv remove duplicates at the end
 
 Note: the code is slightly different than that in anyonica but ive highlighted/commented the parts that match
 """
 function adjoint_irreps(fr::FusionRing)::Vector{Vector{Int}}
-    adj_el, adj_ring = adjoint_fusion_ring(fr)   
+    adj_el, adj_ring = adjoint_fusion_ring(fr)
 
     r = rank(fr)
 
@@ -1215,7 +1215,7 @@ function adjoint_irreps(fr::FusionRing)::Vector{Vector{Int}}
     # Right action
     function right_action(elements::Vector{Int})::Vector{Int}
         seen = falses(r)
-        @inbounds for b in elements, a in adj_el 
+        @inbounds for b in elements, a in adj_el
             for c in fusion_outcomes(fr, b, a)
                 seen[c] = true
             end
@@ -1289,7 +1289,7 @@ export all_gradings
 
 Return all gradings of fr
 
-Every grading  obtained from  universal grading by quotienting 
+Every grading  obtained from  universal grading by quotienting
 universal grading group by a normal subgroup.
 
     C = ⨁_{g ∈ U} C_g
@@ -1299,11 +1299,14 @@ where N is a normal subgroup of U.
 """
 
 function all_gradings(fr::FusionRing)
+    ag = fr.all_gradings
+    !ismissing(ag) && return ag
+
     grading, universal_group = universal_grading(fr)
 
     universal_blocks = blocks_from_grading_pairs(grading)
 
-    G = to_group(universal_group)
+    G    = to_group(universal_group)
     mult = cayley_table(universal_group)
 
     gradings = Vector{Dict{String, Any}}()
@@ -1448,12 +1451,12 @@ end
 #┃                                    characters                                   ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-export characters 
+export characters
 
 function characters(ring::FusionRing; use_numerics = true )
   if !(ring.characters === missing)
     return from_qqb_id( ring.characters )
-  elseif !FusionRings.is_commutative(ring) 
+  elseif !FusionRings.is_commutative(ring)
     error("Calculation of characters for non-commutative fusion ring is not implemented yet.")
   elseif rank(ring) == 1
     return [ qqbar(1) ]
@@ -1462,7 +1465,7 @@ function characters(ring::FusionRing; use_numerics = true )
     r    = rank( ring )
     mats = [ mt[i,:,:] for i in 1:r ]
     qqb  = algebraic_closure(QQ)
-    
+
     sort_mat( mat ) = sortslices( mat, dims = 1, by = char_sort_crit )
 
     if use_numerics
@@ -1535,7 +1538,7 @@ function diagonalizing_matrix( mats )
   proposed_mat = qqbmats[1]
 
   r = first( size( first( mats ) ) )
-    
+
   diagq = false; upi = 4; upj = 4
 
   while !diagq
@@ -1551,8 +1554,8 @@ function diagonalizing_matrix( mats )
     end
 
     # Find diagonalizing matrix
-    proposed_mat = 
-      reduce( 
+    proposed_mat =
+      reduce(
         vcat,
         (collect ∘ values ∘ eigenspaces)( combinedmat )
       )
@@ -1561,7 +1564,7 @@ function diagonalizing_matrix( mats )
     diagq = is_diagonalizing_matrix( proposed_mat, qqbmats )
   end
 
-  return proposed_mat 
+  return proposed_mat
 end
 
 # Sort criterion for characters
@@ -1573,7 +1576,7 @@ function char_sort_crit( v )
 	absval(vec) = conv.( RR.( abs2.( vec ) ) )
 	# Angles of elements of v
 	angl(vec) = conv.( real.( log.( CC.( vec ) ) ./ CC( 2 * pi * im ) ) )
-			
+
 	( - Int( all( isreal.(v) ) ) , angl(v), absval(v) )
 end
 
@@ -1590,6 +1593,20 @@ function is_diagonalizing_matrix( mat, ring::FusionRing )
 
   all( is_diagonal( mat * m * inv(mat) ) for m in mats )
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                formal_codegrees                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export formal_codegrees
+
+function formal_codegrees(fr::FusionRing)::Vector{QQBarFieldElem}
+  chars = characters(fr)
+  d  = conjugate_element(fr)
+
+  sum( chars[i,:]' * chars[d(i),:] for i in 1:r )
+end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                               numeric_characters                                ┃
@@ -1649,7 +1666,7 @@ end
 
 function projective_SL_2_ZZ_reps( fr::FusionRing )
     md = fr.projective_SL2Z_reps
-    if md !== missing 
+    if md !== missing
         return md
     else
         error("No data available and calculation not implemented yet")
@@ -1802,4 +1819,3 @@ function _k_subsets(n::Int, k::Int)
     go(1,1)
     out
 end
-

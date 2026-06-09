@@ -1139,7 +1139,6 @@ end
 
 export upper_central_series
 
-#Added: from branch feat/adjoint_upper
 function upper_central_series(fr::FusionRing)
     chain = Tuple{Vector{Int},FusionRing}[]
     push!(chain, (collect(1:rank(fr)), fr))
@@ -1151,6 +1150,10 @@ function upper_central_series(fr::FusionRing)
     end
     chain
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_nilpotent                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export is_nilpotent
 
@@ -1177,8 +1180,7 @@ under left and right action of the adjoint subring.
       X -> Action[(ring, adjoint), X] ∪ Action[X, (ring, adjoint)]
 - remove duplicates
 
-More simply (this is mostly for me to remember lol): 
-let (S,A) be adjoint subring of R where S is set of simple indices in that subring
+More simply, let (S,A) be adjoint subring of R where S is set of simple indices in that subring
 For subset X of simples def:
     Left action: S*X = \$⋃_{a∈S, x∈X} Sup(a⊗x)
     Right action: X*S = \$⋃_{x∈X, a∈S} Sup(x⊗a)
@@ -1289,8 +1291,6 @@ Return all gradings of fr
 
 Every grading  obtained from  universal grading by quotienting 
 universal grading group by a normal subgroup.
-
-
 
     C = ⨁_{g ∈ U} C_g
 

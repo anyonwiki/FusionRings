@@ -30,7 +30,6 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
-# TODO: might want to test whether it is quicker to convert characters to QQBar first
 
 function pdc_criterion( fr::FusionRing )::Bool
   !is_commutative(fr) && return false

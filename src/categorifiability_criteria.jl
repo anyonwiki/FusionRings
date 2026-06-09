@@ -16,7 +16,7 @@ function csp_criterion( ring::FusionRing )
         s = sum( chars[ i, j1 ] * chars[ i, j2 ] * chars[ i, j3 ] / chars[ i, 1 ] for i in 1:r )
         if is_real(s) && s < 0
             return true
-        else 
+        else
             continue
         end
     end
@@ -30,27 +30,23 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
-function pdc_criterion( r::FusionRing )
-#
-# PDCCriterion[ ring_FusionRing?CommutativeQ ] :=
-#   Module[{chars,c},
-#     chars =
-#       FusionRingCharacters[ring];
-#     c =
-#       #.ConjugateTranspose[#]& /@ chars;
-#
-#     Catch[
-#       Do[
-#         If[
-#           And @@ Flatten @ AlgebraicIntegerQ[ c[[j]] / c ],
-#           Throw[ False ]
-#         ],
-#         { j, Length[c] }
-#       ];
-#       True
-#     ]
-#
-#   ];
+# TODO: might want to test whether it is quicker to convert characters to QQBar first
+
+function pdc_criterion( fr::FusionRing )::Bool
+  !is_commutative(fr) && return false
+
+  r = rank(fr)
+  fcds = formal_codegrees(fr)
+
+  for j in 1:r
+    ratios = [ fcds[j]/fcds[i] for i in 1:r ]
+    if all( is_algebraic_integer, ratios  )
+      return false
+    end
+  end
+
+  return true
+
 end
 
 
@@ -59,6 +55,12 @@ end
 #┃                    pseudo-unitary drinfeld center criterion                     ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+#function pudc_criterion(fr::FusionRing)
+#  !is_commutative(fr) && return false
+#
+#  chars = characters(fr)
+#
+#end
 #  Returns True if ring has no complex pseudo-unitary categorification
 #
 #
@@ -74,41 +76,40 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                               D-number criterion                                ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#  
-# The function returns true if the fusion ring cannot be categorified.
+# Source:https://arxiv.org/pdf/0810.3242
 #
+# The function returns true if the fusion ring has no complex categorification
 #
-#PackageExport["DNCriterion"]
-#
-#DNCriterion[ ring_FusionRing?CommutativeQ ] :=
-#  Module[{ chars, c, DNumberQ, n },
-#    chars = FusionRingCharacters[ring];
-#    c = RootReduce[ #.ConjugateTranspose[#]& /@ chars ];
-#
-#    DNumberQ[ x_ ] :=
-#      Module[{ p, a, y },
-#        If[ !AlgebraicIntegerQ[x], Return[ True ] ];
-#
-#        p =
-#          MinimalPolynomial[x][y];
-#
-#        a =
-#          ( Rest @ MonomialList[p] /. y -> 1 );
-#
-#        n =
-#          Exponent[ p, y ];
-#
-#        And @@
-#        Table[
-#          Mod[ a[[i]]^n, a[[-1]]^i ] == 0,
-#          { i, Length[a] }
-#        ]
-#      ];
-#
-#    Not[ And @@ ( DNumberQ /@ c ) ]
-#
-#  ];
-#
+export dn_criterion
+
+function dn_criterion(fr::FusionRing)::Bool
+  !is_commutative(fr) && return false
+
+  fcds = formal_codegrees(fr)
+
+  for z in fcds
+    !is_d_number(z) && return true
+  end
+
+  return false
+
+end
+
+function is_d_number(z::QQBarFieldElem)::Bool
+  R,_ = polynomial_ring(QQ,:x)
+  mp  = minpoly(R,z)
+  n   = degree(mp)
+
+  an  = constant_coefficient(mp)
+  cfs = collect(coefficients(mp))[2:end-1]
+
+  is_empty(cfs) && return true
+
+  divint(i) = is_integer((an^i) / (cfs[i]^n))
+
+  all( divint, 1:n-1 )
+end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                          extended cyclotomic criterion                          ┃

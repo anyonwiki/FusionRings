@@ -1297,6 +1297,7 @@ universal grading group by a normal subgroup.
 is  universal grading,  every grading  obtained from U/N,
 where N is a normal subgroup of U.
 """
+
 function all_gradings(fr::FusionRing)
     grading, universal_group = universal_grading(fr)
 

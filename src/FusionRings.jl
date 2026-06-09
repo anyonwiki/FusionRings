@@ -31,7 +31,7 @@ This requires package data to be loaded (normally happens during `__init__`).
 """
 function from_anyonwiki_code(r::Integer, m::Integer, nnsd::Integer, i::Integer)
     _ensure_frd_initialized()
-    frd[Int[r, m, nnsd][i]]
+    frd[Int[r, m, nnsd]][i]
 end
 
 function from_anyonwiki_code(v::AbstractVector{<:Integer})
@@ -60,6 +60,8 @@ function __init__()
     end
 
     # IMPORT FUSION RINGS
+    # TODO: how long does sorting take? Might want to store the permutation vector 
+    # once and reuse it
     global fusion_ring_list =
         sort( # Stored list is unsorted so we still need to sort
             import_rings( joinpath( datadir, "fusionrings.json" ) ),

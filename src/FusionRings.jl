@@ -42,7 +42,7 @@ function from_anyonwiki_code(v::AbstractVector{<:Integer})
 end
 
 const fawc = from_anyonwiki_code
-const awc = from_anyonwiki_code
+const awc  = anyonwiki_code
 
 function __init__()
     # GLOBAL VARIABLES

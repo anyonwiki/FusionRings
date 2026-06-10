@@ -1,3 +1,47 @@
+#=
+# binsplit( v::Array{T}, f ) takes an array and a boolean function and
+# returns a tuple (trues,falses) such that f(x) === true for all x in trues
+# and f(x) = false for all x in falses
+=#
+
+function binsplit( f, v::Array{T} ) where {T}
+    trues  = T[]
+    falses = T[]
+
+    for el in v
+        if f(el) === true
+            push!(trues,el)
+        else
+            push!(falses,el)
+        end
+    end
+
+    (trues, falses)
+end
+
+#=
+# complement( u, s1, s2,..., sn ) returns all elements in u that are not in any
+# of the lists s1, ... , sn
+#
+=#
+
+function complement( u::Vector{T}, s::Vector{T}... ) where {T}
+    res = T[]
+
+    function inany(x::T, tuple_of_lists )
+        for l in tuple_of_lists
+            x in l && return true
+        end
+        return false
+    end
+
+    for x in u
+        !inany(x,s) && push!(res,x)
+    end
+
+    return res
+end
+
 
 #= counts the number of times an element apears in a vector and 
  returns a couple of vectors (els, counts) where els = unique 

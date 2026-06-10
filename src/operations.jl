@@ -210,35 +210,17 @@ end
 """perm_vec_sd_conj(r; order = :increasing) – self‑duals first, then conjugate
     pairs, each block ordered by FP‑dimension."""
 function perm_vec_sd_conj(r::FusionRing; order::Symbol = :increasing)::Vector{Int}
-    n  = rank(r)
-    conj = conjugate_element(r)
-    qd = fpdims(r)
+    qd    = fpdims(r)
+    pairs = conjugate_pairs(r)
 
-    self_dual = [i for i in 2:n if conj(i) == i]
-    sort!(self_dual; by = i -> qd[i], rev = (order == :decreasing))
+    sd, nsd = binsplit( p -> length(p)==1, pairs )
 
-    paired   = Set(self_dual)
-    pairs    = Tuple{Int,Int}[]
+    sort!(sd;  by = i -> qd[i],    rev = (order == :decreasing))
+    sort!(nds; by = p -> qd[p[1]], rev = (order == :decreasing))
 
-    for i in 2:n
-        i in paired && continue
-        j = conj(i)
-        i == j && continue
+    nsdlist = reduce(vcat, pairs; init = Int[])
 
-        a, b = i, j
-        if (order == :increasing && qd[a] > qd[b]) || (order == :decreasing && qd[a] < qd[b])
-            a, b = b, a
-        end
-
-        push!(pairs, (a, b))
-        push!(paired, a)
-        push!(paired, b)
-    end
-
-    sort!(pairs; by = p -> qd[p[1]], rev = (order == :decreasing))
-    conjlist = reduce(vcat, ([p[1], p[2]] for p in pairs); init = Int[])
-
-    vcat(1, self_dual, conjlist)
+    return vcat(1, sd, nsdlist)
 end
 
 

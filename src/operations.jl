@@ -136,7 +136,7 @@ export permute
     permuted by `perm`.  `perm[1]` **must** equal 1 to keep the vacuum first."""
 function permute( perm::Vector{Int}, r::FusionRing)::FusionRing
     n = rank(r)
-    n == length(perm)      || throw(ArgumentError("perm length ≠ rank"))
+    n == length(perm) || throw(ArgumentError("perm length ≠ rank"))
     sort(perm) == collect(1:n) || throw(ArgumentError("perm must be a true permutation"))
     perm[1] == 1 || throw(ArgumentError("vacuum must stay at index 1"))
 

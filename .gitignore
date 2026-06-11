@@ -28,3 +28,4 @@ Manifest*.toml
 
 # Personal settings of an editor should not be stored
 .vscode
+.editorconfig

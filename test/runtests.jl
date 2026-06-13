@@ -1,6 +1,10 @@
 using Test
 using FusionRings
 
+using FusionRings: fix_fractions
+using FusionRings: factor_squares
+using FusionRings: bold_integer
+
 include("test_utils.jl")
 include("test_fixtures.jl")
 
@@ -38,6 +42,64 @@ Accepted names:
 """
 want_level(name::AbstractString) =
     TEST_LEVEL == "all" || normalize_test_level(name) == TEST_LEVEL
+
+
+"""
+    maybe_testset(name; group="all", level="all") do
+        ...
+    end
+
+    maybe_testset(name, level) do
+        ...
+    end
+
+    maybe_testset(name, group, level) do
+        ...
+    end
+
+Run a testset only if the requested group and level are enabled.
+"""
+
+function maybe_group_ok(group::AbstractString)
+    g = lowercase(strip(group))
+    return g == "all" || want_group(g)
+end
+
+function run_maybe_testset(f::Function, name::AbstractString; group="all", level="all")
+    if maybe_group_ok(group) && want_level(level)
+        @testset "$name" begin
+            f()
+        end
+    end
+
+    return nothing
+end
+
+# Keyword style:
+# maybe_testset("name"; group="properties", level="basic") do ... end
+function maybe_testset(f::Function, name::AbstractString; group="all", level="all")
+    return run_maybe_testset(f, name; group=group, level=level)
+end
+
+# Positional level style:
+# maybe_testset("name", "basic") do ... end
+function maybe_testset(f::Function, name::AbstractString, level::AbstractString)
+    return run_maybe_testset(f, name; level=level)
+end
+
+# Positional group + level style:
+# maybe_testset("name", "properties", "basic") do ... end
+function maybe_testset(
+    f::Function,
+    name::AbstractString,
+    group::AbstractString,
+    level::AbstractString,
+)
+    return run_maybe_testset(f, name; group=group, level=level)
+end
+
+
+
 
 """
     include_if_exists(path)

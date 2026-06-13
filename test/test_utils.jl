@@ -141,12 +141,12 @@ end
 Use a normal global instead of `const` so repeated includes/reloads do
 not trigger invalid constant redefinition errors.
 """
-ANYONICA_TESTDATA_DIR = get(
-    @__MODULE__,
-    :ANYONICA_TESTDATA_DIR,
-    joinpath(@__DIR__, "testdata")
-)
 
+ANYONICA_TESTDATA_DIR = isdefined(@__MODULE__, :ANYONICA_TESTDATA_DIR) ?
+    getfield(@__MODULE__, :ANYONICA_TESTDATA_DIR) :
+    joinpath(@__DIR__, "testdata")
+
+    
 """
     anyonica_data_path(filename)
 

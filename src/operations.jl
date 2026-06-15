@@ -150,23 +150,23 @@ function permute(perm::Vector{Int}, r::FusionRing)::FusionRing
     missing
   else
     (
-    if length(r.frobenius_perron_dimensions) == n
-      r.frobenius_perron_dimensions[perm]
-    else
-      r.frobenius_perron_dimensions
-    end
-  )
+      if length(r.frobenius_perron_dimensions) == n
+        r.frobenius_perron_dimensions[perm]
+      else
+        r.frobenius_perron_dimensions
+      end
+    )
   end
   chars = if r.characters === missing
     missing
   else
     (
-    if ndims(r.characters) == 2 && size(r.characters, 2) == n
-      r.characters[:, perm]
-    else
-      r.characters
-    end
-  )
+      if ndims(r.characters) == 2 && size(r.characters, 2) == n
+        r.characters[:, perm]
+      else
+        r.characters
+      end
+    )
   end
 
   return fusion_ring(

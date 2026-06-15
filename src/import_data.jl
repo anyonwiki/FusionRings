@@ -289,7 +289,7 @@ end
 # import fpdim. Might fail
 function fpdfromjs(js)
   try
-    from_qqb_id(js["frobenius_perron_dimension"])
+    js["frobenius_perron_dimension"]
   catch e
     missing
   end
@@ -297,7 +297,7 @@ end
 
 function fpdsfromjs(js)
   try
-    from_qqb_id(js["frobenius_perron_dimensions"])
+    js["frobenius_perron_dimensions"]
   catch e
     missing
   end

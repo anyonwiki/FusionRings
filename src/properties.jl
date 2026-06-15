@@ -121,7 +121,7 @@ function frobenius_perron_dimensions(
     multmats = [matrix(ZZ, mt[i, :, :]) for i in 1:rank(r)]
     return [first(eigenvalues(QQBar, A)) for A in multmats]
   else
-    return stored_dims
+    return from_qqb_id(stored_dims)
   end
 end
 
@@ -139,8 +139,13 @@ fpdims = frobenius_perron_dimensions
 
 export frobenius_perron_dimension
 
-function frobenius_perron_dimension(r::FusionRing)::QQBarFieldElem
-  return sum(fpdims(r) .^ 2)
+function frobenius_perron_dimension(r::FusionRing,force_compute=false)::QQBarFieldElem
+  stored_dim = r.frobenius_perron_dimension
+  if ismissing(stored_dim) || force_compute
+    return sum(fpdims(r) .^ 2,force_compute=force_compute)
+  else
+    return from_qqb_id(stored_dim)
+  end
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

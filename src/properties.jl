@@ -328,13 +328,13 @@ function sub_fusion_rings(r::FusionRing)
   dictvec = r.sub_fusion_rings
   if dictvec !== missing
     [
-      Dict("injection"   => dict["injection"], "fusion_ring" => awc(dict["anyonwiki_code"]))
+      Dict("injection" => dict["injection"], "fusion_ring" => awc(dict["anyonwiki_code"]))
       for dict in dictvec
     ]
   else
     subsets = sub_fusion_ring_subsets
     [
-      Dict("injection"   => s, "fusion_ring" => replace_by_known(fusion_ring(mt[s, s, s])))
+      Dict("injection" => s, "fusion_ring" => replace_by_known(fusion_ring(mt[s, s, s])))
       for s in subsets
     ]
   end
@@ -410,10 +410,10 @@ function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
   mt = multiplication_table(fr)[S, S, S]
 
   return check_struct_const(mt) &&
-           check_mt_dims(mt) &&
-           check_unit(mt) &&
-           check_inverse(mt) &&
-           check_associativity(mt)
+         check_mt_dims(mt) &&
+         check_unit(mt) &&
+         check_inverse(mt) &&
+         check_associativity(mt)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

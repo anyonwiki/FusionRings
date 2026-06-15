@@ -36,8 +36,8 @@ function root_sort_crit(x)
 end
 
 function save_qqb_num(x::QQBarFieldElem)
-  path = joinpath(@__DIR__, "data","split_data",qqb_id(x)*".mrdi")
-    Oscar.save(data,x)
+  path = joinpath(@__DIR__, "data", "split_data", qqb_id(x)*".mrdi")
+  return Oscar.save(data, x)
 end
 
 # Loading from library of qqb elements
@@ -47,14 +47,14 @@ end
 export from_qqb_id
 
 function from_qqb_id(s::String)
-    if haskey( qqb_dict, s )
-        return qqb_dict[s]
-    else
-        fn = joinpath(datadir,"split_number_data",s*".mrdi")
-        val = Oscar.load(fn)
-        qqb_dict[s] = val
-        return val
-    end
+  if haskey(qqb_dict, s)
+    return qqb_dict[s]
+  else
+    fn = joinpath(datadir, "split_number_data", s*".mrdi")
+    val = Oscar.load(fn)
+    qqb_dict[s] = val
+    return val
+  end
 end
 
 function from_qqb_id(a::Array{Any})
@@ -470,7 +470,7 @@ function npsrtojs(fr::FusionRing)
     for rep in npsr
       tf = reim(rep["twist_factors"])
       sm = reim(rep["S_matrix"])
-      push!(dicts, Dict("twist_factors" => tf, "S_matrix"      => sm))
+      push!(dicts, Dict("twist_factors" => tf, "S_matrix" => sm))
     end
     return dicts
   else

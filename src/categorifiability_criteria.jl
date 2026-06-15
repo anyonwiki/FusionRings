@@ -6,24 +6,23 @@
 
 # csp_criterion( fusion_ring ) returns true if fusion_ring does not have a unitary categorification due to the commutative schur product criterion
 
-function csp_criterion( ring::FusionRing )
-    is_commutative( ring ) || return false
+function csp_criterion(ring::FusionRing)
+  is_commutative(ring) || return false
 
-    chars = characters( ring )
-    r = rank( ring )
+  chars = characters(ring)
+  r = rank(ring)
 
-    for j1 in 1:r, j2 in 1:r, j3 in 1:r
-        s = sum( chars[ i, j1 ] * chars[ i, j2 ] * chars[ i, j3 ] / chars[ i, 1 ] for i in 1:r )
-        if is_real(s) && s < 0
-            return true
-        else
-            continue
-        end
+  for j1 in 1:r, j2 in 1:r, j3 in 1:r
+    s = sum(chars[i, j1] * chars[i, j2] * chars[i, j3] / chars[i, 1] for i in 1:r)
+    if is_real(s) && s < 0
+      return true
+    else
+      continue
     end
+  end
 
-    return false
+  return false
 end
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                       pivotal drinfeld center criterion                         ┃
@@ -31,24 +30,21 @@ end
 
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
 
-function pdc_criterion( fr::FusionRing )::Bool
+function pdc_criterion(fr::FusionRing)::Bool
   !is_commutative(fr) && return false
 
   r = rank(fr)
   fcds = formal_codegrees(fr)
 
   for j in 1:r
-    ratios = [ fcds[j]/fcds[i] for i in 1:r ]
-    if all( is_algebraic_integer, ratios  )
+    ratios = [fcds[j]/fcds[i] for i in 1:r]
+    if all(is_algebraic_integer, ratios)
       return false
     end
   end
 
   return true
-
 end
-
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                    pseudo-unitary drinfeld center criterion                     ┃
@@ -91,24 +87,22 @@ function dn_criterion(fr::FusionRing)::Bool
   end
 
   return false
-
 end
 
 function is_d_number(z::QQBarFieldElem)::Bool
-  R,_ = polynomial_ring(QQ,:x)
-  mp  = minpoly(R,z)
-  n   = degree(mp)
+  R, _ = polynomial_ring(QQ, :x)
+  mp   = minpoly(R, z)
+  n    = degree(mp)
 
   an  = constant_coefficient(mp)
-  cfs = collect(coefficients(mp))[2:end-1]
+  cfs = collect(coefficients(mp))[2:(end - 1)]
 
   is_empty(cfs) && return true
 
   divint(i) = is_integer((an^i) / (cfs[i]^n))
 
-  all( divint, 1:n-1 )
+  return all(divint, 1:(n - 1))
 end
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                          extended cyclotomic criterion                          ┃
@@ -204,28 +198,25 @@ end
 #
 #  ];
 #
-function crit1( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum( mt[ i[5], i[4], k ] * mt[ i[3], d[ i[1] ], k ] for  k in 1:r ) == 1 ||
-    sum( mt[ i[2], d[ i[4] ], k ] * mt[ i[3], d[ i[6] ], k ] for k in 1:r ) == 1 ||
-    sum( mt[ d[ i[5] ], i[2], k ] * mt[ i[6], d[ i[1] ], k ] for k in 1:r ) == 1
+function crit1(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+  r = size(mt, 1)
+  return sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
+           sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
+           sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k in 1:r) == 1
 end
 
-function crit2( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum( mt[ i[2], i[4], k ] * mt[ i[3], d[ i[6] ], k ] for  k in 1:r ) == 1 ||
-    sum( mt[ i[5], d[ i[4] ], k ] * mt[ i[3], d[ i[1] ], k ] for k in 1:r ) == 1 ||
-    sum( mt[ d[ i[2] ], i[5], k ] * mt[ i[1], d[ i[6] ], k ] for k in 1:r ) == 1
+function crit2(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+  r = size(mt, 1)
+  return sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
+           sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
+           sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k in 1:r) == 1
 end
 
-function crit3( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum(
-        mt[ i[1], i[4], k ] *
-        mt[ d[ i[2] ], i[5], k ] *
-        mt[ i[3], d[ i[6] ], k ]
-        for k in 1:r
-    ) == 0
+function crit3(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+  r = size(mt, 1)
+  return sum(
+    mt[i[1], i[4], k] * mt[d[i[2]], i[5], k] * mt[i[3], d[i[6]], k] for k in 1:r
+  ) == 0
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

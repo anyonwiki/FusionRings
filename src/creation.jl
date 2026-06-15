@@ -170,7 +170,7 @@ function HI_fusion_ring(
   labels = [string(i) for i in 1:n]
   append!(labels, ["ρ"*subscript_integer(i) for i in 1:n])
 
-  return fusion_ring(mt; names  = names, labels = labels)
+  return fusion_ring(mt; names = names, labels = labels)
 end
 
 # Helper function for HI_fusion_ring
@@ -377,7 +377,7 @@ function son2_fusion_ring(N::Int)::FusionRing
     error("son2_fusion_ring: label length mismatch with mt rank")
 
   return fusion_ring(
-    mt; names  = ["SO($N)"*subscript_integer(2), "Metaplectic($N)"], labels = labels
+    mt; names = ["SO($N)"*subscript_integer(2), "Metaplectic($N)"], labels = labels
   )
 end
 

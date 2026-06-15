@@ -35,24 +35,28 @@ function root_sort_crit(x)
   return (- Int(is_real(x)), real(x), imag(x))
 end
 
-#TODO:implement
-function save_qqb_num(dir::String, x::QQBarFieldElem)
-  return nothing
-end
-
-#TODO:implement
 function save_qqb_num(x::QQBarFieldElem)
-  return nothing
+  path = joinpath(@__DIR__, "data","split_data",qqb_id(x)*".mrdi")
+    Oscar.save(data,x)
 end
 
-# Load the dictionary of qqbar elems
+# Loading from library of qqb elements
+# If number already loaded, use that one, otherwise load and
+# add to qqb_dict
 
-# Get from dict
 export from_qqb_id
 
 function from_qqb_id(s::String)
-  return qqb_dict[s]
+    if haskey( qqb_dict, s )
+        return qqb_dict[s]
+    else
+        fn = joinpath(datadir,"split_number_data",s*".mrdi")
+        val = Oscar.load(fn)
+        qqb_dict[s] = val
+        return val
+    end
 end
+
 function from_qqb_id(a::Array{Any})
   return from_qqb_id.(a)
 end

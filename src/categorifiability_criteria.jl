@@ -18,6 +18,14 @@ function csp_criterion( ring::FusionRing )
 
     for j1 in 1:r, j2 in 1:r, j3 in 1:r
         s = sum( chars[ i, j1 ] * chars[ i, j2 ] * chars[ i, j3 ] / chars[ i, 1 ] for i in 1:r )
+        #TODO: this is only correct if characters(ring) is stored as:
+        # rows  = basis els / simple objs i
+        # cols = chars j
+        #mathematica says though 
+        #c = #.ConjugateTranspose[#]& /@ chars;
+        # which only makes snese if chars is a list of char vectors
+        # maybe replace with s = sum(chars[j1, i] * chars[j2, i] * chars[j3, i] / chars[1, i] for i in 1:r)
+
         if ISREAL( s ) && lesserthan( s, 0 )
             return true
         else 

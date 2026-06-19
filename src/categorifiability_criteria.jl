@@ -417,3 +417,68 @@ function zsc_criterion(ring::FusionRing)::Bool
 end
 
 
+#TODO: take a look at this too
+"""
+    osc_criterion(ring)
+
+Return `true` if the One Spectrum Criterion rules out categorifiability.
+
+This is a direct Julia port of the Mathematica `OSCriterion` logic.
+"""
+function osc_criterion(ring::FusionRing)::Bool
+    mt = _mult_table(ring)
+    r = size(mt, 1)
+
+    d = _dual_indices_from_mt(mt)
+    nonzero = _nonzero_structure_constants(mt)
+
+    for i2 in 1:r, i1 in 1:r, i3 in 1:r
+        mt[i2, i1, i3] == 0 || continue
+
+        for ind1 in nonzero
+            # Mathematica pattern: {i4_, i1, i6_}
+            ind1[2] == i1 || continue
+
+            i4 = ind1[1]
+            i6 = ind1[3]
+
+            for ind2 in nonzero
+                # Mathematica pattern: {i5_, i4, i2}
+                ind2[2] == i4 || continue
+                ind2[3] == i2 || continue
+
+                i5 = ind2[1]
+
+                mt[i5, i6, i3] != 0 || continue
+
+                for ind3 in nonzero
+                    # Mathematica pattern: {i7_, i9_, i1}
+                    ind3[3] == i1 || continue
+
+                    i7 = ind3[1]
+                    i9 = ind3[2]
+
+                    for i0 in 1:r
+                        mt[i4, i7, i0] == 1 || continue
+                        mt[i6, d[i9], i0] == 1 || continue
+                        _crit1_has_one((i9, i0, i6, i7, i4, i1), d, mt) || continue
+
+                        for i8 in 1:r
+                            if mt[i2, i7, i8] != 0 &&
+                               mt[i8, i9, i3] != 0 &&
+                               mt[d[i5], i8, i0] == 1 &&
+                               _crit1_has_one((i7, i2, i8, i4, i5, i0), d, mt) &&
+                               _crit1_has_one((i9, i8, i3, i0, i5, i6), d, mt) &&
+                               _crit3_sum((i4, i5, i6, i7, i8, i9), d, mt) == 1
+
+                                return true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return false
+end

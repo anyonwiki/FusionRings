@@ -347,3 +347,73 @@ end
 #    ]
 #
 #  ];
+
+
+
+
+#TODO: to me: take a look at and see if warrants replacement: 
+"""
+    zsc_criterion(ring)
+
+Return `true` if the Zero Spectrum Criterion rules out categorifiability.
+
+This is a direct Julia port of the Mathematica `ZSCriterion` logic, but with
+explicit Boolean helpers.
+"""
+function zsc_criterion(ring::FusionRing)::Bool
+    mt = _mult_table(ring)
+    r = size(mt, 1)
+
+    d = _dual_indices_from_mt(mt)
+    nonzero = _nonzero_structure_constants(mt)
+
+    for i2 in 1:r, i1 in 1:r, i3 in 1:r
+        mt[i2, i1, i3] == 1 || continue
+
+        for ind1 in nonzero
+            # Mathematica pattern: {i4_, i1, i6_}
+            ind1[2] == i1 || continue
+
+            i4 = ind1[1]
+            i6 = ind1[3]
+
+            for ind2 in nonzero
+                # Mathematica pattern: {i5_, i4, i2}
+                ind2[2] == i4 || continue
+                ind2[3] == i2 || continue
+
+                i5 = ind2[1]
+
+                mt[i5, i6, i3] != 0 || continue
+                _crit1_has_one((i1, i2, i3, i4, i5, i6), d, mt) || continue
+
+                for ind3 in nonzero
+                    # Mathematica pattern: {i7_, i9_, i1}
+                    ind3[3] == i1 || continue
+
+                    i7 = ind3[1]
+                    i9 = ind3[2]
+
+                    for ind4 in nonzero
+                        # Mathematica pattern: {i2, i7, i8_}
+                        ind4[1] == i2 || continue
+                        ind4[2] == i7 || continue
+
+                        i8 = ind4[3]
+
+                        if mt[i8, i9, i3] != 0 &&
+                           _crit3_sum((i4, i5, i6, i7, i8, i9), d, mt) == 0 &&
+                           _crit2_has_one((i1, i2, i3, i7, i8, i9), d, mt)
+
+                            return true
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return false
+end
+
+

@@ -25,7 +25,7 @@ function csp_criterion( ring::FusionRing )
         #c = #.ConjugateTranspose[#]& /@ chars;
         # which only makes snese if chars is a list of char vectors
         # maybe replace with s = sum(chars[j1, i] * chars[j2, i] * chars[j3, i] / chars[1, i] for i in 1:r)
-
+        # i could be wrong though and maybe it is object rowed lol!
         if ISREAL( s ) && lesserthan( s, 0 )
             return true
         else 
@@ -34,6 +34,54 @@ function csp_criterion( ring::FusionRing )
     end
 
     return false
+end
+
+
+#TODO: slightly different csp implementation
+# I basically split it into 2 functions : csp_value  returns the min shcur product value and witness triple
+# csp_criterion returns obstruction boolean
+
+
+# chars[j, i] = value of character j on basis el i
+# chars[1, i] =  FP dim of basis element i.
+
+function csp_value(ring::FusionRing; tol::Real = 1e-10)
+    is_commutative(ring) ||
+        error("Commutative Schur Product Criterion only applies to commutative fusion rings")
+
+    chars = characters(ring)
+    r = rank(ring)
+
+    best_value = Inf
+    best_witness = nothing
+
+    for j1 in 1:r, j2 in 1:r, j3 in 1:r
+        s = sum(
+            chars[j1, i] * chars[j2, i] * chars[j3, i] / chars[1, i]
+            for i in 1:r
+        )
+
+        # The theorem expects a real value. Numerical character tables may produce
+        # tiny imaginary noise, so tolerate that.
+        if !isreal(s)
+            if abs(imag(complex(s))) > tol
+                continue
+            end
+            s = real(complex(s))
+        end
+
+        if s < best_value
+            best_value = s
+            best_witness = (j1, j2, j3)
+        end
+    end
+
+    return best_value, best_witness
+end
+
+function csp_criterion(ring::FusionRing; tol::Real = 1e-10)
+    val, _ = csp_value(ring; tol = tol)
+    return val < -tol
 end
 
 

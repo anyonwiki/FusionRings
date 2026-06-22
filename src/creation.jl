@@ -389,6 +389,7 @@ export metaplectic_fusion_ring
 Return fusion ring ``\\text{SO}(N)_2`` (metaplectic).
 """
 metaplectic_fusion_ring(n::Int)::FusionRing = son2_fusion_ring(n)
+metaplectic_fusion_ring(n::Int)::FusionRing = son2_fusion_ring(n)
 
 function _son2_rules_odd(m::Integer)::Array{Int, 3}
   isodd(m) || throw(ArgumentError("_son2_rules_odd expects odd N, got N=$m"))
@@ -495,6 +496,8 @@ function _son2_rules_odd(m::Integer)::Array{Int, 3}
 end
 
 # index convention (matches  Evaluate[...] = IdentityMatrix[rank]):
+@inline 𝟙 = 1
+@inline Θ = 2
 @inline 𝟙 = 1
 @inline Θ = 2
 @inline Φ₁ = 3

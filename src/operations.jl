@@ -309,3 +309,4 @@ end
 
 # TODO: implement bicrossed product. @Szagha02: not a priority 
 # @gvercley will do this at some point
+

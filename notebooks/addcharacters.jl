@@ -1,6 +1,9 @@
 using Pkg;
 Pkg.activate("/home/gert/Projects/FusionRings.jl")
 using Revise, Oscar, Accessors, JSON, FusionRings
+using Pkg;
+Pkg.activate("/home/gert/Projects/FusionRings.jl")
+using Revise, Oscar, Accessors, JSON, FusionRings
 
 function to_qqb_arr(mat)
   return [mat[i] for i in eachindex(mat)]

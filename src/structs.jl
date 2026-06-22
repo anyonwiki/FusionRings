@@ -142,3 +142,4 @@ function fusion_ring(
     non_cat_reasons,
   )
 end
+

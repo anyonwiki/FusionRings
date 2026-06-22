@@ -30,6 +30,7 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export names
+export names
 
 function names(r::FusionRing)::Array{String, 1}
   return r.names
@@ -129,6 +130,7 @@ end
 #┃                                     fpdims                                      ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+export fpdims
 export fpdims
 
 fpdims = frobenius_perron_dimensions
@@ -239,6 +241,7 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export nnsd
+export nnsd
 
 nnsd = num_non_self_dual
 
@@ -314,9 +317,10 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export barcode
+export barcode
 
 function barcode(r::FusionRing)
-  return r.barcode
+    return r.barcode
 end
 
 function mult_tab_code(mat::Array{Int, 2}, mult::Int)::Int
@@ -1425,6 +1429,7 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export characters
+export characters
 
 function characters(ring::FusionRing; use_numerics = true)
   if !(ring.characters === missing)
@@ -1516,7 +1521,7 @@ function diagonalizing_matrix(mats)
     return true
   end
 
-  proposed_mat = qqbmats[1]
+    proposed_mat = qqbmats[1]
 
   r = first(size(first(mats)))
 
@@ -1524,9 +1529,9 @@ function diagonalizing_matrix(mats)
   upi = 4;
   upj = 4
 
-  while !diagq
-    upi += 1
-    upj += 1
+    while !diagq
+        upi += 1
+        upj += 1
 
     # Take random linear rational combination of matrices in mats
     rvec = rand(unique([i//j for i in 1:upi, j in 1:upj]), r)

@@ -141,10 +141,10 @@ fpdims = frobenius_perron_dimensions
 
 export frobenius_perron_dimension
 
-function frobenius_perron_dimension(r::FusionRing,force_compute=false)::QQBarFieldElem
+function frobenius_perron_dimension(r::FusionRing, force_compute = false)::QQBarFieldElem
   stored_dim = r.frobenius_perron_dimension
   if ismissing(stored_dim) || force_compute
-    return sum(fpdims(r) .^ 2,force_compute=force_compute)
+    return sum(fpdims(r) .^ 2; force_compute = force_compute)
   else
     return from_qqb_id(stored_dim)
   end
@@ -320,7 +320,7 @@ export barcode
 export barcode
 
 function barcode(r::FusionRing)
-    return r.barcode
+  return r.barcode
 end
 
 function mult_tab_code(mat::Array{Int, 2}, mult::Int)::Int
@@ -1521,7 +1521,7 @@ function diagonalizing_matrix(mats)
     return true
   end
 
-    proposed_mat = qqbmats[1]
+  proposed_mat = qqbmats[1]
 
   r = first(size(first(mats)))
 
@@ -1529,9 +1529,9 @@ function diagonalizing_matrix(mats)
   upi = 4;
   upj = 4
 
-    while !diagq
-        upi += 1
-        upj += 1
+  while !diagq
+    upi += 1
+    upj += 1
 
     # Take random linear rational combination of matrices in mats
     rvec = rand(unique([i//j for i in 1:upi, j in 1:upj]), r)

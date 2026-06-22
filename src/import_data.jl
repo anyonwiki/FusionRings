@@ -114,7 +114,7 @@ end
 
 # tensor product decompositions
 function tpdfromjs(js)
-    tps = js["tensor_product_decompositions"]
+  tps = js["tensor_product_decompositions"]
 
   if length(tps) == 0
     []

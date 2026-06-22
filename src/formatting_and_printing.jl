@@ -2,44 +2,65 @@
 # │                              Pretty printing                               │
 # └────────────────────────────────────────────────────────────────────────────┘
 
-function transform_integer( i::Int, dict::Dict ) 
-  dgts = digits( i, base = 10 )
-  join( reverse( [ dict[j] for j in dgts  ] ) )
+function transform_integer(i::Int, dict::Dict)
+    dgts = digits(i, base = 10)
+    join(reverse([dict[j] for j in dgts]))
 end
 
 bold_integer(i::Int)::String = transform_integer(i, bold_digits_dict)
 
-bold_digits_dict = 
-  Dict(
-    0 => "𝟎", 1 => "𝟏", 2 => "𝟐", 3 => "𝟑", 4 => "𝟒", 
-    5 => "𝟓", 6 => "𝟔", 7 => "𝟕", 8 => "𝟖", 9 => "𝟗"
-  )
+bold_digits_dict = Dict(
+    0 => "𝟎",
+    1 => "𝟏",
+    2 => "𝟐",
+    3 => "𝟑",
+    4 => "𝟒",
+    5 => "𝟓",
+    6 => "𝟔",
+    7 => "𝟕",
+    8 => "𝟖",
+    9 => "𝟗",
+)
 
-subscript_integer(i::Int)::String = transform_integer(i,subs_digits_dict)
+subscript_integer(i::Int)::String = transform_integer(i, subs_digits_dict)
 
-subs_digits_dict = 
-  Dict(
-    0 => "₀", 1 => "₁", 2 => "₂", 3 => "₃", 4 => "₄", 
-    5 => "₅", 6 => "₆", 7 => "₇", 8 => "₈", 9 => "₉"
-  )
+subs_digits_dict = Dict(
+    0 => "₀",
+    1 => "₁",
+    2 => "₂",
+    3 => "₃",
+    4 => "₄",
+    5 => "₅",
+    6 => "₆",
+    7 => "₇",
+    8 => "₈",
+    9 => "₉",
+)
 
-superscript_integer(i::Int) = transform_integer(i,sup_digits_dict)
+superscript_integer(i::Int) = transform_integer(i, sup_digits_dict)
 
-sup_digits_dict = 
-  Dict(
-    0 => "⁰", 1 => "¹", 2 => "²", 3 => "³", 4 => "⁴", 
-    5 => "⁵", 6 => "⁶", 7 => "⁷", 8 => "⁸", 9 => "⁹"
-  )
+sup_digits_dict = Dict(
+    0 => "⁰",
+    1 => "¹",
+    2 => "²",
+    3 => "³",
+    4 => "⁴",
+    5 => "⁵",
+    6 => "⁶",
+    7 => "⁷",
+    8 => "⁸",
+    9 => "⁹",
+)
 # Formatting of fusion rings
-function Base.show( io::IO, ring::FusionRing )
-    p(str) = print( io, str );
+function Base.show(io::IO, ring::FusionRing)
+    p(str) = print(io, str);
     if ring.names != []
-        p( "FR(" * names(ring)[1] * ")" )
+        p("FR(" * names(ring)[1] * ")")
     elseif ring.anyonwiki_code ≢ missing
-        p( "FR(" * string(ring.anyonwiki_code)[2:end-1] * ")" )
+        p("FR(" * string(ring.anyonwiki_code)[2:(end-1)] * ")")
     else
-        props = map( string, comap( [ rank, multiplicity, nnsd ], ring ) )
-        p( "FR(" * join( props, ", "  ) * ", ? )" )
+        props = map(string, comap([rank, multiplicity, nnsd], ring))
+        p("FR(" * join(props, ", ") * ", ? )")
     end
 end
 
@@ -89,9 +110,9 @@ function print_multiplication_table(r::FusionRing)
     rk = rank(r)
     mt = multiplication_table(r)
 
-    tab = fill( "", rk, rk )
-    for i in 1:rk, j in 1:rk
-    tab[i,j] = row_to_string(r,mt[i,j,:])
+    tab = fill("", rk, rk)
+    for i = 1:rk, j = 1:rk
+        tab[i, j] = row_to_string(r, mt[i, j, :])
     end
     tab
 end
@@ -101,57 +122,54 @@ pmt = print_multiplication_table
 export row_to_string
 
 function row_to_string(r::FusionRing, row)::String
-    n             = length(row)
-    el_names      = labels(r)
-    non_zero_ind  = findall(i -> row[i] > 0, 1:n)
-    to_string(i)  = element_to_string(row[i], el_names[i])
+    n = length(row)
+    el_names = labels(r)
+    non_zero_ind = findall(i -> row[i] > 0, 1:n)
+    to_string(i) = element_to_string(row[i], el_names[i])
 
-    join(
-    map(to_string, non_zero_ind),
-    " ⊕ "
-    )
+    join(map(to_string, non_zero_ind), " ⊕ ")
 end
 
-function element_to_string(mult,elem)::String
-    if mult == 0 
+function element_to_string(mult, elem)::String
+    if mult == 0
         return ""
     elseif mult == 1
         return elem
-    else 
-        return string(mult) * " " * elem 
+    else
+        return string(mult) * " " * elem
     end
 end
 
 "Pretty one-liner: `a × b = ...` using printed names; `a,b` are indices."
 function product_string(fr::FusionRing, a::Int, b::Int)
     names = labels(fr)
-    rhs = let d = fusion_product(fr,a,b)
+    rhs = let d = fusion_product(fr, a, b)
         isempty(d) ? "0" :
-            join([ m==1 ? names[c] : string(m," ",names[c]) for (c,m) in d ], " ⊕ ")
+        join([m==1 ? names[c] : string(m, " ", names[c]) for (c, m) in d], " ⊕ ")
     end
     string(names[a], " × ", names[b], " = ", rhs)
 end
 
-function export_tex_reps( filename::String,  v::Vector{QQBarFieldElem}; try_cyclo = false )
-    data = Dict( qqb_id(x) => tex_reps(x) for x in v )
-        
-    open( filename, "w" ) do f
-        JSON.json( f, data, pretty = true, inline_limit = 10 )
+function export_tex_reps(filename::String, v::Vector{QQBarFieldElem}; try_cyclo = false)
+    data = Dict(qqb_id(x) => tex_reps(x) for x in v)
+
+    open(filename, "w") do f
+        JSON.json(f, data, pretty = true, inline_limit = 10)
     end
 end
 
-function tex_reps( x::QQBarFieldElem; try_cyclo = false )
+function tex_reps(x::QQBarFieldElem; try_cyclo = false)
     rat = rational_tex_rep(x)
     if rat != ""
         return Dict(
-            "rational"  => rat,
-            "radical"   => rat,
+            "rational" => rat,
+            "radical" => rat,
             "power_sum" => rat,
-            "cyclo"     => rat,
-            "general"   => general_tex_rep(x)
+            "cyclo" => rat,
+            "general" => general_tex_rep(x),
         )
     end
-        
+
     ps = power_sum_tex_rep(x)
     if ps != ""
         cyc = ps
@@ -160,83 +178,81 @@ function tex_reps( x::QQBarFieldElem; try_cyclo = false )
     else
         cyc = ""
     end
-    
+
     Dict(
-        "rational"  => rational_tex_rep(x),
-        "radical"   => radicals_tex_rep(x),
+        "rational" => rational_tex_rep(x),
+        "radical" => radicals_tex_rep(x),
         "power_sum" => ps,
-        "cyclo"     => cyc,
-        "general"   => general_tex_rep(x)
+        "cyclo" => cyc,
+        "general" => general_tex_rep(x),
     )
 end
 
-function general_tex_rep( x::QQBarFieldElem )
-    n = string( rootnum( x ) )
+function general_tex_rep(x::QQBarFieldElem)
+    n = string(rootnum(x))
 
     fix_poly_string("[" * string(minpoly(x)) * "]_{" * n * "}")
 end
 
 function fix_fractions(str::String)::String
-    replace( str, r"(?<p>\d+)//(?<q>\d+)" => s"\\frac{\g<p>}{\g<q>}" )
+    replace(str, r"(?<p>\d+)//(?<q>\d+)" => s"\\frac{\g<p>}{\g<q>}")
 end
 
 function fix_mult(str::String)::String
-    replace( str, "*" => "" )
+    replace(str, "*" => "")
 end
 
 function fix_spaces(str::String)::String
-    replace( str, " " => "" )
+    replace(str, " " => "")
 end
 
 function fix_powers(str::String)::String
-    replace( str, r"\^(?<p>\d{2,})" => s"^{\g<p>}" )
+    replace(str, r"\^(?<p>\d{2,})" => s"^{\g<p>}")
 end
 
 function fix_cyclo(str::String)::String
-    replace( str, r"zeta\((?<deg>\d+)\)" => s"\\zeta_{\g<deg>}" )
+    replace(str, r"zeta\((?<deg>\d+)\)" => s"\\zeta_{\g<deg>}")
 end
 
 function fix_poly_string(str::String)::String
-    ( fix_fractions ∘ fix_mult ∘ fix_spaces ∘ fix_powers )(
-        str
-    )
+    (fix_fractions ∘ fix_mult ∘ fix_spaces ∘ fix_powers)(str)
 end
 
 function cyclo_tex_rep(x::QQBarFieldElem)
-    cx, emb = to_composite_field( x )
-    if !is_abelian( parent( cx ) )
+    cx, emb = to_composite_field(x)
+    if !is_abelian(parent(cx))
         return ""
     else
-        el = to_cyclotomic_field( cx, emb )[1]
+        el = to_cyclotomic_field(cx, emb)[1]
 
         (fix_cyclo ∘ fix_poly_string ∘ string ∘ QQab)(el)
-    end   
+    end
 end
 
-function radicals_tex_rep( x::QQBarFieldElem )
-    mp = minpoly( x )
-    d  = degree( mp )
+function radicals_tex_rep(x::QQBarFieldElem)
+    mp = minpoly(x)
+    d = degree(mp)
     if d == 1
-        mp, q = collect( coefficients( mp ) )
-        fix_poly_string( string( -mp//q ) )
+        mp, q = collect(coefficients(mp))
+        fix_poly_string(string(-mp//q))
     elseif d == 2
         # output string consists of 4 parts:
         # <-b/2a> * <sign> * <factor/a2> * <sqrt{Δ/factor^2}>
         #   s1    *   s2   *     s3      *        s4
-        QQb      = algebraic_closure( QQ )
-        c, b, a  = collect( coefficients( mp ) )
-        s1       = b == 0 ? "" : string(-b//(2*a))
-        
-        Δ        = b^2 - 4*a*c
-        pval     = (-QQb(b) + sqrt(QQb(Δ)))//(2*a)
-        s2       = pval == x ? "+" : "-" 
+        QQb = algebraic_closure(QQ)
+        c, b, a = collect(coefficients(mp))
+        s1 = b == 0 ? "" : string(-b//(2*a))
 
-        ( d, e ) = factor_squares(Δ)
-        s3       = d//(2*a) == 1 ? "" : string(d//(2*a))
+        Δ = b^2 - 4*a*c
+        pval = (-QQb(b) + sqrt(QQb(Δ)))//(2*a)
+        s2 = pval == x ? "+" : "-"
 
-        s4       = string( "\\sqrt{", ( Δ > 0 ? e : -e ), "}" )
+        (d, e) = factor_squares(Δ)
+        s3 = d//(2*a) == 1 ? "" : string(d//(2*a))
 
-        return fix_poly_string( string( s1, s2, s3, s4 ) )
+        s4 = string("\\sqrt{", (Δ > 0 ? e : -e), "}")
+
+        return fix_poly_string(string(s1, s2, s3, s4))
     else
         ""
     end
@@ -246,27 +262,23 @@ end
 # and a non-square
 function factor_squares(x)
     zzx = ZZ(x)
-    sq_factors =
-        filter(
-            λ -> λ[2] > 1,
-            (collect ∘ factor)( zzx )
-        )
-    length( sq_factors ) == 0 && return (1,x)
-    
-    sq  = prod( a^ZZ( floor( ZZ(b)//2 ) ) for (a,b) in sq_factors )
+    sq_factors = filter(λ -> λ[2] > 1, (collect ∘ factor)(zzx))
+    length(sq_factors) == 0 && return (1, x)
+
+    sq = prod(a^ZZ(floor(ZZ(b)//2)) for (a, b) in sq_factors)
     nsq = zzx/sq^2
 
-    ( sq, nsq )
+    (sq, nsq)
 end
 
 #TODO: surely there must be a better way...
 function rational_tex_rep(x::QQBarFieldElem)
     if isinteger(x)
-        m = - first( collect( coefficients( minpoly( x ) ) ) )
+        m = - first(collect(coefficients(minpoly(x))))
         return string(m)
     elseif is_rational(x)
-        cf = collect( coefficients( minpoly( x ) ) )
-        return fix_poly_string( string( -cf[1]//cf[2] ) )
+        cf = collect(coefficients(minpoly(x)))
+        return fix_poly_string(string(-cf[1]//cf[2]))
     else
         return ""
     end
@@ -274,17 +286,14 @@ end
 
 # represent root of pol of form 1 + ax + (ax)^2 +... +(ax)^n
 function power_sum_tex_rep(x::QQBarFieldElem)
-    mp  = minimal_polynomial(x)
+    mp = minimal_polynomial(x)
     if is_power_sum(mp)
         gen = (collect(coefficients(mp)))[2]
         n = degree(mp)
         a = x*gen
-        i = findfirst( j -> QQb(ζ(n+1)^j) == a, 1:n )
+        i = findfirst(j -> QQb(ζ(n+1)^j) == a, 1:n)
         factorstring = gen == 1 ? "" : string(1//gen)
-        return string(
-            factorstring,
-            "\\zeta_{", n+1, "}^{", i, "}"
-        ) 
+        return string(factorstring, "\\zeta_{", n+1, "}^{", i, "}")
     else
         return ""
     end
@@ -301,7 +310,7 @@ function is_geometric_array(a::Vector{T}) where {T}
         return a[1] == 1
     else
         gen = a[2]
-        for i in 2:(length(a)-1)
+        for i = 2:(length(a)-1)
             if gen^i != a[i+1]
                 return false
             end

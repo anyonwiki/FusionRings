@@ -12,7 +12,7 @@ end
 "Structure constant N[a,b,c]."
 # TODO: function is not used except in tests...
 function fusion_coeff(fr::FusionRing, a::Int, b::Int, c::Int)::Int
-    multiplication_table(fr)[a,b,c]
+    multiplication_table(fr)[a, b, c]
 end
 
 """
@@ -22,9 +22,9 @@ Return the decomposition of `a ⊗ b` as a multiplicity dictionary
 `Dict{simple_index => multiplicity}`.
 """
 function fusion_product(fr::FusionRing, a::Int, b::Int)
-    N = @views multiplication_table(fr)[a,b,:]
+    N = @views multiplication_table(fr)[a, b, :]
     out = Dict{Int,Int}()
-    @inbounds for (c,m) in enumerate(N)
+    @inbounds for (c, m) in enumerate(N)
         m==0 && continue
         out[c] = m
     end
@@ -33,13 +33,13 @@ end
 
 "Return vector of simple indices with positive multiplicity in `a × b`."
 function fusion_outcomes(fr::FusionRing, a::Int, b::Int)::Vector{Int}
-    [c for (c,m) in fusion_product(fr,a,b) if m>0]
+    [c for (c, m) in fusion_product(fr, a, b) if m>0]
 end
 
 "Ordered list form of `a × b`."
 # TODO: function is not used except in tests...
-function decompose(fr::FusionRing, a::Int, b::Int) 
-    [ (k,v) for (k,v) in fusion_product(fr,a,b) ]
+function decompose(fr::FusionRing, a::Int, b::Int)
+    [(k, v) for (k, v) in fusion_product(fr, a, b)]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -53,36 +53,36 @@ export replace_by_known
 # safe_return=true makes the function return the original ring in case no built-in 
 # ring is found
 
-function replace_by_known( fr::FusionRing; keep_order=true, safe_return=true )::FusionRing
+function replace_by_known(fr::FusionRing; keep_order = true, safe_return = true)::FusionRing
     r = rank(fr)
     m = multiplicity(fr)
     n = nnsd(fr)
 
-    if !haskey(frd, [r,m,n] )
+    if !haskey(frd, [r, m, n])
         safe_return && return fr
         return missing
     end
 
-    proposals = collect(values(frd[[r,m,n]]))
+    proposals = collect(values(frd[[r, m, n]]))
 
     # find the permutation
-    p      = nothing
+    p = nothing
     target = nothing
-    for ring in proposals 
-        p = which_permutation( ring, fr )
-        if p ≠ nothing 
-            target = ring 
+    for ring in proposals
+        p = which_permutation(ring, fr)
+        if p ≠ nothing
+            target = ring
             break
         end
     end
 
-    if p === nothing 
+    if p === nothing
         safe_return && return fr
         return missing
     end
 
     if keep_order
-        permute( p[1], target )
+        permute(p[1], target)
     else
         return target
     end
@@ -96,11 +96,15 @@ end
 export restrict_subring
 
 # restrict ring to subindices S (Anyonica's MT[ring][[el,el,el]])
-function restrict_subring(fr::FusionRing, S::Vector{Int}; check_closed::Bool = true)::FusionRing
+function restrict_subring(
+    fr::FusionRing,
+    S::Vector{Int};
+    check_closed::Bool = true,
+)::FusionRing
     sS = sort(S)
 
     sS == collect(1:rank(fr)) && return fr
-    
+
     unique(sS) != sS && error("vector should contain each element only once")
 
 
@@ -122,7 +126,7 @@ function restrict_subring(fr::FusionRing, S::Vector{Int}; check_closed::Bool = t
 
     # TODO: might want to conserve as much information as possible, but 
     # it's better to wait until all fields of the FusionRing struct are finalized
-    fusion_ring( Nsub ) 
+    fusion_ring(Nsub)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -134,9 +138,9 @@ export permute
 
 """permute(r, perm) – return a new `FusionRing` with all data
     permuted by `perm`.  `perm[1]` **must** equal 1 to keep the vacuum first."""
-function permute( perm::Vector{Int}, r::FusionRing)::FusionRing
+function permute(perm::Vector{Int}, r::FusionRing)::FusionRing
     n = rank(r)
-    n == length(perm)      || throw(ArgumentError("perm length ≠ rank"))
+    n == length(perm) || throw(ArgumentError("perm length ≠ rank"))
     sort(perm) == collect(1:n) || throw(ArgumentError("perm must be a true permutation"))
     perm[1] == 1 || throw(ArgumentError("vacuum must stay at index 1"))
 
@@ -146,20 +150,29 @@ function permute( perm::Vector{Int}, r::FusionRing)::FusionRing
     # Metadata that needs re‑ordering (guard against `missing`)
     el_names = labels(r)[perm]
     tex_names = length(r.texnames) == n ? r.texnames[perm] : r.texnames
-    fpdims   = r.frobenius_perron_dimensions === missing ?
-               missing : (length(r.frobenius_perron_dimensions) == n ? r.frobenius_perron_dimensions[perm] : r.frobenius_perron_dimensions)
-    chars    = r.characters === missing ?
-               missing : (ndims(r.characters) == 2 && size(r.characters, 2) == n ? r.characters[:, perm] : r.characters)
+    fpdims =
+        r.frobenius_perron_dimensions === missing ? missing :
+        (
+            length(r.frobenius_perron_dimensions) == n ?
+            r.frobenius_perron_dimensions[perm] : r.frobenius_perron_dimensions
+        )
+    chars =
+        r.characters === missing ? missing :
+        (
+            ndims(r.characters) == 2 && size(r.characters, 2) == n ? r.characters[:, perm] :
+            r.characters
+        )
 
-    return fusion_ring(mt_new;                       # core data
-        names         = r.names,
-        texnames      = tex_names,
-        labels        = el_names,
-        barcode       = r.barcode,
+    return fusion_ring(
+        mt_new;                       # core data
+        names = r.names,
+        texnames = tex_names,
+        labels = el_names,
+        barcode = r.barcode,
         anyonwiki_code = r.anyonwiki_code,
         sub_fusion_rings = r.sub_fusion_rings,
         frobenius_perron_dimensions = fpdims,
-        characters    = chars
+        characters = chars,
     )
 end
 
@@ -170,10 +183,10 @@ Apply permutation `p` (fixing 1) to all three indices of `N`.
 """
 function permute_mult_tab(N::Array{Int,3}, p::Vector{Int})
     p[1]==1 || error("Permutation must fix the unit at index 1")
-    r = size(N,1)
+    r = size(N, 1)
     M = fill(0, r, r, r)
-    @inbounds for a in 1:r, b in 1:r, c in 1:r
-        M[p[a], p[b], p[c]] = N[a,b,c]
+    @inbounds for a = 1:r, b = 1:r, c = 1:r
+        M[p[a], p[b], p[c]] = N[a, b, c]
     end
     M
 end
@@ -188,11 +201,11 @@ end
 
 export sort
 
-function sort( fr::FusionRing; by="fpdims", order::Symbol = :increasing )
+function sort(fr::FusionRing; by = "fpdims", order::Symbol = :increasing)
     if by == "fpdims"
-        return permute( perm_vec_qd(fr,order=order), fr )
+        return permute(perm_vec_qd(fr, order = order), fr)
     elseif by == "sd_conj"
-        return permute( perm_vec_sd_conj(fr,order=order), fr )
+        return permute(perm_vec_sd_conj(fr, order = order), fr)
     else
         message("by= argument was not \"fpdims\" or \"sd_conj\".")
     end
@@ -202,7 +215,7 @@ end
     elements by Frobenius–Perron dimension."""
 function perm_vec_qd(r::FusionRing; order::Symbol = :increasing)::Vector{Int}
     idx = collect(2:rank(r))
-    qd  = fpdims(r)
+    qd = fpdims(r)
     sort!(idx; by = i -> qd[i], rev = (order == :decreasing))
     return vcat(1, idx)
 end
@@ -210,23 +223,24 @@ end
 """perm_vec_sd_conj(r; order = :increasing) – self‑duals first, then conjugate
     pairs, each block ordered by FP‑dimension."""
 function perm_vec_sd_conj(r::FusionRing; order::Symbol = :increasing)::Vector{Int}
-    n  = rank(r)
+    n = rank(r)
     conj = conjugate_element(r)
     qd = fpdims(r)
 
-    self_dual = [i for i in 2:n if conj(i) == i]
+    self_dual = [i for i = 2:n if conj(i) == i]
     sort!(self_dual; by = i -> qd[i], rev = (order == :decreasing))
 
-    paired   = Set(self_dual)
-    pairs    = Tuple{Int,Int}[]
+    paired = Set(self_dual)
+    pairs = Tuple{Int,Int}[]
 
-    for i in 2:n
+    for i = 2:n
         i in paired && continue
         j = conj(i)
         i == j && continue
 
         a, b = i, j
-        if (order == :increasing && qd[a] > qd[b]) || (order == :decreasing && qd[a] < qd[b])
+        if (order == :increasing && qd[a] > qd[b]) ||
+           (order == :decreasing && qd[a] < qd[b])
             a, b = b, a
         end
 
@@ -249,21 +263,22 @@ end
 export tensor_product
 
 function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
-    m, n   = rank(r1), rank(r2)
+    m, n = rank(r1), rank(r2)
     mt1, mt2 = multiplication_table(r1), multiplication_table(r2)
 
     mt = zeros(Int, m*n, m*n, m*n)
-    @inbounds for a in 1:m, α in 1:n, b in 1:m, β in 1:n, c in 1:m, γ in 1:n
+    @inbounds for a = 1:m, α = 1:n, b = 1:m, β = 1:n, c = 1:m, γ = 1:n
         i = (a-1)*n + α
         j = (b-1)*n + β
         k = (c-1)*n + γ
-        mt[i,j,k] = mt1[a,b,c] * mt2[α,β,γ]
+        mt[i, j, k] = mt1[a, b, c] * mt2[α, β, γ]
     end
 
     # Assemble element names
-    elnames = [ string(e1, "⊗", e2) for e1 in labels(r1) for e2 in labels(r2) ]
+    elnames = [string(e1, "⊗", e2) for e1 in labels(r1) for e2 in labels(r2)]
 
-    names_tp = (isempty(names(r1)) || isempty(names(r2))) ? String[] :
+    names_tp =
+        (isempty(names(r1)) || isempty(names(r2))) ? String[] :
         [string(names(r1)[1], "⊗", names(r2)[1])]
 
     fpdims_new = try
@@ -273,10 +288,10 @@ function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
     end
 
     return fusion_ring(
-        mt; 
-        names = names_tp, 
-        labels = elnames, 
-        frobenius_perron_dimensions = fpdims_new
+        mt;
+        names = names_tp,
+        labels = elnames,
+        frobenius_perron_dimensions = fpdims_new,
     )
 end
 
@@ -291,7 +306,7 @@ function tensor_product(rings::Vector{FusionRing})::FusionRing
     return out
 end
 
-function tensor_product(rings...)::FusionRing 
+function tensor_product(rings...)::FusionRing
     return tensor_product([rings...])
 end
 
@@ -301,10 +316,10 @@ end
 
 export to_group
 
-function to_group( fr::FusionRing )
-  ct = cayley_table(fr)
-  gm( a, b ) = ct[a,b]
-  permutation_group( generic_group(1:rank(fr), gm )[1] )
+function to_group(fr::FusionRing)
+    ct = cayley_table(fr)
+    gm(a, b) = ct[a, b]
+    permutation_group(generic_group(1:rank(fr), gm)[1])
 end
 
 

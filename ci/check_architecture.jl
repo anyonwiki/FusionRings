@@ -11,13 +11,15 @@ struct Violation
 end
 
 function usage()
-    println("""
+    println(
+        """
 Usage:
   julia --project=ci/FuncDepsEnv ci/check_architecture.jl <source_dir> <policy_file> <report_file>
 
 Example:
   julia --project=ci/FuncDepsEnv ci/check_architecture.jl src ci/architecture_policy.toml artifacts/funcdeps/architecture_report.txt
-""")
+""",
+    )
 end
 
 length(ARGS) >= 3 || (usage(); exit(2))
@@ -96,12 +98,15 @@ for mod in string_list(get(policy, "independent_modules", String[]))
         for callee in info.calls
             module_norm(callee) == m && continue
             is_ignored(info.full_name, callee) && continue
-            push!(violations, Violation(
-                "independent_modules",
-                info.full_name,
-                callee,
-                "module $(module_of(info.full_name)) is marked independent but calls module $(module_of(callee))",
-            ))
+            push!(
+                violations,
+                Violation(
+                    "independent_modules",
+                    info.full_name,
+                    callee,
+                    "module $(module_of(info.full_name)) is marked independent but calls module $(module_of(callee))",
+                ),
+            )
         end
     end
 end
@@ -117,12 +122,15 @@ for file in string_list(get(policy, "independent_files", String[]))
             isempty(callee_file) && continue
             file_norm(callee_file) == f && continue
             is_ignored(info.full_name, callee) && continue
-            push!(violations, Violation(
-                "independent_files",
-                info.full_name,
-                callee,
-                "file $(basename(info.file)) is marked independent but calls function in $(basename(callee_file))",
-            ))
+            push!(
+                violations,
+                Violation(
+                    "independent_files",
+                    info.full_name,
+                    callee,
+                    "file $(basename(info.file)) is marked independent but calls function in $(basename(callee_file))",
+                ),
+            )
         end
     end
 end
@@ -137,12 +145,15 @@ for (srcmod, blocked) in get(policy, "forbidden_module_deps", Dict{String,Any}()
             dst_m = module_norm(callee)
             dst_m in blocked_set || continue
             is_ignored(info.full_name, callee) && continue
-            push!(violations, Violation(
-                "forbidden_module_deps",
-                info.full_name,
-                callee,
-                "module $(module_of(info.full_name)) is forbidden from depending on module $(module_of(callee))",
-            ))
+            push!(
+                violations,
+                Violation(
+                    "forbidden_module_deps",
+                    info.full_name,
+                    callee,
+                    "module $(module_of(info.full_name)) is forbidden from depending on module $(module_of(callee))",
+                ),
+            )
         end
     end
 end
@@ -159,12 +170,15 @@ for (srcmod, allowed) in get(policy, "allowed_module_deps", Dict{String,Any}())
             dst_m == src_m && continue
             dst_m in allowed_set && continue
             is_ignored(info.full_name, callee) && continue
-            push!(violations, Violation(
-                "allowed_module_deps",
-                info.full_name,
-                callee,
-                "module $(module_of(info.full_name)) may only depend on $(sort(collect(allowed_set))) but calls $(module_of(callee))",
-            ))
+            push!(
+                violations,
+                Violation(
+                    "allowed_module_deps",
+                    info.full_name,
+                    callee,
+                    "module $(module_of(info.full_name)) may only depend on $(sort(collect(allowed_set))) but calls $(module_of(callee))",
+                ),
+            )
         end
     end
 end
@@ -179,12 +193,15 @@ if ind_funcs isa Dict
             for callee in info.calls
                 module_norm(callee) == module_norm(info.full_name) && continue
                 is_ignored(info.full_name, callee) && continue
-                push!(violations, Violation(
-                    "independent_functions.cross_module",
-                    info.full_name,
-                    callee,
-                    "function $(info.full_name) is marked cross-module independent",
-                ))
+                push!(
+                    violations,
+                    Violation(
+                        "independent_functions.cross_module",
+                        info.full_name,
+                        callee,
+                        "function $(info.full_name) is marked cross-module independent",
+                    ),
+                )
             end
         end
     end
@@ -195,12 +212,15 @@ if ind_funcs isa Dict
             normfull(info.full_name) == target || continue
             for callee in info.calls
                 is_ignored(info.full_name, callee) && continue
-                push!(violations, Violation(
-                    "independent_functions.no_internal_calls",
-                    info.full_name,
-                    callee,
-                    "function $(info.full_name) is marked as having no internal project calls",
-                ))
+                push!(
+                    violations,
+                    Violation(
+                        "independent_functions.no_internal_calls",
+                        info.full_name,
+                        callee,
+                        "function $(info.full_name) is marked as having no internal project calls",
+                    ),
+                )
             end
         end
     end
@@ -215,12 +235,15 @@ for (srcfun, blocked) in get(policy, "forbidden_function_deps", Dict{String,Any}
         for callee in info.calls
             normfull(callee) in blocked_set || continue
             is_ignored(info.full_name, callee) && continue
-            push!(violations, Violation(
-                "forbidden_function_deps",
-                info.full_name,
-                callee,
-                "exact function dependency is forbidden by policy",
-            ))
+            push!(
+                violations,
+                Violation(
+                    "forbidden_function_deps",
+                    info.full_name,
+                    callee,
+                    "exact function dependency is forbidden by policy",
+                ),
+            )
         end
     end
 end

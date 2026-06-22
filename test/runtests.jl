@@ -27,8 +27,7 @@ Examples:
     FUSIONRINGS_TEST_GROUP=properties
     FUSIONRINGS_TEST_GROUP=all
 """
-want_group(name::AbstractString) =
-    TEST_GROUP == "all" || lowercase(name) == TEST_GROUP
+want_group(name::AbstractString) = TEST_GROUP == "all" || lowercase(name) == TEST_GROUP
 
 """
     want_level(name)
@@ -65,7 +64,7 @@ function maybe_group_ok(group::AbstractString)
     return g == "all" || want_group(g)
 end
 
-function run_maybe_testset(f::Function, name::AbstractString; group="all", level="all")
+function run_maybe_testset(f::Function, name::AbstractString; group = "all", level = "all")
     if maybe_group_ok(group) && want_level(level)
         @testset "$name" begin
             f()
@@ -77,14 +76,14 @@ end
 
 # Keyword style:
 # maybe_testset("name"; group="properties", level="basic") do ... end
-function maybe_testset(f::Function, name::AbstractString; group="all", level="all")
-    return run_maybe_testset(f, name; group=group, level=level)
+function maybe_testset(f::Function, name::AbstractString; group = "all", level = "all")
+    return run_maybe_testset(f, name; group = group, level = level)
 end
 
 # Positional level style:
 # maybe_testset("name", "basic") do ... end
 function maybe_testset(f::Function, name::AbstractString, level::AbstractString)
-    return run_maybe_testset(f, name; level=level)
+    return run_maybe_testset(f, name; level = level)
 end
 
 # Positional group + level style:
@@ -95,7 +94,7 @@ function maybe_testset(
     group::AbstractString,
     level::AbstractString,
 )
-    return run_maybe_testset(f, name; group=group, level=level)
+    return run_maybe_testset(f, name; group = group, level = level)
 end
 
 

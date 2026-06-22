@@ -10,14 +10,16 @@
 ISREAL(x) = isreal(x)
 lesserthan(x, y) = x < y
 
-function csp_criterion( ring::FusionRing )
-    is_commutative( ring ) || error("Commutative Schur Product Criterion only applies to commutative fusion rings")
+function csp_criterion(ring::FusionRing)
+    is_commutative(ring) || error(
+        "Commutative Schur Product Criterion only applies to commutative fusion rings",
+    )
 
-    chars = characters( ring )
-    r = rank( ring )
+    chars = characters(ring)
+    r = rank(ring)
 
-    for j1 in 1:r, j2 in 1:r, j3 in 1:r
-        s = sum( chars[ i, j1 ] * chars[ i, j2 ] * chars[ i, j3 ] / chars[ i, 1 ] for i in 1:r )
+    for j1 = 1:r, j2 = 1:r, j3 = 1:r
+        s = sum(chars[i, j1] * chars[i, j2] * chars[i, j3] / chars[i, 1] for i = 1:r)
         #TODO: this is only correct if characters(ring) is stored as:
         # rows  = basis els / simple objs i
         # cols = chars j
@@ -26,9 +28,9 @@ function csp_criterion( ring::FusionRing )
         # which only makes snese if chars is a list of char vectors
         # maybe replace with s = sum(chars[j1, i] * chars[j2, i] * chars[j3, i] / chars[1, i] for i in 1:r)
         # i could be wrong though and maybe it is object rowed lol!
-        if ISREAL( s ) && lesserthan( s, 0 )
+        if ISREAL(s) && lesserthan(s, 0)
             return true
-        else 
+        else
             continue
         end
     end
@@ -46,8 +48,9 @@ end
 # chars[1, i] =  FP dim of basis element i.
 
 function csp_value(ring::FusionRing; tol::Real = 1e-10)
-    is_commutative(ring) ||
-        error("Commutative Schur Product Criterion only applies to commutative fusion rings")
+    is_commutative(ring) || error(
+        "Commutative Schur Product Criterion only applies to commutative fusion rings",
+    )
 
     chars = characters(ring)
     r = rank(ring)
@@ -55,11 +58,8 @@ function csp_value(ring::FusionRing; tol::Real = 1e-10)
     best_value = Inf
     best_witness = nothing
 
-    for j1 in 1:r, j2 in 1:r, j3 in 1:r
-        s = sum(
-            chars[j1, i] * chars[j2, i] * chars[j3, i] / chars[1, i]
-            for i in 1:r
-        )
+    for j1 = 1:r, j2 = 1:r, j3 = 1:r
+        s = sum(chars[j1, i] * chars[j2, i] * chars[j3, i] / chars[1, i] for i = 1:r)
 
         # The theorem expects a real value. Numerical character tables may produce
         # tiny imaginary noise, so tolerate that.
@@ -90,27 +90,27 @@ end
 # ========================================================================
 
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
-function pdc_criterion( r::FusionRing )
-#
-# PDCCriterion[ ring_FusionRing?CommutativeQ ] :=
-#   Module[{chars,c},
-#     chars =
-#       FusionRingCharacters[ring];
-#     c =
-#       #.ConjugateTranspose[#]& /@ chars;
-#
-#     Catch[
-#       Do[
-#         If[
-#           And @@ Flatten @ AlgebraicIntegerQ[ c[[j]] / c ],
-#           Throw[ False ]
-#         ],
-#         { j, Length[c] }
-#       ];
-#       True
-#     ]
-#
-#   ];
+function pdc_criterion(r::FusionRing)
+    #
+    # PDCCriterion[ ring_FusionRing?CommutativeQ ] :=
+    #   Module[{chars,c},
+    #     chars =
+    #       FusionRingCharacters[ring];
+    #     c =
+    #       #.ConjugateTranspose[#]& /@ chars;
+    #
+    #     Catch[
+    #       Do[
+    #         If[
+    #           And @@ Flatten @ AlgebraicIntegerQ[ c[[j]] / c ],
+    #           Throw[ False ]
+    #         ],
+    #         { j, Length[c] }
+    #       ];
+    #       True
+    #     ]
+    #
+    #   ];
 end
 
 
@@ -263,28 +263,23 @@ end
 #
 #  ];
 #
-function crit1( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum( mt[ i[5], i[4], k ] * mt[ i[3], d[ i[1] ], k ] for  k in 1:r ) == 1 ||
-    sum( mt[ i[2], d[ i[4] ], k ] * mt[ i[3], d[ i[6] ], k ] for k in 1:r ) == 1 ||
-    sum( mt[ d[ i[5] ], i[2], k ] * mt[ i[6], d[ i[1] ], k ] for k in 1:r ) == 1
+function crit1(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3})::Bool
+    r = size(mt, 1)
+    sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k = 1:r) == 1 ||
+        sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k = 1:r) == 1 ||
+        sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k = 1:r) == 1
 end
 
-function crit2( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum( mt[ i[2], i[4], k ] * mt[ i[3], d[ i[6] ], k ] for  k in 1:r ) == 1 ||
-    sum( mt[ i[5], d[ i[4] ], k ] * mt[ i[3], d[ i[1] ], k ] for k in 1:r ) == 1 ||
-    sum( mt[ d[ i[2] ], i[5], k ] * mt[ i[1], d[ i[6] ], k ] for k in 1:r ) == 1
+function crit2(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3})::Bool
+    r = size(mt, 1)
+    sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k = 1:r) == 1 ||
+        sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k = 1:r) == 1 ||
+        sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k = 1:r) == 1
 end
 
-function crit3( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum(
-        mt[ i[1], i[4], k ] *
-        mt[ d[ i[2] ], i[5], k ] *
-        mt[ i[3], d[ i[6] ], k ]
-        for k in 1:r
-    ) == 0
+function crit3(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3})::Bool
+    r = size(mt, 1)
+    sum(mt[i[1], i[4], k] * mt[d[i[2]], i[5], k] * mt[i[3], d[i[6]], k] for k = 1:r) == 0
 end
 
 #PackageExport["OSCriterion"]
@@ -367,7 +362,7 @@ function zsc_criterion(ring::FusionRing)::Bool
     d = _dual_indices_from_mt(mt)
     nonzero = _nonzero_structure_constants(mt)
 
-    for i2 in 1:r, i1 in 1:r, i3 in 1:r
+    for i2 = 1:r, i1 = 1:r, i3 = 1:r
         mt[i2, i1, i3] == 1 || continue
 
         for ind1 in nonzero
@@ -432,7 +427,7 @@ function osc_criterion(ring::FusionRing)::Bool
     d = _dual_indices_from_mt(mt)
     nonzero = _nonzero_structure_constants(mt)
 
-    for i2 in 1:r, i1 in 1:r, i3 in 1:r
+    for i2 = 1:r, i1 = 1:r, i3 = 1:r
         mt[i2, i1, i3] == 0 || continue
 
         for ind1 in nonzero
@@ -458,12 +453,12 @@ function osc_criterion(ring::FusionRing)::Bool
                     i7 = ind3[1]
                     i9 = ind3[2]
 
-                    for i0 in 1:r
+                    for i0 = 1:r
                         mt[i4, i7, i0] == 1 || continue
                         mt[i6, d[i9], i0] == 1 || continue
                         _crit1_has_one((i9, i0, i6, i7, i4, i1), d, mt) || continue
 
-                        for i8 in 1:r
+                        for i8 = 1:r
                             if mt[i2, i7, i8] != 0 &&
                                mt[i8, i9, i3] != 0 &&
                                mt[d[i5], i8, i0] == 1 &&

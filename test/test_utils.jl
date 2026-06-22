@@ -46,15 +46,15 @@ function check_equal(actual, expected, msg::AbstractString)
     @test actual == expected
 end
 
-function check_approx(actual, expected, msg::AbstractString; atol=1e-8, rtol=1e-8)
-    ok = isapprox(actual, expected; atol=atol, rtol=rtol)
+function check_approx(actual, expected, msg::AbstractString; atol = 1e-8, rtol = 1e-8)
+    ok = isapprox(actual, expected; atol = atol, rtol = rtol)
     if !ok
         println("FAILED: ", msg)
         println("  expected approximately: ", repr(expected))
         println("  got                   : ", repr(actual))
         println("  absolute difference   : ", repr(abs(actual - expected)))
     end
-    @test isapprox(actual, expected; atol=atol, rtol=rtol)
+    @test isapprox(actual, expected; atol = atol, rtol = rtol)
 end
 
 function check_throws(f::Function, msg::AbstractString)
@@ -80,7 +80,11 @@ end
 # Better multiplication-table comparison
 # ============================================================
 
-function check_equal_tensor(actual::Array{Int,3}, expected::Array{Int,3}, msg::AbstractString)
+function check_equal_tensor(
+    actual::Array{Int,3},
+    expected::Array{Int,3},
+    msg::AbstractString,
+)
     if actual != expected
         println("FAILED: ", msg)
         println("  expected size: ", size(expected))
@@ -142,11 +146,11 @@ Use a normal global instead of `const` so repeated includes/reloads do
 not trigger invalid constant redefinition errors.
 """
 
-ANYONICA_TESTDATA_DIR = isdefined(@__MODULE__, :ANYONICA_TESTDATA_DIR) ?
-    getfield(@__MODULE__, :ANYONICA_TESTDATA_DIR) :
-    joinpath(@__DIR__, "testdata")
+ANYONICA_TESTDATA_DIR =
+    isdefined(@__MODULE__, :ANYONICA_TESTDATA_DIR) ?
+    getfield(@__MODULE__, :ANYONICA_TESTDATA_DIR) : joinpath(@__DIR__, "testdata")
 
-    
+
 """
     anyonica_data_path(filename)
 
@@ -208,7 +212,7 @@ function json_int_matrix(x)
     n = length(x[1])
     A = zeros(Int, m, n)
 
-    for i in 1:m, j in 1:n
+    for i = 1:m, j = 1:n
         A[i, j] = json_int(x[i][j])
     end
 
@@ -219,7 +223,7 @@ function json_int_3tensor(x)
     r = length(x)
     A = zeros(Int, r, r, r)
 
-    for i in 1:r, j in 1:r, k in 1:r
+    for i = 1:r, j = 1:r, k = 1:r
         A[i, j, k] = json_int(x[i][j][k])
     end
 
@@ -302,7 +306,9 @@ function ring_from_anyonica_ref(x)
     elseif looks_like_formal_code(x)
         return ring_from_anyonica_code(x)
     else
-        error("Could not interpret Anyonica ring reference of type $(typeof(x)): $(repr(x))")
+        error(
+            "Could not interpret Anyonica ring reference of type $(typeof(x)): $(repr(x))",
+        )
     end
 end
 
@@ -459,7 +465,13 @@ function numeric_vector_from_json(xs)
     return Float64[json_float(x) for x in xs]
 end
 
-function check_numeric_vector_approx(actual, expected_json, msg::AbstractString; atol=1e-8, rtol=1e-8)
+function check_numeric_vector_approx(
+    actual,
+    expected_json,
+    msg::AbstractString;
+    atol = 1e-8,
+    rtol = 1e-8,
+)
     actual_vec = Float64[Float64(real(x)) for x in actual]
     expected_vec = numeric_vector_from_json(expected_json)
 
@@ -467,7 +479,7 @@ function check_numeric_vector_approx(actual, expected_json, msg::AbstractString;
         println("FAILED: ", msg)
         println("  expected length: ", length(expected_vec))
         println("  actual length  : ", length(actual_vec))
-    elseif !isapprox(actual_vec, expected_vec; atol=atol, rtol=rtol)
+    elseif !isapprox(actual_vec, expected_vec; atol = atol, rtol = rtol)
         println("FAILED: ", msg)
         println("  expected approximately: ", repr(expected_vec))
         println("  got                   : ", repr(actual_vec))
@@ -481,21 +493,27 @@ function check_numeric_vector_approx(actual, expected_json, msg::AbstractString;
     end
 
     @test length(actual_vec) == length(expected_vec)
-    @test isapprox(actual_vec, expected_vec; atol=atol, rtol=rtol)
+    @test isapprox(actual_vec, expected_vec; atol = atol, rtol = rtol)
 end
 
-function check_numeric_approx(actual, expected_json, msg::AbstractString; atol=1e-8, rtol=1e-8)
+function check_numeric_approx(
+    actual,
+    expected_json,
+    msg::AbstractString;
+    atol = 1e-8,
+    rtol = 1e-8,
+)
     actual_num = Float64(real(actual))
     expected_num = json_float(expected_json)
 
-    if !isapprox(actual_num, expected_num; atol=atol, rtol=rtol)
+    if !isapprox(actual_num, expected_num; atol = atol, rtol = rtol)
         println("FAILED: ", msg)
         println("  expected approximately: ", repr(expected_num))
         println("  got                   : ", repr(actual_num))
         println("  absolute difference   : ", repr(abs(actual_num - expected_num)))
     end
 
-    @test isapprox(actual_num, expected_num; atol=atol, rtol=rtol)
+    @test isapprox(actual_num, expected_num; atol = atol, rtol = rtol)
 end
 
 # Oracle case selection
@@ -537,7 +555,7 @@ function _rank_from_oracle_input(x)
     end
 end
 
-function oracle_case_indices(data; mode=oracle_mode(), max_cases=12, max_rank=6)
+function oracle_case_indices(data; mode = oracle_mode(), max_cases = 12, max_rank = 6)
     n = length(data["Input"])
 
     n == 0 && return Int[]
@@ -550,26 +568,20 @@ function oracle_case_indices(data; mode=oracle_mode(), max_cases=12, max_rank=6)
         if n <= max_cases
             return collect(1:n)
         end
-        return sort(unique(round.(Int, range(1, n; length=max_cases))))
+        return sort(unique(round.(Int, range(1, n; length = max_cases))))
     elseif mode == :representative
         if n <= max_cases
             return collect(1:n)
         end
 
-        base = Int[
-            1,
-            max(1, cld(n, 4)),
-            max(1, cld(n, 2)),
-            max(1, cld(3n, 4)),
-            n,
-        ]
+        base = Int[1, max(1, cld(n, 4)), max(1, cld(n, 2)), max(1, cld(3n, 4)), n]
 
-        spread = round.(Int, range(1, n; length=max_cases))
+        spread = round.(Int, range(1, n; length = max_cases))
         return sort(unique(vcat(base, collect(spread))))
     elseif mode == :small_ranks
         inds = Int[]
 
-        for i in 1:n
+        for i = 1:n
             r = _rank_from_oracle_input(data["Input"][i])
             if r !== nothing && r <= max_rank
                 push!(inds, i)
@@ -582,7 +594,13 @@ function oracle_case_indices(data; mode=oracle_mode(), max_cases=12, max_rank=6)
     end
 end
 
-function oracle_case_indices(filename::AbstractString, data; mode=oracle_mode(), max_cases=12, max_rank=6)
+function oracle_case_indices(
+    filename::AbstractString,
+    data;
+    mode = oracle_mode(),
+    max_cases = 12,
+    max_rank = 6,
+)
     # Creation  are tiny, so testing all of them is cheap and useful.
     if filename in (
         "zn_tables.json",
@@ -596,5 +614,10 @@ function oracle_case_indices(filename::AbstractString, data; mode=oracle_mode(),
         return collect(1:length(data["Input"]))
     end
 
-    return oracle_case_indices(data; mode=mode, max_cases=max_cases, max_rank=max_rank)
+    return oracle_case_indices(
+        data;
+        mode = mode,
+        max_cases = max_cases,
+        max_rank = max_rank,
+    )
 end

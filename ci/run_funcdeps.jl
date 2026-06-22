@@ -4,13 +4,15 @@ using FuncDeps
 using TOML
 
 function usage()
-    println("""
+    println(
+        """
 Usage:
   julia --project=ci/FuncDepsEnv ci/run_funcdeps.jl <source_dir> <output_dir> [policy_file]
 
 Example:
   julia --project=ci/FuncDepsEnv ci/run_funcdeps.jl src artifacts/funcdeps ci/architecture_policy.toml
-""")
+""",
+    )
 end
 
 function render_svg(cmd::Cmd, description::String)
@@ -49,13 +51,13 @@ println("Scanning source directory: ", abspath(source_dir))
 infos = scan_project(source_dir)
 idx = build_index(infos)
 
-full_dot   = joinpath(output_dir, "funcdeps_full.dot")
-cross_dot  = joinpath(output_dir, "funcdeps_cross_module.dot")
+full_dot = joinpath(output_dir, "funcdeps_full.dot")
+cross_dot = joinpath(output_dir, "funcdeps_cross_module.dot")
 module_dot = joinpath(output_dir, "moduledeps.dot")
-html_out   = joinpath(output_dir, "interactive_graph.html")
+html_out = joinpath(output_dir, "interactive_graph.html")
 
-write_full_dot(infos, full_dot; cluster_by_module=false)
-write_cross_module_dot(infos, cross_dot; cluster_by_module=true)
+write_full_dot(infos, full_dot; cluster_by_module = false)
+write_cross_module_dot(infos, cross_dot; cluster_by_module = true)
 write_module_dot(infos, module_dot)
 write_interactive_html(infos, html_out)
 
@@ -83,10 +85,15 @@ end
 
 ind_funcs = get(policy, "independent_functions", Dict{String,Any}())
 if ind_funcs isa Dict
-    for f in vcat(string_list(get(ind_funcs, "cross_module", String[])),
-                  string_list(get(ind_funcs, "no_internal_calls", String[])))
-        out = joinpath(focus_dir, "function_focus_$(replace(f, r"[^A-Za-z0-9_]+" => "_")).dot")
-        write_function_focus_dot(infos, f, out; depth=2)
+    for f in vcat(
+        string_list(get(ind_funcs, "cross_module", String[])),
+        string_list(get(ind_funcs, "no_internal_calls", String[])),
+    )
+        out = joinpath(
+            focus_dir,
+            "function_focus_$(replace(f, r"[^A-Za-z0-9_]+" => "_")).dot",
+        )
+        write_function_focus_dot(infos, f, out; depth = 2)
         println("  ", abspath(out))
     end
 end
@@ -96,22 +103,34 @@ dot = Sys.which("dot")
 sfdp = Sys.which("sfdp")
 
 if dot !== nothing
-    render_svg(`$dot -Tsvg $module_dot -o $(joinpath(output_dir, "moduledeps.svg"))`, "moduledeps.svg")
-    render_svg(`$dot -Tsvg $cross_dot -o $(joinpath(output_dir, "funcdeps_cross_module.svg"))`, "funcdeps_cross_module.svg")
+    render_svg(
+        `$dot -Tsvg $module_dot -o $(joinpath(output_dir, "moduledeps.svg"))`,
+        "moduledeps.svg",
+    )
+    render_svg(
+        `$dot -Tsvg $cross_dot -o $(joinpath(output_dir, "funcdeps_cross_module.svg"))`,
+        "funcdeps_cross_module.svg",
+    )
 else
     @warn "Graphviz dot not found; skipping module/cross-module SVG rendering"
 end
 
 if sfdp !== nothing
-    render_svg(`$sfdp -Goverlap=prism -Gsplines=line -Gpack=true -Grepulsiveforce=2 -Tsvg $full_dot -o $(joinpath(output_dir, "funcdeps_full.svg"))`, "funcdeps_full.svg")
+    render_svg(
+        `$sfdp -Goverlap=prism -Gsplines=line -Gpack=true -Grepulsiveforce=2 -Tsvg $full_dot -o $(joinpath(output_dir, "funcdeps_full.svg"))`,
+        "funcdeps_full.svg",
+    )
 elseif dot !== nothing
-    render_svg(`$dot -Tsvg $full_dot -o $(joinpath(output_dir, "funcdeps_full.svg"))`, "funcdeps_full.svg via dot fallback")
+    render_svg(
+        `$dot -Tsvg $full_dot -o $(joinpath(output_dir, "funcdeps_full.svg"))`,
+        "funcdeps_full.svg via dot fallback",
+    )
 else
     @warn "Graphviz sfdp/dot not found; skipping full graph SVG rendering"
 end
 
 if dot !== nothing && isdir(focus_dir)
-    for f in readdir(focus_dir; join=true)
+    for f in readdir(focus_dir; join = true)
         endswith(f, ".dot") || continue
         out = replace(f, r"\.dot$" => ".svg")
         render_svg(`$dot -Tsvg $f -o $out`, basename(out))

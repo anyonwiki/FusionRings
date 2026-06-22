@@ -7,14 +7,14 @@ using InteractiveUtils
 # ╔═╡ 4f8788dc-b431-11f0-01df-fd75003adb9b
 # ╠═╡ show_logs = false
 begin
-	using Revise
-	using Pkg;
-	Pkg.develop(path="/home/gert/Projects/FusionRings.jl/")
-	#Pkg.develop(path="/Users/gertvercleyen/Projects/FusionRings.jl/")
-	using FusionRings
-	using Oscar
-	using JSON
-	using Base.Threads
+    using Revise
+    using Pkg;
+    Pkg.develop(path = "/home/gert/Projects/FusionRings.jl/")
+    #Pkg.develop(path="/Users/gertvercleyen/Projects/FusionRings.jl/")
+    using FusionRings
+    using Oscar
+    using JSON
+    using Base.Threads
 end
 
 # ╔═╡ 95eeb20c-3efd-4285-b6a3-8d8d37aaee05
@@ -28,19 +28,19 @@ md"""
 """
 
 # ╔═╡ cbaa67dc-35db-4759-aaab-09e461581c16
-function frl(i::Int) 
-  js = JSON.parsefile("/home/gert/Tests/JSONExport/ring_"*string(i)*".json")
-  fc = [ js["formal_code"][i] for i in 1:4 ]
-  r = fc[1]
-  mt = zeros(Int, r, r, r)
-  for i in 1:r, j in 1:r, k in 1:r 
-      mt[i,j,k] = Int.(js["mt"][i][j][k])
-  end
-  FusionRings.fusion_ring( mt, formal_code = fc)
+function frl(i::Int)
+    js = JSON.parsefile("/home/gert/Tests/JSONExport/ring_"*string(i)*".json")
+    fc = [js["formal_code"][i] for i = 1:4]
+    r = fc[1]
+    mt = zeros(Int, r, r, r)
+    for i = 1:r, j = 1:r, k = 1:r
+        mt[i, j, k] = Int.(js["mt"][i][j][k])
+    end
+    FusionRings.fusion_ring(mt, formal_code = fc)
 end
 
 # ╔═╡ ac3382fa-1341-4017-ae7a-b96bdfa0ea67
-@time FRL = [ frl(i) for i in 1:28451 ];
+@time FRL = [frl(i) for i = 1:28451];
 
 # ╔═╡ e6ef9a18-94a6-44e5-b590-f08a12b2f4cf
 md"""
@@ -59,12 +59,12 @@ md"""
 mt = FusionRings.multiplication_table
 
 # ╔═╡ 9e9d0d16-5907-4601-b59a-f03556541567
-function is_constant_array( arr; equalfunc = === ) 
-  if isempty(arr)
-    return true 
-  end
-  first = arr[1]
-  return all( equalfunc( element, first ) for element in arr )
+function is_constant_array(arr; equalfunc = ===)
+    if isempty(arr)
+        return true
+    end
+    first = arr[1]
+    return all(equalfunc(element, first) for element in arr)
 end
 
 # ╔═╡ 3d817d5e-728a-45b3-bdba-7270a72a7c9b
@@ -82,7 +82,7 @@ function to_combined_numberfield(
     )
 
   K, f = number_field( QQ, unique( arr ), cached = false )
-   
+
   if simplify_field 
     L, g = simplify( K; canonical = canonical_simplification )
     to_field_elem  = x -> preimage( g, preimage( f, x ) )
@@ -100,7 +100,7 @@ end
 #=╠═╡
 function to_cyclotomic_field( arr::Array{AbsSimpleNumFieldElem}, emb ) 
 	length(arr) === 0 && return ( arr, emb )
-	
+
 	# Check parrent field of all fields are equal
 	is_constant_array( parent.( arr ) ) || error("Elements of array should belong to same field")
 
@@ -136,55 +136,55 @@ end
   ╠═╡ =#
 
 # ╔═╡ bfbea5b1-cbc2-4bed-946e-2a2066c317e1
-function samefield_characters( r )
-	to_composite_field( characters( r ), simplify_field = true )
+function samefield_characters(r)
+    to_composite_field(characters(r), simplify_field = true)
 end
 
 # ╔═╡ 1e211d49-5c37-4357-9f0c-b44b97d8bc2b
-function export_characters( i::Int ) 
-	fn1 = "/home/gert/Tests/characters/chars_"* string(i) *".mrdi"
-	fn2 = "/home/gert/Tests/characters/chars_injection_"* string(i) *".mrdi"
+function export_characters(i::Int)
+    fn1 = "/home/gert/Tests/characters/chars_" * string(i) * ".mrdi"
+    fn2 = "/home/gert/Tests/characters/chars_injection_" * string(i) * ".mrdi"
 
-	function export_new_chars(i) 
-		try 
-			chars, f  = samefield_characters(FRL[i])
-			generator = gen( parent( chars[1] ) )
-			
-			Oscar.save( fn1, chars )
-			Oscar.save( fn2, f(generator) )
-		catch e2
-			Oscar.save( fn1, ZZ.( [ 0 ] ) )
-			Oscar.save( fn2, ZZ.( [ 0 ] ) )
-		end	
-	end
-	
-	try
-		chars = Oscar.load(fn1)
-		f     = Oscar.load(fn2)
-		if chars == ZZ.([0])
-			export_new_chars(i)
-		end
-	catch e
-		export_new_chars(i)
-	end
+    function export_new_chars(i)
+        try
+            chars, f = samefield_characters(FRL[i])
+            generator = gen(parent(chars[1]))
+
+            Oscar.save(fn1, chars)
+            Oscar.save(fn2, f(generator))
+        catch e2
+            Oscar.save(fn1, ZZ.([0]))
+            Oscar.save(fn2, ZZ.([0]))
+        end
+    end
+
+    try
+        chars = Oscar.load(fn1)
+        f = Oscar.load(fn2)
+        if chars == ZZ.([0])
+            export_new_chars(i)
+        end
+    catch e
+        export_new_chars(i)
+    end
 end
 
 # ╔═╡ 881071c8-58dc-4f5f-99d3-7e031a3bfcf0
 function create_ind()
-	indices = []
-	fn(i) = "/home/gert/Tests/characters/chars_injection_"* string(i) *".mrdi"
-	for j in 1:352
-		try 
-			f = Oscar.load(fn(j))
-			if f == ZZ.([0])
-				push!( indices, j )
-			end
-			continue
-		catch e
-			push!( indices, j )
-		end
-	end
-	indices
+    indices = []
+    fn(i) = "/home/gert/Tests/characters/chars_injection_" * string(i) * ".mrdi"
+    for j = 1:352
+        try
+            f = Oscar.load(fn(j))
+            if f == ZZ.([0])
+                push!(indices, j)
+            end
+            continue
+        catch e
+            push!(indices, j)
+        end
+    end
+    indices
 end
 
 # ╔═╡ d656c78d-2df6-4497-82e8-0525a6195ea4
@@ -192,7 +192,7 @@ end
 
 # ╔═╡ 76730eeb-53fa-4d07-b0be-cc14660e5011
 @threads for i in create_ind()
-	export_characters( i ) 
+    export_characters(i)
 end
 
 # ╔═╡ aeb7bcf2-fcc8-4e47-8457-0a8ddc59243c
@@ -206,7 +206,7 @@ function char_sort_crit( v )
 	absval(vec) = conv.( RR.(abs2.(vec)) )
 	# Angles of elements of v
 	angl(vec) = conv.( real.( log.( CC.( vec) ) ./ CC( 2 * pi * im ) ) )
-			
+
 	( Int( all(isreal.(v)) ), absval(v), angl(v) )
 end
   ╠═╡ =#
@@ -228,11 +228,11 @@ function characters(ring)
     function is_diagonalizing_matrix( mat, mats )
       all( is_diagonal( mat * m * inv(mat) ) for m in mats )
     end
-    
+
     diagq = false
     upi = 9
     upj = 9
-    
+
     proposedchars = mats[1]
     while !diagq
       upi += 1

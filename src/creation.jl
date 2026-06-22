@@ -330,9 +330,8 @@ function psu2k_fusion_ring(k::Int)::FusionRing
         end
     end
 
-    elnames = [
-        "["*string(numerator((i-1)//2))*"/"*string(denominator((i-1)//2))*"]" for i = 1:rk
-    ]
+    elnames =
+        ["["*string(numerator((i-1)//2))*"/"*string(denominator((i-1)//2))*"]" for i = 1:rk]
 
     fusion_ring(mt, names = ["PSU(2)" * subscript_integer(k)], labels = elnames)
 end

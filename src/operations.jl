@@ -42,6 +42,8 @@ function decompose(fr::FusionRing, a::Int, b::Int)
   return [(k, v) for (k, v) in fusion_product(fr, a, b)]
 end
 
+# TODO: implement change_property function using the Accessors package
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                replace_by_known                                 ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

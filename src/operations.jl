@@ -134,7 +134,7 @@ end
 #TODO: implement permute for permutations from OSCAR
 export permute
 
-"""permute(r, perm) – return a new `FusionRing` with all data
+"""permute(perm,r) – return a new `FusionRing` with all data
     permuted by `perm`.  `perm[1]` **must** equal 1 to keep the vacuum first."""
 function permute(perm::Vector{Int}, r::FusionRing)::FusionRing
   n = rank(r)

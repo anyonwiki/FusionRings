@@ -23,7 +23,6 @@ bold_digits_dict = Dict(
 )
 
 subscript_integer(i::Int)::String = transform_integer(i, subs_digits_dict)
-subscript_integer(i::Int)::String = transform_integer(i, subs_digits_dict)
 
 subs_digits_dict = Dict(
   0 => "₀",

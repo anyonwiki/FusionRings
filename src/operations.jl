@@ -143,45 +143,35 @@ function permute(perm::Vector{Int}, r::FusionRing)::FusionRing
   perm[1] == 1 || throw(ArgumentError("vacuum must stay at index 1"))
 
   # Core table
-  mt_new = permute_mult_tab(multiplication_table(r), perm)
+  pmt = permute_mult_tab(multiplication_table(r), perm)
 
-  # Metadata that needs re‑ordering (guard against `missing`)
-  el_names = labels(r)[perm]
-  tex_names = length(r.texnames) == n ? r.texnames[perm] : r.texnames
-  fpdims = if r.frobenius_perron_dimensions === missing
-    missing
-  else
-    (
-      if length(r.frobenius_perron_dimensions) == n
-        r.frobenius_perron_dimensions[perm]
-      else
-        r.frobenius_perron_dimensions
-      end
+  pr = @set r.multiplication_table = pmt
+
+
+  permute_vector(p,v) = [ p[v[i]] for i in 1:size(v,1) ]
+  permute_sub_fus_ring(d) =
+    Dict(
+      "injection"   => permute_vector(invperm(perm),d["injection"]),
+      "anyonwiki_code" => d["anyonwiki_code"]
     )
-  end
-  chars = if r.characters === missing
-    missing
-  else
-    (
-      if ndims(r.characters) == 2 && size(r.characters, 2) == n
-        r.characters[:, perm]
-      else
-        r.characters
-      end
-    )
+
+  # Data that needs re‑ordering (guard against `missing`)
+  sr = r.sub_fusion_rings
+  if !ismissing(sr)
+    pr = @set pr.sub_fusion_rings = permute_sub_fus_ring.(sr)
   end
 
-  return fusion_ring(
-    mt_new;                       # core data
-    names = r.names,
-    texnames = tex_names,
-    labels = el_names,
-    barcode = r.barcode,
-    anyonwiki_code = r.anyonwiki_code,
-    sub_fusion_rings = r.sub_fusion_rings,
-    frobenius_perron_dimensions = fpdims,
-    characters = chars,
-  )
+  fpd = r.frobenius_perron_dimensions
+  if !ismissing(fpd)
+    pr = @set pr.frobenius_perron_dimensions = fpd[perm]
+  end
+
+  ch = r.characters
+  if !ismissing(ch)
+    pr = @set pr.characters = ch[:,perm]
+  end
+
+  return pr
 end
 
 """
@@ -194,7 +184,7 @@ function permute_mult_tab(N::Array{Int, 3}, p::Vector{Int})
   r = size(N, 1)
   M = fill(0, r, r, r)
   @inbounds for a in 1:r, b in 1:r, c in 1:r
-    M[p[a], p[b], p[c]] = N[a, b, c]
+    M[a, b, c] = N[p[a], p[b], p[c]]
   end
   return M
 end

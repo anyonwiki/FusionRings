@@ -570,6 +570,8 @@ function is_self_conjugate(fr)
 end
 
 # Apply permutation P on all three indices: A'[i,j,k] = A[P[i],P[j],P[k]]
+# TODO: we already have permute_mult_tab. Isn't this the same? If so remove the code below
+# in favor of permute_mult_tab
 function _permute_multtab(A::Array{Int, 3}, P::Vector{Int})::Array{Int, 3}
   r = size(A, 1)
   B = similar(A)

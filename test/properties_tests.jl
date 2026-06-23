@@ -429,7 +429,7 @@
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
       N3 = multiplication_table(z3)
-      pz3 = permute(z3, [1, 3, 2])
+      pz3 = permute([1, 3, 2],z3)
       N3p = multiplication_table(pz3)
 
       check_equal(
@@ -476,7 +476,7 @@
   @testset "is_equivalent_fusion_ring / fusion_ring_automorphisms" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
-      pz3 = permute(z3, [1, 3, 2])
+      pz3 = permute([1, 3, 2],z3)
 
       eq = is_equivalent_fusion_ring(z3, pz3)
       autos = fusion_ring_automorphisms(z3)
@@ -492,11 +492,11 @@
       z2 = zn_fusion_ring(2)
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
-      pz3 = permute(z3, [1, 3, 2])
+      pz3 = permute([1, 3, 2],z3)
 
       check_true(
         is_equivalent_fusion_ring(z3, pz3),
-        "is_equivalent_fusion_ring(z3, permute(z3,[1,3,2])) returned false",
+        "is_equivalent_fusion_ring(z3, permute([1,3,2],z3)) returned false",
       )
       check_false(
         is_equivalent_fusion_ring(z2, z3),

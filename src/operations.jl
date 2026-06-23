@@ -218,20 +218,23 @@ function perm_vec_qd(r::FusionRing; order::Symbol = :increasing)::Vector{Int}
   return vcat(1, idx)
 end
 
-"""perm_vec_sd_conj(r; order = :increasing) – self‑duals first, then conjugate
-    pairs, each block ordered by FP‑dimension."""
+"""perm_vec_sd_conj(r; order = :increasing) – self‑duals first (ordered by fpdim), then conjugate
+    pairs, with blocks ordered by FP‑dimension."""
 function perm_vec_sd_conj(r::FusionRing; order::Symbol = :increasing)::Vector{Int}
-  qd    = fpdims(r)
+  fpd   = fpdims(r)
   pairs = conjugate_pairs(r)
 
   sd, nsd = binsplit(p -> length(p)==1, pairs)
 
-  sort!(sd; by = i -> qd[i], rev = (order == :decreasing))
-  sort!(nds; by = p -> qd[p[1]], rev = (order == :decreasing))
+  # flatten list of self-dual elements, remove unit, and and sort by fpdim
+  sdlist = reduce( vcat, sd, init = Int[] )[2:end]
+  sort!(sdlist; by = i -> fpd[i], rev = (order == :decreasing))
 
-  nsdlist = reduce(vcat, pairs; init = Int[])
+  # sort pairs of dual elements and flatten the list
+  sort!(nsd; by = p -> fpd[p[1]], rev = (order == :decreasing))
+  nsdlist = reduce(vcat, nsd; init = Int[])
 
-  return vcat(1, sd, nsdlist)
+  return vcat( [1], sdlist, nsdlist)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

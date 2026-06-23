@@ -44,8 +44,8 @@ end
 function from_anyonwiki_code(v::AbstractVector{<:Integer})
   _ensure_frd_initialized()
   length(v) == 4 || error("anyonwiki_code expects a vector of 4 integers.")
-  r, m, nnsd, i = Int.collect(v)
-  return frd[r, m, nnsd][i]
+  r, m, nnsd, i = Int.(collect(v))
+  return frd[[r, m, nnsd]][i]
 end
 
 const fawc = from_anyonwiki_code

@@ -337,11 +337,11 @@ function sub_fusion_rings(r::FusionRing)
   dictvec = r.sub_fusion_rings
   if dictvec !== missing
     [
-      Dict("injection" => dict["injection"], "fusion_ring" => awc(dict["anyonwiki_code"]))
+      Dict("injection" => dict["injection"], "fusion_ring" => fawc(dict["anyonwiki_code"]))
       for dict in dictvec
     ]
   else
-    subsets = sub_fusion_ring_subsets
+    subsets = sub_fusion_ring_subsets(r)
     [
       Dict("injection" => s, "fusion_ring" => replace_by_known(fusion_ring(mt[s, s, s])))
       for s in subsets

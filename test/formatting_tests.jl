@@ -6,40 +6,40 @@
 
   @testset "integer formatting helpers" begin
     maybe_testset("basic", "1. basic construction") do
-      b = bold_integer(12)
-      s = subscript_integer(12)
-      t = superscript_integer(12)
+      b = FusionRings.bold_integer(12)
+      s = FusionRings.subscript_integer(12)
+      t = FusionRings.superscript_integer(12)
 
-      check_true(b isa AbstractString, "bold_integer(12) did not return a string")
-      check_true(s isa AbstractString, "subscript_integer(12) did not return a string")
-      check_true(t isa AbstractString, "superscript_integer(12) did not return a string")
+      check_true(b isa AbstractString, "FusionRings.bold_integer(12) did not return a string")
+      check_true(s isa AbstractString, "FusionRings.subscript_integer(12) did not return a string")
+      check_true(t isa AbstractString, "FusionRings.superscript_integer(12) did not return a string")
 
       check_false(isempty(b), "bold_integer(12) returned an empty string")
-      check_false(isempty(s), "subscript_integer(12) returned an empty string")
+      check_false(isempty(s), "FusionRings.subscript_integer(12) returned an empty string")
       return check_false(isempty(t), "superscript_integer(12) returned an empty string")
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       check_equal(
-        transform_integer(0, bold_digits_dict),
+        FusionRings.transform_integer(0, FusionRings.bold_digits_dict),
         "𝟎",
-        "transform_integer(0, bold_digits_dict) did not return bold zero",
+        "FusionRings.transform_integer(0, FusionRings.bold_digits_dict) did not return bold zero",
       )
       check_equal(
-        transform_integer(123, bold_digits_dict),
+        FusionRings.transform_integer(123, FusionRings.bold_digits_dict),
         "𝟏𝟐𝟑",
-        "transform_integer(123, bold_digits_dict) did not return the expected bold digits",
+        "FusionRings.transform_integer(123, FusionRings.bold_digits_dict) did not return the expected bold digits",
       )
 
       check_equal(
-        bold_integer(907),
+        FusionRings.bold_integer(907),
         "𝟗𝟎𝟕",
-        "bold_integer(907) did not return the expected bold representation",
+        "FusionRings.bold_integer(907) did not return the expected bold representation",
       )
       check_equal(
-        subscript_integer(314),
+        FusionRings.subscript_integer(314),
         "₃₁₄",
-        "subscript_integer(314) did not return the expected subscript representation",
+        "FusionRings.subscript_integer(314) did not return the expected subscript representation",
       )
       check_equal(
         superscript_integer(256),
@@ -48,19 +48,19 @@
       )
 
       check_equal(
-        bold_integer(1001),
+        FusionRings.bold_integer(1001),
         "𝟏𝟎𝟎𝟏",
         "bold_integer(1001) did not preserve repeated digits and zeros",
       )
       check_equal(
-        subscript_integer(1001),
+        FusionRings.subscript_integer(1001),
         "₁₀₀₁",
-        "subscript_integer(1001) did not preserve repeated digits and zeros",
+        "FusionRings.subscript_integer(1001) did not preserve repeated digits and zeros",
       )
       return check_equal(
-        superscript_integer(1001),
+        FusionRings.superscript_integer(1001),
         "¹⁰⁰¹",
-        "superscript_integer(1001) did not preserve repeated digits and zeros",
+        "FusionRings.superscript_integer(1001) did not preserve repeated digits and zeros",
       )
     end
 
@@ -71,44 +71,44 @@
   end
 
   # ============================================================
-  # element_to_string
+  # FusionRings.element_to_string
   # ============================================================
 
-  @testset "element_to_string" begin
+  @testset "FusionRings.element_to_string" begin
     maybe_testset("basic", "1. basic construction") do
-      a = element_to_string(0, "x")
-      b = element_to_string(1, "x")
-      c = element_to_string(2, "x")
+      a = FusionRings.element_to_string(0, "x")
+      b = FusionRings.element_to_string(1, "x")
+      c = FusionRings.element_to_string(2, "x")
 
       check_true(
-        a isa AbstractString, "element_to_string(0, \"x\") did not return a string"
+        a isa AbstractString, "FusionRings.element_to_string(0, \"x\") did not return a string"
       )
       check_true(
-        b isa AbstractString, "element_to_string(1, \"x\") did not return a string"
+        b isa AbstractString, "FusionRings.element_to_string(1, \"x\") did not return a string"
       )
       return check_true(
-        c isa AbstractString, "element_to_string(2, \"x\") did not return a string"
+        c isa AbstractString, "FusionRings.element_to_string(2, \"x\") did not return a string"
       )
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       check_equal(
-        element_to_string(0, "x"),
+        FusionRings.element_to_string(0, "x"),
         "",
-        "element_to_string(0, \"x\") did not return the empty string",
+        "FusionRings.element_to_string(0, \"x\") did not return the empty string",
       )
       check_equal(
-        element_to_string(1, "x"), "x", "element_to_string(1, \"x\") did not return \"x\""
+        FusionRings.element_to_string(1, "x"), "x", "FusionRings.element_to_string(1, \"x\") did not return \"x\""
       )
       check_equal(
-        element_to_string(2, "x"),
+        FusionRings.element_to_string(2, "x"),
         "2 x",
-        "element_to_string(2, \"x\") did not return \"2 x\"",
+        "FusionRings.element_to_string(2, \"x\") did not return \"2 x\"",
       )
       return check_equal(
-        element_to_string(7, "abc"),
+        FusionRings.element_to_string(7, "abc"),
         "7 abc",
-        "element_to_string(7, \"abc\") did not return \"7 abc\"",
+        "FusionRings.element_to_string(7, \"abc\") did not return \"7 abc\"",
       )
     end
 
@@ -125,32 +125,32 @@
   @testset "row_to_string" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
-      s = row_to_string(z3, [0, 1, 0])
+      s = FusionRings.row_to_string(z3, [0, 1, 0])
 
-      return check_true(s isa AbstractString, "row_to_string did not return a string")
+      return check_true(s isa AbstractString, "FusionRings.row_to_string did not return a string")
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       z3 = zn_fusion_ring(3)
 
       check_equal(
-        row_to_string(z3, [1, 0, 0]), "0", "row_to_string(Z3, [1,0,0]) did not return \"0\""
+        FusionRings.row_to_string(z3, [1, 0, 0]), "0", "FusionRings.row_to_string(Z3, [1,0,0]) did not return \"0\""
       )
       check_equal(
-        row_to_string(z3, [0, 1, 0]), "1", "row_to_string(Z3, [0,1,0]) did not return \"1\""
+        FusionRings.row_to_string(z3, [0, 1, 0]), "1", "FusionRings.row_to_string(Z3, [0,1,0]) did not return \"1\""
       )
       check_equal(
-        row_to_string(z3, [0, 0, 1]), "2", "row_to_string(Z3, [0,0,1]) did not return \"2\""
+        FusionRings.row_to_string(z3, [0, 0, 1]), "2", "FusionRings.row_to_string(Z3, [0,0,1]) did not return \"2\""
       )
       check_equal(
-        row_to_string(z3, [1, 0, 1]),
+        FusionRings.row_to_string(z3, [1, 0, 1]),
         "0 ⊕ 2",
         "row_to_string(Z3, [1,0,1]) did not join summands with ⊕",
       )
       return check_equal(
-        row_to_string(z3, [2, 0, 1]),
+        FusionRings.row_to_string(z3, [2, 0, 1]),
         "2 0 ⊕ 2",
-        "row_to_string(Z3, [2,0,1]) did not format multiplicities correctly",
+        "FusionRings.row_to_string(Z3, [2,0,1]) did not format multiplicities correctly",
       )
     end
 
@@ -161,16 +161,16 @@
   end
 
   # ============================================================
-  # product_string
+  # FusionRings.product_string
   # ============================================================
 
-  @testset "product_string" begin
+  @testset "FusionRings.product_string" begin
     maybe_testset("basic", "1. basic construction") do
       z2 = zn_fusion_ring(2)
-      s = product_string(z2, 1, 1)
+      s = FusionRings.product_string(z2, 1, 1)
 
-      check_true(s isa AbstractString, "product_string(Z2, 1, 1) did not return a string")
-      return check_false(isempty(s), "product_string(Z2, 1, 1) returned an empty string")
+      check_true(s isa AbstractString, "FusionRings.product_string(Z2, 1, 1) did not return a string")
+      return check_false(isempty(s), "FusionRings.product_string(Z2, 1, 1) returned an empty string")
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
@@ -179,29 +179,29 @@
       su2_2 = su2k_fusion_ring(2)
 
       check_equal(
-        product_string(z2, 1, 1),
+        FusionRings.product_string(z2, 1, 1),
         "0 × 0 = 0",
-        "product_string(Z2, 1, 1) was not \"0 × 0 = 0\"",
+        "FusionRings.product_string(Z2, 1, 1) was not \"0 × 0 = 0\"",
       )
       check_equal(
-        product_string(z2, 2, 2),
+        FusionRings.product_string(z2, 2, 2),
         "1 × 1 = 0",
-        "product_string(Z2, 2, 2) was not \"1 × 1 = 0\"",
+        "FusionRings.product_string(Z2, 2, 2) was not \"1 × 1 = 0\"",
       )
       check_equal(
-        product_string(z3, 2, 2),
+        FusionRings.product_string(z3, 2, 2),
         "1 × 1 = 2",
-        "product_string(Z3, 2, 2) was not \"1 × 1 = 2\"",
+        "FusionRings.product_string(Z3, 2, 2) was not \"1 × 1 = 2\"",
       )
       check_equal(
-        product_string(z3, 2, 3),
+        FusionRings.product_string(z3, 2, 3),
         "1 × 2 = 0",
-        "product_string(Z3, 2, 3) was not \"1 × 2 = 0\"",
+        "FusionRings.product_string(Z3, 2, 3) was not \"1 × 2 = 0\"",
       )
       return check_equal(
-        product_string(su2_2, 2, 2),
+        FusionRings.product_string(su2_2, 2, 2),
         "1 × 1 = 0 ⊕ 2",
-        "product_string(SU(2)_2, 2, 2) did not show both summands correctly",
+        "FusionRings.product_string(SU(2)_2, 2, 2) did not show both summands correctly",
       )
     end
 
@@ -236,8 +236,7 @@
       )
     end
 
-    maybe_testset("intermediate", "2. intermediate correctness") do
-      z2 = zn_fusion_ring(2)
+    maybe_testset("intermediate", "2. intermediate correctness") do z2 = zn_fusion_ring(2)
       z3 = zn_fusion_ring(3)
 
       tab2 = print_multiplication_table(z2)
@@ -283,7 +282,7 @@
         startswith(shown_named, "FR("), "show(zn_fusion_ring(2)) did not begin with \"FR(\""
       )
       check_true(
-        occursin("Z_2", shown_named),
+        occursin("ℤ₂", shown_named),
         "show(zn_fusion_ring(2)) did not contain the ring name",
       )
       check_true(
@@ -321,76 +320,76 @@
 
   @testset "string cleanup helpers" begin
     maybe_testset("basic", "1. basic construction") do
-      a = fix_fractions("3//4")
-      b = fix_mult("2*x")
-      c = fix_spaces("a b")
-      d = fix_powers("x^12")
-      e = fix_cyclo("zeta(5)")
-      f = fix_poly_string(" 3//4 * x^12 ")
+      a = FusionRings.fix_fractions("3//4")
+      b = FusionRings.fix_mult("2*x")
+      c = FusionRings.fix_spaces("a b")
+      d = FusionRings.fix_powers("x^12")
+      e = FusionRings.fix_cyclo("zeta(5)")
+      f = FusionRings.fix_poly_string(" 3//4 * x^12 ")
 
-      check_true(a isa AbstractString, "fix_fractions did not return a string")
-      check_true(b isa AbstractString, "fix_mult did not return a string")
-      check_true(c isa AbstractString, "fix_spaces did not return a string")
-      check_true(d isa AbstractString, "fix_powers did not return a string")
-      check_true(e isa AbstractString, "fix_cyclo did not return a string")
+      check_true(a isa AbstractString, "FusionRings.fix_fractions did not return a string")
+      check_true(b isa AbstractString, "FusionRings.FusionRings.fix_mult did not return a string")
+      check_true(c isa AbstractString, "FusionRings.fix_spaces did not return a string")
+      check_true(d isa AbstractString, "FusionRings.fix_powers did not return a string")
+      check_true(e isa AbstractString, "FusionRings.fix_cyclo did not return a string")
       return check_true(f isa AbstractString, "fix_poly_string did not return a string")
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       check_equal(
-        fix_fractions("3//4"),
+        FusionRings.fix_fractions("3//4"),
         "\\frac{3}{4}",
-        "fix_fractions(\"3//4\") did not convert a simple rational",
+        "FusionRings.fix_fractions(\"3//4\") did not convert a simple rational",
       )
       check_equal(
-        fix_fractions("1//2 + 3//4"),
+        FusionRings.fix_fractions("1//2 + 3//4"),
         "\\frac{1}{2} + \\frac{3}{4}",
-        "fix_fractions did not convert multiple rationals in one string",
+        "FusionRings.fix_fractions did not convert multiple rationals in one string",
       )
 
-      check_equal(fix_mult("2*x"), "2x", "fix_mult(\"2*x\") did not remove *")
-      check_equal(fix_mult("a*b*c"), "abc", "fix_mult(\"a*b*c\") did not remove all *")
+      check_equal(FusionRings.fix_mult("2*x"), "2x", "FusionRings.fix_mult(\"2*x\") did not remove *")
+      check_equal(FusionRings.fix_mult("a*b*c"), "abc", "FusionRings.fix_mult(\"a*b*c\") did not remove all *")
 
       check_equal(
-        fix_spaces("a b  c"), "abc", "fix_spaces(\"a b  c\") did not remove spaces"
+        FusionRings.fix_spaces("a b  c"), "abc", "FusionRings.fix_spaces(\"a b  c\") did not remove spaces"
       )
       check_equal(
-        fix_spaces("   x   "),
+        FusionRings.fix_spaces("   x   "),
         "x",
-        "fix_spaces(\"   x   \") did not remove leading/trailing spaces",
+        "FusionRings.fix_spaces(\"   x   \") did not remove leading/trailing spaces",
       )
 
       check_equal(
-        fix_powers("x^12"),
+        FusionRings.fix_powers("x^12"),
         "x^{12}",
-        "fix_powers(\"x^12\") did not brace a multi-digit exponent",
+        "FusionRings.fix_powers(\"x^12\") did not brace a multi-digit exponent",
       )
       check_equal(
-        fix_powers("x^2"),
+        FusionRings.fix_powers("x^2"),
         "x^2",
-        "fix_powers(\"x^2\") should not change a one-digit exponent",
+        "FusionRings.fix_powers(\"x^2\") should not change a one-digit exponent",
       )
       check_equal(
-        fix_powers("x^12 + y^34"),
+        FusionRings.fix_powers("x^12 + y^34"),
         "x^{12} + y^{34}",
-        "fix_powers did not handle multiple multi-digit exponents",
+        "FusionRings.fix_powers did not handle multiple multi-digit exponents",
       )
 
       check_equal(
-        fix_cyclo("zeta(5)"),
+        FusionRings.fix_cyclo("zeta(5)"),
         "\\zeta_5",
-        "fix_cyclo(\"zeta(5)\") did not convert to zeta subscript notation",
+        "FusionRings.fix_cyclo(\"zeta(5)\") did not convert to zeta subscript notation",
       )
       check_equal(
-        fix_cyclo("zeta(3) + zeta(7)"),
+        FusionRings.fix_cyclo("zeta(3) + zeta(7)"),
         "\\zeta_3 + \\zeta_7",
-        "fix_cyclo did not handle multiple zeta terms",
+        "FusionRings.fix_cyclo did not handle multiple zeta terms",
       )
 
       return check_equal(
-        fix_poly_string(" 3//4 * x^12 "),
+        FusionRings.fix_poly_string(" 3//4 * x^12 "),
         "\\frac{3}{4}x^{12}",
-        "fix_poly_string did not compose cleanup helpers correctly",
+        "FusionRings.fix_poly_string did not compose cleanup helpers correctly",
       )
     end
 
@@ -407,10 +406,10 @@
   @testset "small algebraic formatting helpers" begin
     maybe_testset("basic", "1. basic construction") do
       fs = factor_squares(12)
-      g1 = is_geometric_array([1, 2, 4, 8])
+      g1 = FusionRings.is_geometric_array([1, 2, 4, 8])
 
       check_true(fs isa Tuple, "factor_squares(12) did not return a tuple")
-      return check_true(g1 isa Bool, "is_geometric_array([1,2,4,8]) did not return a Bool")
+      return check_true(g1 isa Bool, "FusionRings.is_geometric_array([1,2,4,8]) did not return a Bool")
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
@@ -420,21 +419,21 @@
       check_equal(factor_squares(18), (3, 2), "factor_squares(18) was not (3,2)")
       check_equal(factor_squares(16), (4, 1), "factor_squares(16) was not (4,1)")
 
-      check_true(is_geometric_array(Int[]), "is_geometric_array(Int[]) should be true")
-      check_true(is_geometric_array([1]), "is_geometric_array([1]) should be true")
-      check_false(is_geometric_array([2]), "is_geometric_array([2]) should be false")
+      check_true(FusionRings.is_geometric_array(Int[]), "FusionRings.is_geometric_array(Int[]) should be true")
+      check_true(FusionRings.is_geometric_array([1]), "FusionRings.is_geometric_array([1]) should be true")
+      check_false(FusionRings.is_geometric_array([2]), "FusionRings.is_geometric_array([2]) should be false")
       check_true(
-        is_geometric_array([1, 2, 4, 8]), "is_geometric_array([1,2,4,8]) should be true"
+        FusionRings.is_geometric_array([1, 2, 4, 8]), "FusionRings.is_geometric_array([1,2,4,8]) should be true"
       )
       check_true(
-        is_geometric_array([1, -1, 1, -1]), "is_geometric_array([1,-1,1,-1]) should be true"
+        FusionRings.is_geometric_array([1, -1, 1, -1]), "FusionRings.is_geometric_array([1,-1,1,-1]) should be true"
       )
       check_false(
-        is_geometric_array([1, 2, 5, 10]), "is_geometric_array([1,2,5,10]) should be false"
+        FusionRings.is_geometric_array([1, 2, 5, 10]), "FusionRings.is_geometric_array([1,2,5,10]) should be false"
       )
 
       # is_power_sum: x^2 + x + 1 has coefficients [1,1,1]
-      R, x = polynomial_ring(QQ, "x")
+      R, x = Oscar.polynomial_ring(QQ, "x")
       check_true(is_power_sum(x^2 + x + 1), "is_power_sum(x^2 + x + 1) should be true")
       return check_false(
         is_power_sum(x^2 + 2*x + 1), "is_power_sum(x^2 + 2x + 1) should be false"
@@ -480,12 +479,12 @@
 
       check_equal(
         labels(r)[1],
-        bold_integer(1),
+        FusionRings.bold_integer(1),
         "fusion_ring(mt) did not use bold_integer(1) as the first default label",
       )
       return check_equal(
         labels(r)[2],
-        bold_integer(2),
+        FusionRings.bold_integer(2),
         "fusion_ring(mt) did not use bold_integer(2) as the second default label",
       )
     end

@@ -17,7 +17,7 @@
 
       fm = fusion_matrix(z2, 1)
       fc = fusion_coeff(z2, 1, 1, 1)
-      fp = fusion_product(z2, 1, 1)
+      fp = FusionRings.fusion_product(z2, 1, 1)
 
       check_true(fm isa Matrix{Int}, "fusion_matrix(z2, 1) did not return a Matrix{Int}")
       check_true(fc isa Int, "fusion_coeff(z2, 1, 1, 1) did not return an Int")
@@ -47,25 +47,25 @@
       check_equal(fusion_coeff(z2, 2, 2, 2), 0, "fusion_coeff(z2, 2, 2, 2) was not 0")
 
       check_equal(
-        fusion_product(z2, 1, 1),
+        FusionRings.fusion_product(z2, 1, 1),
         Dict(1 => 1),
         "fusion_product(z2, 1, 1) was not Dict(1 => 1)",
       )
 
       check_equal(
-        fusion_product(z2, 2, 2),
+        FusionRings.fusion_product(z2, 2, 2),
         Dict(1 => 1),
         "fusion_product(z2, 2, 2) was not Dict(1 => 1)",
       )
 
       check_equal(
-        fusion_product(z3, 2, 2),
+        FusionRings.fusion_product(z3, 2, 2),
         Dict(3 => 1),
         "fusion_product(z3, 2, 2) was not Dict(3 => 1)",
       )
 
       return check_equal(
-        fusion_product(z3, 2, 3),
+        FusionRings.fusion_product(z3, 2, 3),
         Dict(1 => 1),
         "fusion_product(z3, 2, 3) was not Dict(1 => 1)",
       )
@@ -358,13 +358,13 @@
       )
 
       check_equal(
-        fusion_product(tp, 1, 1),
+        FusionRings.fusion_product(tp, 1, 1),
         Dict(1 => 1),
         "tensor_product(z2, z3): vacuum × vacuum was not vacuum",
       )
 
       return check_equal(
-        fusion_product(tp, 4, 4),
+        FusionRings.fusion_product(tp, 4, 4),
         Dict(1 => 1),
         "tensor_product(z2, z3): (1⊗0) × (1⊗0) was not 0⊗0",
       )

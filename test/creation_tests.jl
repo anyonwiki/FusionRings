@@ -104,12 +104,12 @@
         "fusion_ring constructed a valid Z2 table but the result was not detected as a group ring",
       )
       check_equal(
-        fusion_product(r, 1, 1),
+        FusionRings.fusion_product(r, 1, 1),
         Dict(1 => 1),
         "fusion_ring(valid Z2): vacuum × vacuum was not vacuum",
       )
       return check_equal(
-        fusion_product(r, 2, 2),
+        FusionRings.fusion_product(r, 2, 2),
         Dict(1 => 1),
         "fusion_ring(valid Z2): nontrivial simple squared was not vacuum",
       )

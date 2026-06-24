@@ -255,11 +255,11 @@
     maybe_testset("basic", "1. basic construction") do
       z4 = zn_fusion_ring(4)
 
-      b1 = _internal_multiplication(z4, [1, 3])
+      b1 = FusionRings._internal_multiplication(z4, [1, 3])
       b2 = is_sub_fusion_ring(z4, [1, 3])
       ss = sub_fusion_ring_subsets(z4)
 
-      check_true(b1 isa Bool, "_internal_multiplication(z4, [1,3]) did not return a Bool")
+      check_true(b1 isa Bool, "FusionRings._internal_multiplication(z4, [1,3]) did not return a Bool")
       check_true(b2 isa Bool, "is_sub_fusion_ring(z4, [1,3]) did not return a Bool")
       return check_true(
         ss isa Vector{Vector{Int}},
@@ -272,12 +272,12 @@
       z4 = zn_fusion_ring(4)
 
       check_true(
-        _internal_multiplication(z4, [1, 3]),
-        "_internal_multiplication(z4, [1,3]) should have returned true",
+        FusionRings._internal_multiplication(z4, [1, 3]),
+        "FusionRings._internal_multiplication(z4, [1,3]) should have returned true",
       )
       check_false(
-        _internal_multiplication(z4, [1, 2]),
-        "_internal_multiplication(z4, [1,2]) should have returned false",
+        FusionRings._internal_multiplication(z4, [1, 2]),
+        "FusionRings._internal_multiplication(z4, [1,2]) should have returned false",
       )
 
       check_true(

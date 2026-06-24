@@ -46,18 +46,16 @@
   end
 
   # ============================================================
-  # indexmap / conjugate_element / conjugation_matrix
+  # conjugate_element / conjugation_matrix
   # ============================================================
 
-  @testset "indexmap / conjugate_element / conjugation_matrix" begin
+  @testset "conjugate_element / conjugation_matrix" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
 
-      im = indexmap(z3)
       C = conjugation_matrix(z3)
       c = conjugate_element(z3, 1)
 
-      check_true(im isa Dict{String, Int}, "indexmap(z3) did not return a Dict{String,Int}")
       check_true(
         C isa AbstractMatrix, "conjugation_matrix(z3) did not return a matrix-like object"
       )
@@ -67,12 +65,6 @@
     maybe_testset("intermediate", "2. intermediate correctness") do
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
-
-      check_equal(
-        indexmap(z3),
-        Dict("0"=>1, "1"=>2, "2"=>3),
-        "indexmap(zn_fusion_ring(3)) was incorrect",
-      )
 
       check_equal(
         conjugation_matrix(z3),

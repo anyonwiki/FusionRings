@@ -164,7 +164,7 @@
         )
 
         mt_bad_inverse = make_z2_mt()
-        mt_bad_inverse[2, 2, 2] = 1
+        mt_bad_inverse[2, 1, 1] = 1
         check_throws(
           () -> fusion_ring(mt_bad_inverse; labels = ["0", "1"]),
           "fusion_ring accepted a multiplication table violating the unique inverse condition",

@@ -27,7 +27,7 @@
 
       check_equal(rank(z3), 3, "rank(zn_fusion_ring(3)) was not 3")
       check_equal(labels(z3), ["0", "1", "2"], "labels(zn_fusion_ring(3)) were incorrect")
-      check_equal(names(z3), ["Z_3"], "names(zn_fusion_ring(3)) were incorrect")
+      check_equal(names(z3), ["ℤ₃"], "names(zn_fusion_ring(3)) were incorrect")
       check_equal(
         tex_names(z3),
         String[],

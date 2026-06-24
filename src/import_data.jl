@@ -137,7 +137,7 @@ function sfrfromjs(js)
   return map(fix_type, srs)
 end
 
-function vec_to_cflt(v::Vector{Any})::ComplexF64
+function vec_to_cflt(v::Vector{Float64})::ComplexF64
   return v[1] + v[2]*1im
 end
 

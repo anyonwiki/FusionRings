@@ -1786,27 +1786,3 @@ function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
   end
   return true
 end
-
-#Added from: updates/automorphisms_which_injections
-# generate all k-subsets of 1:n without external deps - could not find corresponding combinatorics function
-# so can be replaced by function once found
-function _k_subsets(n::Int, k::Int)
-  out = Vector{Vector{Int}}()
-  buf = Vector{Int}(undef, k)
-  function go(start::Int, depth::Int)
-    if depth > k
-      push!(out, copy(buf));
-      return nothing
-    end
-    # ensure enough remaining
-    last = n - (k - depth)
-    for v in start:last
-      buf[depth] = v
-      go(v + 1, depth + 1)
-    end
-  end
-  k == 0 && return [Int[]]
-  (k < 0 || k > n) && return out
-  go(1, 1)
-  return out
-end

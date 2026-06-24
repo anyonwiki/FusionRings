@@ -117,6 +117,8 @@ function print_multiplication_table(r::FusionRing)
   return tab
 end
 
+export pmt
+
 pmt = print_multiplication_table
 
 export row_to_string

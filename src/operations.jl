@@ -3,17 +3,7 @@
 #┃                          various helper functions                               ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-# TODO: function is not used except in tests...
-"Return the fusion matrix (left multiplication by `a`)."
-function fusion_matrix(fr::FusionRing, a::Int)::Matrix{Int}
-  @views multiplication_table(fr)[a, :, :]
-end
 
-"Structure constant N[a,b,c]."
-# TODO: function is not used except in tests...
-function fusion_coeff(fr::FusionRing, a::Int, b::Int, c::Int)::Int
-  return multiplication_table(fr)[a, b, c]
-end
 
 """
     fusion_product(fr, a, b) -> Dict{Int,Int}
@@ -34,12 +24,6 @@ end
 "Return vector of simple indices with positive multiplicity in `a × b`."
 function fusion_outcomes(fr::FusionRing, a::Int, b::Int)::Vector{Int}
   return [c for (c, m) in fusion_product(fr, a, b) if m>0]
-end
-
-"Ordered list form of `a × b`."
-# TODO: function is not used except in tests...
-function decompose(fr::FusionRing, a::Int, b::Int)
-  return [(k, v) for (k, v) in fusion_product(fr, a, b)]
 end
 
 # TODO: implement change_property function using the Accessors package

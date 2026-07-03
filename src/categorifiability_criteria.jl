@@ -3,7 +3,7 @@
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 # TODO: check whether s is correct
-
+#Todo
 # csp_criterion( fusion_ring ) returns true if fusion_ring does not have a unitary categorification due to the commutative schur product criterion
 
 function csp_criterion(ring::FusionRing)

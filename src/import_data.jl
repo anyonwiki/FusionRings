@@ -78,7 +78,7 @@ end
 # we should remove it since it slows down the import
 
 # formal code
-function fcfromjs(js)::Vector{Int64}
+function fcfromjs(js)::Union{Missing,Vector{Int64}}
   k = keys(js)
 
   if "formal_code" ∈ k

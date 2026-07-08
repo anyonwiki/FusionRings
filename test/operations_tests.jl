@@ -246,7 +246,7 @@
   # FusionRings.perm_vec_qd / FusionRings.perm_vec_sd_conj
   # ============================================================
 
-  @testset "FusionRings.perm_vec_qd / FusionRings.perm_vec_sd_conj" begin
+  @testset "perm_vec_qd / perm_vec_sd_conj" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
       qd_perm = FusionRings.perm_vec_qd(z3)

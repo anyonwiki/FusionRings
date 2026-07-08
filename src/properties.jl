@@ -1736,7 +1736,8 @@ function which_injection(subring::FusionRing, ring::FusionRing)
 
   for S in _internal_closed_subsets(ring, rs)
     Nres = @views Nbig[S, S, S]
-    perm = _permutation_vector_equiv(Nsub, Nres)
+    perm = first(which_permutation(fusion_ring(Nsub), fusion_ring(Nres)))
+
     perm === nothing && continue
 
     inj = Dict{Int, Int}()

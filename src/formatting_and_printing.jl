@@ -145,12 +145,17 @@ end
 "Pretty one-liner: `a × b = ...` using printed names; `a,b` are indices."
 function product_string(fr::FusionRing, a::Int, b::Int)
   names = labels(fr)
-  rhs = let d = fusion_product(fr, a, b)
+  d = fusion_product(fr, a, b)
+  rhs =
     if isempty(d)
       "0"
-    else
-      join([m==1 ? names[c] : string(m, " ", names[c]) for (c, m) in d], " ⊕ ")
-    end
+      function tostr(tuple)
+        c, m = tuple
+        m == 1 ? names[c] : string( m, " ", names[c] )
+      end
+
+      outcomes = sort(collect(d),by=(x->x[1]))
+      join(tostr.(outcomes), " ⊕ ")
   end
   return string(names[a], " × ", names[b], " = ", rhs)
 end

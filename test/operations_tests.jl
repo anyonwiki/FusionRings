@@ -161,7 +161,7 @@
           check_mt_equal(
             actual,
             expected_tabs[j],
-            "permute_mult_tab did not match Anyonica permuted_tabs.json case ($idx, $j)",
+            "permute_mult_tab did not match Anyonica permuted_tabs.json for ring with code: $code, and permutation $p",
           )
         end
       end
@@ -355,7 +355,7 @@
         check_mt_equal(
           actual,
           data["Output"][idx],
-          "tensor_product did not match Anyonica tensor_product_tables.json case $idx",
+          "tensor_product did not match Anyonica tensor_product_tables.json for rings with codes $code1, $code2",
         )
       end
     end
@@ -433,18 +433,18 @@
 
           check_true(
             p !== nothing,
-            "which_permutation returned nothing for Anyonica permuted_tabs.json case ($idx, $j)",
+            "which_permutation returned nothing for Anyonica permuted_tabs.json ring with code $code, and permutation $p",
           )
 
           check_equal_tensor(
             FusionRings.permute_mult_tab(multiplication_table(r), p),
             multiplication_table(target),
-            "which_permutation returned an invalid permutation for Anyonica permuted_tabs.json case ($idx, $j)",
+            "which_permutation returned an invalid permutation for Anyonica permuted_tabs.json ring with code $code, and permutation $p",
           )
 
           check_true(
             is_equivalent_fusion_ring(r, target),
-            "is_equivalent_fusion_ring returned false for Anyonica permuted_tabs.json case ($idx, $j)",
+            "is_equivalent_fusion_ring returned false for Anyonica permuted_tabs.json ring with code $code, and permutation $p"),
           )
         end
       end

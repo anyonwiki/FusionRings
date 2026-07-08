@@ -480,6 +480,19 @@ end
 
 function cpropstojs(fr::FusionRing)
   props = fr.has_categories_with_props
+  if ismissing(props)
+    return
+    [
+      ["Fusion",null,["","Unknown to AnyonWiki"]],
+      ["Pivotal",null,["","Unknown to AnyonWiki"]],
+      ["Unitary",null,["","Unknown to AnyonWiki"]],
+      ["Spherical",null,["","Unknown to AnyonWiki"]],
+      ["Braided",null,["","Unknown to AnyonWiki"]],
+      ["Ribbon",null,["","Unknown to AnyonWiki"]],
+      ["Modular",null,["","Unknown to AnyonWiki"]]
+    ]
+  end
+
   function missing_to_nothing(v)
     if v[2] === missing
       [v[1], nothing, v[3]]

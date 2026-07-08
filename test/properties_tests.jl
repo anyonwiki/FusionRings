@@ -153,14 +153,14 @@
       check_equal(
         string.(fpdims(z3)), ["{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}"], "fpdims(zn_fusion_ring(3)) were not all 1"
       )
-      check_equal(string(fpdim(z3)), "3", "fpdim(zn_fusion_ring(3)) was not 3")
+      check_equal(string(fpdim(z3)), "{a1: 3.00000}", "fpdim(zn_fusion_ring(3)) was not 3")
 
       check_equal(
         string.(fpdims(z4)),
         ["{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}"],
         "fpdims(zn_fusion_ring(4)) were not all 1",
       )
-      return check_equal(string(fpdim(z4)), "4", "fpdim(zn_fusion_ring(4)) was not 4")
+      return check_equal(string(fpdim(z4)), "{a1: 4.00000}", "fpdim(zn_fusion_ring(4)) was not 4")
     end
 
     maybe_testset("reference", "3. reference / Anyonica parity") do

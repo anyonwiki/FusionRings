@@ -152,7 +152,7 @@ export frobenius_perron_dimension
 function frobenius_perron_dimension(r::FusionRing, force_compute = false)::QQBarFieldElem
   stored_dim = r.frobenius_perron_dimension
   if ismissing(stored_dim) || force_compute
-    return sum(fpdims(r) .^ 2; force_compute = force_compute)
+    return sum(fpdims(r) .^ 2)
   else
     return from_qqb_id(stored_dim)
   end

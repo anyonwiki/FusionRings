@@ -557,7 +557,7 @@
       nfpds = numeric_fpdims(z3)
 
       check_true(
-        ch isa AbstractMatrix, "characters(z3) did not return a matrix-like object"
+        ch isa Oscar.MatElem, "characters(z3) did not return a matrix of type MatElem"
       )
       check_true(
         nch isa AbstractMatrix || nch isa Vector,

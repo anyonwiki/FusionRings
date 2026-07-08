@@ -599,10 +599,19 @@ function rings_to_dict(frs::Vector{FusionRing})
   )
 end
 
+global ringidcounter = 0
+
 function fusion_ring_string(fr::FusionRing)
-  c  = string.(anyonwiki_code(fr))
+  c  = anyonwiki_code(fr)
+  if ismissing(c)
+    @warn "creating ID fr_"*string(ringidcounter) *" for fusionring without defined ID. You can avoid this by setting the field anyonwiki_code of the ring."
+    ridc = ringidcounter
+    global ringidcounter = ringidcounter + 1
+    return "fr_" * string(ridc)
+  else
   us = fill("_", 3)
-  return stringriffle(c, us)
+    return stringriffle(string.(c), us)
+  end
 end
 
 function fusion_ring_file_name(fr::FusionRing)

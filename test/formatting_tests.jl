@@ -43,7 +43,7 @@
         "FusionRings.subscript_integer(314) did not return the expected subscript representation",
       )
       check_equal(
-        superscript_integer(256),
+        FusionRings.superscript_integer(256),
         "²⁵⁶",
         "superscript_integer(256) did not return the expected superscript representation",
       )
@@ -237,7 +237,8 @@
       )
     end
 
-    maybe_testset("intermediate", "2. intermediate correctness") do z2 = zn_fusion_ring(2)
+    maybe_testset("intermediate", "2. intermediate correctness") do
+      z2 = zn_fusion_ring(2)
       z3 = zn_fusion_ring(3)
 
       tab2 = print_multiplication_table(z2)
@@ -378,12 +379,12 @@
 
       check_equal(
         FusionRings.fix_cyclo("zeta(5)"),
-        "\\zeta_5",
+        "\\zeta_{5}",
         "FusionRings.fix_cyclo(\"zeta(5)\") did not convert to zeta subscript notation",
       )
       check_equal(
         FusionRings.fix_cyclo("zeta(3) + zeta(7)"),
-        "\\zeta_3 + \\zeta_7",
+        "\\zeta_{3} + \\zeta_{7}",
         "FusionRings.fix_cyclo did not handle multiple zeta terms",
       )
 
@@ -435,9 +436,9 @@
 
       # is_power_sum: x^2 + x + 1 has coefficients [1,1,1]
       R, x = Oscar.polynomial_ring(QQ, "x")
-      check_true(is_power_sum(x^2 + x + 1), "is_power_sum(x^2 + x + 1) should be true")
+      check_true(FusionRings.is_power_sum(x^2 + x + 1), "is_power_sum(x^2 + x + 1) should be true")
       return check_false(
-        is_power_sum(x^2 + 2*x + 1), "is_power_sum(x^2 + 2x + 1) should be false"
+        FusionRings.is_power_sum(x^2 + 2*x + 1), "is_power_sum(x^2 + 2x + 1) should be false"
       )
     end
 

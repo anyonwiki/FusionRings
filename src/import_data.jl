@@ -89,7 +89,7 @@ function fcfromjs(js)::Union{Missing,Vector{Int64}}
     return missing
   end
 
-  if length(fc) == 0
+  if fc === nothing || length(fc) == 0
     missing
   else
     [fc[i] for i in 1:4]

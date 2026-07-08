@@ -174,8 +174,8 @@
 
       js_nch1 = Dict("numeric_characters" => nothing)
       check_equal(
-        FusionRings.nchfromjs(js_nch1),
-        missing,
+        ismissing(FusionRings.nchfromjs(js_nch1)),
+        true,
         "FusionRings.nchfromjs did not return missing when numeric_characters was nothing",
       )
 
@@ -208,7 +208,7 @@
 
       js_names = Dict("names" => ["A", "B"])
       js_texnames = Dict("texnames" => ["A", "B"])
-      check_equal(nfromjs(js_names), ["A", "B"], "nfromjs did not decode names correctly")
+      check_equal(FusionRings.nfromjs(js_names), ["A", "B"], "nfromjs did not decode names correctly")
       return check_equal(
         FusionRings.tnfromjs(js_texnames), ["A", "B"], "tnfromjs did not decode texnames correctly"
       )
@@ -271,8 +271,8 @@
       )
 
       check_equal(
-        FusionRings.ctsfromjs(Dict("categorifications" => nothing)),
-        missing,
+        ismissing(FusionRings.ctsfromjs(Dict("categorifications" => nothing))),
+        true,
         "FusionRings.ctsfromjs did not return missing when categorifications was nothing",
       )
       check_equal(

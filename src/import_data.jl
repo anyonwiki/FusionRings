@@ -478,6 +478,11 @@ function npsrtojs(fr::FusionRing)
   end
 end
 
+#TODO: for some rings we automatically know these props e.g.
+# abelian groups: all true (exept maybe modular?)
+# nonabelian groups: fusion, piv, unitary, spherical true, rest false
+# quantum group like rings: need to look this up but a lot is known as well
+#
 function cpropstojs(fr::FusionRing)
   props = fr.has_categories_with_props
   if ismissing(props)

@@ -133,7 +133,7 @@
         "FusionRings.fcfromjs did not decode legacy anyonwiki_code correctly",
       )
       check_equal(
-        FusionRings.fcfromjs(js_fc3), missing, "FusionRings.fcfromjs did not return missing on an empty code"
+        ismissing(FusionRings.fcfromjs(js_fc3)), true, "FusionRings.fcfromjs did not return missing on an empty code"
       )
 
       js_mt = Dict("mult_tab" => [[[1, 0], [0, 1]], [[0, 1], [1, 0]]])
@@ -257,18 +257,9 @@
 
   @testset "misc import-side helpers" begin
     maybe_testset("basic", "1. basic construction") do
-      check_true(
+      return check_true(
         FusionRings.vec_to_cflt([1.0, 2.0]) isa ComplexF64,
         "FusionRings.vec_to_cflt([re,im]) did not return a ComplexF64",
-      )
-
-      js_false = Dict("categorifiable" => false)
-      js_null = Dict("categorifiable" => nothing)
-      js_true = Dict("categorifiable" => true)
-
-      check_true(FusionRings.cfromjs(js_false) isa Bool, "FusionRings.cfromjs(false case) did not return a Bool")
-      return check_true(
-        FusionRings.cfromjs(js_true) isa Bool, "FusionRings.cfromjs(true case) did not return a Bool"
       )
     end
 
@@ -277,22 +268,6 @@
         FusionRings.vec_to_cflt([1.0, 2.0]),
         1.0 + 2.0im,
         "FusionRings.vec_to_cflt([1.0,2.0]) did not decode correctly",
-      )
-
-      check_equal(
-        FusionRings.cfromjs(Dict("categorifiable" => false)),
-        false,
-        "FusionRings.cfromjs did not decode categorifiable=false correctly",
-      )
-      check_equal(
-        FusionRings.cfromjs(Dict("categorifiable" => nothing)),
-        missing,
-        "FusionRings.cfromjs did not decode categorifiable=nothing correctly",
-      )
-      check_equal(
-        FusionRings.cfromjs(Dict("categorifiable" => true)),
-        true,
-        "FusionRings.cfromjs did not decode categorifiable=true correctly",
       )
 
       check_equal(

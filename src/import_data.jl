@@ -173,20 +173,6 @@ function nfpdfromjs(js)::ComplexF64
   return vec_to_cflt(js["numeric_frobenius_perron_dimension"])
 end
 
-function cfromjs(js)
-  # Known to be non categorifiable
-  if js["categorifiable"] === false
-    return false
-  end
-
-  # Nothing known about categorifiability
-  if js["categorifiable"] === nothing
-    return missing
-  end
-
-  # Has fusion categories
-  return true
-end
 
 # TODO: only works for cats given by anyonwiki_code
 # categorifications

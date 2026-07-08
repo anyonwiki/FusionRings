@@ -315,7 +315,7 @@
   # FusionRings._fusion_closure / restrict_subring / FusionRings._internal_closed_subsets / which_injection
   # ============================================================
 
-  @testset "FusionRings._fusion_closure / restrict_subring / FusionRings._internal_closed_subsets / which_injection" begin
+  @testset "_fusion_closure / restrict_subring / _internal_closed_subsets / which_injection" begin
     maybe_testset("basic", "1. basic construction") do
       z4 = zn_fusion_ring(4)
 

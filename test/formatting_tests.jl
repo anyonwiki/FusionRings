@@ -1,4 +1,5 @@
 @testset "Formatting and printing" begin
+  using Oscar
 
   # ============================================================
   # Integer formatting helpers

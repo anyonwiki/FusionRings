@@ -9,7 +9,8 @@ import Oscar:
   multiplicity,
   group,
   upper_central_series,
-  is_nilpotent
+  is_nilpotent,
+  tensor_product
 import Base: sort, names
 
 include("general_functions.jl")

@@ -79,7 +79,7 @@ function check_labels(mt, names)
 end
 
 function fusion_ring(
-  mt;
+  mt::Array{Int,3};
   labels                              = [],
   names                               = [],
   texnames                            = [],

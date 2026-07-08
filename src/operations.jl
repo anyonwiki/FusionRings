@@ -23,7 +23,7 @@ end
 
 "Return vector of simple indices with positive multiplicity in `a × b`."
 function fusion_outcomes(fr::FusionRing, a::Int, b::Int)::Vector{Int}
-  return [c for (c, m) in fusion_product(fr, a, b) if m>0]
+  return sort( [c for (c, m) in fusion_product(fr, a, b) if m>0] )
 end
 
 # TODO: implement change_property function using the Accessors package

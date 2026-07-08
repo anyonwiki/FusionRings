@@ -3,7 +3,13 @@ module FusionRings
 using Oscar, JSON, Base.Threads, Accessors
 using LinearAlgebra: eigen, eigvals, diag
 import Oscar:
-  multiplication_table, is_commutative, rank, multiplicity, group, upper_central_series
+  multiplication_table,
+  is_commutative,
+  rank,
+  multiplicity,
+  group,
+  upper_central_series,
+  is_nilpotent
 import Base: sort, names
 
 include("general_functions.jl")

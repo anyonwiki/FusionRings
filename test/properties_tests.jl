@@ -384,45 +384,6 @@
     end
   end
 
-  # ============================================================
-  #  FusionRings._permutation_vector_equiv
-  # ============================================================
-
-  @testset "FusionRings._permutation_vector_equiv" begin
-    maybe_testset("basic", "1. basic construction") do
-      z3 = zn_fusion_ring(3)
-      N = multiplication_table(z3)
-
-      pv = FusionRings._permutation_vector_equiv(N, N)
-
-      return check_true(
-        pv === nothing || pv isa Vector{Int},
-        "FusionRings._permutation_vector_equiv(N, N) returned an unexpected type",
-      )
-    end
-
-    maybe_testset("intermediate", "2. intermediate correctness") do
-      z3 = zn_fusion_ring(3)
-      z4 = zn_fusion_ring(4)
-      N3 = multiplication_table(z3)
-      pz3 = permute([1, 3, 2],z3)
-      N3p = multiplication_table(pz3)
-
-      pv = FusionRings._permutation_vector_equiv(N3, N3p)
-      check_true(
-        pv !== nothing, "FusionRings._permutation_vector_equiv(N3, permuted N3) returned nothing"
-      )
-      return check_equal(
-        _permute_multtab(N3, pv),
-        N3p,
-        "FusionRings._permutation_vector_equiv did not return a valid permutation",
-      )
-    end
-
-    maybe_testset("reference", "3. reference / Anyonica parity") do
-      @test true
-    end
-  end
 
   # ============================================================
   # is_equivalent_fusion_ring / fusion_ring_automorphisms

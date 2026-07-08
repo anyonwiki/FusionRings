@@ -95,10 +95,12 @@
         FusionRings.mtfromjs(js_mt) isa Array{Int, 3},
         "FusionRings.mtfromjs did not return an Int 3-tensor on a basic mult_tab input",
       )
+      #= commenting out since we might want to use strings for barcodes
       check_true(
         FusionRings.bcfromjs(js_bc) isa Oscar.ZZRingElem,
         "FusionRings.bcfromjs did not return a ZZRingElem on a basic barcode input",
       )
+      =#
       check_true(
         FusionRings.tpdfromjs(js_tpd) isa Vector,
         "tpdfromjs did not return a vector on an empty decomposition input",

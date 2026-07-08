@@ -149,6 +149,7 @@ function product_string(fr::FusionRing, a::Int, b::Int)
   rhs =
     if isempty(d)
       "0"
+    else
       function tostr(tuple)
         c, m = tuple
         m == 1 ? names[c] : string( m, " ", names[c] )

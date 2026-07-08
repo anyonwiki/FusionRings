@@ -108,17 +108,24 @@ function mtfromjs(js)::Array{Int64, 3}
 end
 
 # barcode
-function bcfromjs(js)::ZZRingElem
-  return ZZ(parse(BigInt, js["barcode"]))
+function bcfromjs(js)
+  bc = js["barcode"]
+  if ismissing(bc) || bc == "missing"
+    return missing
+  else
+    return ZZ(parse(BigInt, bc))
+  end
 end
 
 # tensor product decompositions
 function tpdfromjs(js)
   tps = js["tensor_product_decompositions"]
 
+  ismissing(tps) && return missing
+
   if length(tps) == 0
     []
-  elseif typeof(tps) === Vector{Any}
+  elseif typeof(tps) <: Vector
     [[Int.(code) for code in decomp] for decomp in tps]
   else
     tps = tps["value"]
@@ -130,7 +137,7 @@ end
 function sfrfromjs(js)
   srs = js["non_trivial_sub_fusion_rings"]
 
-  function fix_type(d::Dict{String, Any})::Dict{String, Vector{Int64}}
+  function fix_type(d::JSON.Object{String, Any})::Dict{String, Vector{Int64}}
     return Dict(k => Int64.(v) for (k, v) in d)
   end
 

@@ -525,7 +525,7 @@ function which_permutation(
       p = addunit(Vector(σ, r-1))
       if sm1[p, p, p] == sm2
         iuσ2 = invperm(uσ2)
-        return [iuσ2[p[uσ1]]]
+        return [uσ1[p[iuσ2]]]
       end
     end
   else # want all permutations
@@ -535,7 +535,7 @@ function which_permutation(
       p = addunit(Vector(σ, r-1))
       if sm1[p, p, p] == sm2
         iuσ2 = invperm(uσ2)
-        push!(allperms, iuσ2[p[uσ1]])
+        push!(allperms, uσ1[p[iuσ2]])
       end
     end
 

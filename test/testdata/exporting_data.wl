@@ -5,7 +5,7 @@
 
 
 <<Anyonica`
-codes = Import["/home/gert/Projects/FusionRings/test/testdata/test_fusion_ring_codes.wdx"];
+codes = Import["/home/gert/Projects/FusionRings.jl/test/testdata/test_fusion_ring_codes.wdx"];
 
 
 (* Exporting data *)

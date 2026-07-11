@@ -17,7 +17,7 @@ tojson[ input_, output_, info_ ] :=
 	|>;
 
 exportjson[ fn_, dt_ ] := 
-	Export["/home/gert/Projects/FusionRings/test/testdata/"<>fn<>".json",dt,"JSON"];
+	Export["/home/gert/Projects/FusionRings.jl/test/testdata/"<>fn<>".json",dt,"JSON"];
 
 
 (* ::Section::Closed:: *)
@@ -105,11 +105,11 @@ exportjson["son2_tables",son2tables];
 
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Operations*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Permutations*)
 
 
@@ -340,7 +340,7 @@ exportjson[ "upper_central_series", json ]
 
 inputrings = FRBC/@codes;
 input = codes;
-output = Sort[Sort/@AdjointIrreps[#]]&/@inputrings/.r_FusionRing:>FC[r];
+output = PMap[ Sort[Sort/@AdjointIrreps[#]]&,inputrings]/.r_FusionRing:>FC[r];
 
 json = tojson[ 
 	input,
@@ -358,13 +358,47 @@ exportjson[ "adjoint_irreps", json ]
 
 inputrings = FRBC/@codes;
 input = codes;
-output = PMap[ UniversalGrading, inputrings]/.r_FusionRing:>FC[r];
+gradingmaptoim[ ug_ ] := ug/.{ l_, fr_FusionRing }:> {Values[l], fr }
+
+output = PMap[ gradingmaptoim @* UniversalGrading @* SortedRing,inputrings]/.r_FusionRing:>FC[r];
 
 json = tojson[ 
 	input,
 	output,
 	"Input: formal code of fusion ring, " <> 
-	"Output: partition of basis of fusion ring into adjoint irreps. Each subset is sorted and the partition is sorted lexicographically on the subsets"
+	"Output: universal_grading stored as vector [ im, ringid ] where im is a vector of images of the elements of the original ring under the grading map and ringid is the formal code of the fusion ring that is the universal grading."
 ];
 
-exportjson[ "adjoint_irreps", json ]
+exportjson[ "universal_grading", json ]
+
+
+(* ::Subsection:: *)
+(*Categorifiability*)
+
+
+inputrings = FRBC/@codes;
+input = codes;
+
+data = PMap[ 
+	TimeConstrained[
+		FC[#] -> {
+			ZSCriterion[#], 
+			LCriterion[#],
+			N[Catch[CSPCValue[32][#],False]]<0,
+			Catch[PDCCriterion[#],False], 
+			Catch[DNCriterion[#],False]
+			},
+		20,
+		Missing[]
+	]&,
+	inputrings
+];
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: list of booleans indicating whether resp the zero spectrum criterion, "
+];
+
+exportjson[ "categorifiability", json ]

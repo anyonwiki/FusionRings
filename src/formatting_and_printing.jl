@@ -157,7 +157,7 @@ function product_string(fr::FusionRing, a::Int, b::Int)
 
       outcomes = sort(collect(d),by=(x->x[1]))
       join(tostr.(outcomes), " ⊕ ")
-  end
+    end
   return string(names[a], " × ", names[b], " = ", rhs)
 end
 

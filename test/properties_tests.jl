@@ -335,7 +335,7 @@
         "FusionRings._internal_closed_subsets(z4, 2) did not return Vector{Vector{Int}}",
       )
       return check_true(
-        inj === nothing || inj isa Dict{Int, Int},
+        isnothing(inj) || inj isa Dict{Int, Int},
         "which_injection(zn_fusion_ring(2), z4) returned an unexpected type",
       )
     end

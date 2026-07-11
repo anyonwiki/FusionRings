@@ -599,6 +599,8 @@ function rings_to_dict(frs::Vector{FusionRing})
     )
   end
 
+  # we create the fusion ring strings twice
+  frstrings = Dict( fr => fusion_ring_string(fr) for fr in frs )
   return Dict(
     "data"  => Dict(frstrings[fr] => ringtodict(fr) for fr in frs),
     "info"  => infostring,

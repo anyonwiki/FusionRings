@@ -361,7 +361,10 @@ function import_rings(filename::String)
 
   frlist = FusionRing[]
 
-  for ind in eachindex(jsdict["data"])
+  k = keys(jsdict)
+  indices = "order" ∈ k ? jsdict["order"] : eachindex(jsdict["data"])
+
+  for ind in indices
     js = jsdict["data"][ind]
     fr = fusion_ring(
       mtfromjs(js);
@@ -597,8 +600,9 @@ function rings_to_dict(frs::Vector{FusionRing})
   end
 
   return Dict(
-    "data" => Dict(fusion_ring_string(fr) => ringtodict(fr) for fr in frs),
-    "info" => infostring,
+    "data"  => Dict(frstrings[fr] => ringtodict(fr) for fr in frs),
+    "info"  => infostring,
+    "order" => [frstrings[fr] for fr in frs ] # to preserve the order when importing
   )
 end
 
@@ -628,6 +632,11 @@ function export_ring(filename::String, fr::FusionRing)
 end
 
 export export_rings
+
+"""export_rings(fn::String,frs::Vector{FusionRing})
+
+Exports the list of fusion rings frs. The list can be imported using import_rings
+"""
 
 function export_rings(filename::String, frs::Vector{FusionRing})
   return write_json(filename, rings_to_dict(frs))

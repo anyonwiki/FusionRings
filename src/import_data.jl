@@ -110,7 +110,7 @@ end
 # barcode
 function bcfromjs(js)
   bc = js["barcode"]
-  if ismissing(bc) || bc == "missing"
+  if isnothing(bc) || bc == "missing"
     return missing
   else
     return ZZ(parse(BigInt, bc))
@@ -121,7 +121,7 @@ end
 function tpdfromjs(js)
   tps = js["tensor_product_decompositions"]
 
-  ismissing(tps) && return missing
+  isnothing(tps) && return missing
 
   if length(tps) == 0
     []
@@ -137,6 +137,8 @@ end
 function sfrfromjs(js)
   srs = js["non_trivial_sub_fusion_rings"]
 
+  isnothing(srs) && return missing
+
   function fix_type(d::JSON.Object{String, Any})::Dict{String, Vector{Int64}}
     return Dict(k => Int64.(v) for (k, v) in d)
   end
@@ -151,12 +153,11 @@ end
 # numeric characters
 function nchfromjs(js)::Union{Missing, Matrix{ComplexF64}}
   ncvecs = js["numeric_characters"]
-  if ncvecs === nothing
-    return missing
-  else
+
+  isnothing(ncvecs) && return missing
+
     r = length(ncvecs)
     [vec_to_cflt(ncvecs[i][j]) for i in 1:r, j in 1:r]
-  end
 end
 
 # characters
@@ -170,14 +171,21 @@ function chfromjs(js)
 end
 
 # fpdims
-function nfpdsfromjs(js)::Vector{ComplexF64}
+function nfpdsfromjs(js)::Union{Missing,Vector{ComplexF64}}
   nfpdims = js["numeric_frobenius_perron_dimensions"]
+
+  isnothing(nfpdims) && return missing
+
   return vec_to_cflt.(nfpdims)
 end
 
 # fpdim
-function nfpdfromjs(js)::ComplexF64
-  return vec_to_cflt(js["numeric_frobenius_perron_dimension"])
+function nfpdfromjs(js)::Union{Missing,ComplexF64}
+  nfpdim = js["numeric_frobenius_perron_dimension"]
+
+  isnothing(nfpdim) && return missing
+
+  return vec_to_cflt(nfpdim)
 end
 
 
@@ -186,17 +194,19 @@ end
 function ctsfromjs(js)
   cats = js["categorifications"]
 
-  if cats === nothing # Nothing known about categorifiability
-    return missing
-  elseif length(cats) === 0 # Known to have no cats
-    return Vector{Int64}[]
-  else
-    [Int.(code) for code in cats]
-  end
+  isnothing(cats) && return missing
+
+  length(cats) === 0 && return Vector{Int64}[]
+
+  return  [Int.(code) for code in cats]
 end
 
 function ctpfromjs(js)
-  return props = js["has_categories_with_props"]
+  props = js["has_categories_with_props"]
+
+  isnothing(props) && return missing
+
+  return props
 end
 
 # TODO: it should be possible to add type to output but I get the following error when importing FR^{2,10,0}_{1}:

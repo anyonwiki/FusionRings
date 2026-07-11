@@ -455,13 +455,13 @@
         check_equal_tensor(
           multiplication_table(r2),
           multiplication_table(r),
-          "import_ring(export_ring(r)) did not preserve the multiplication table",
+          "import_ring(export_ring(r)) did not preserve the multiplication table for r = zn_fusion_ring(2)",
         )
         check_equal(
-          rank(r2), rank(r), "import_ring(export_ring(r)) did not preserve the rank"
+          rank(r2), rank(r), "import_ring(export_ring(r)) did not preserve the rank for r = zn_fusion_ring(2)"
         )
         return check_equal(
-          labels(r2), labels(r), "import_ring(export_ring(r)) did not preserve labels"
+          labels(r2), labels(r), "import_ring(export_ring(r)) did not preserve labels for r = zn_fusion_ring(2)"
         )
       end
     end

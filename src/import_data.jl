@@ -323,6 +323,15 @@ function ncrfromjs(js)
   end
 end
 
+function lfromjs(js)
+  k = keys(js)
+  if "labels" ∈ k
+    return js["labels"]
+  else
+    return String[]
+  end
+end
+
 export import_ring
 
 function import_ring(filename::String)
@@ -331,6 +340,7 @@ function import_ring(filename::String)
   return fusion_ring(
     mtfromjs(js);
     names                               = nfromjs(js),
+    labels                              = lfromjs(js),
     texnames                            = tnfromjs(js),
     barcode                             = bcfromjs(js),
     anyonwiki_code                      = fcfromjs(js),
@@ -369,6 +379,7 @@ function import_rings(filename::String)
     fr = fusion_ring(
       mtfromjs(js);
       names                               = nfromjs(js),
+      labels                              = lfromjs(js),
       texnames                            = tnfromjs(js),
       barcode                             = bcfromjs(js),
       anyonwiki_code                      = fcfromjs(js),
@@ -546,6 +557,7 @@ function ring_to_dict(fr)
   return Dict(
     "mult_tab"                            => mttojs(fr),
     "names"                               => names(fr),
+    "labels"                              => labels(fr),
     "texnames"                            => tex_names(fr),
     "barcode"                             => string(barcode(fr)),
     "anyonwiki_code"                      => anyonwiki_code(fr),
@@ -578,6 +590,7 @@ function rings_to_dict(frs::Vector{FusionRing})
     return Dict(
       "mult_tab"                            => mttojs(fr),
       "names"                               => names(fr),
+      "labels"                              => labels(fr),
       "texnames"                            => tex_names(fr),
       "barcode"                             => string(barcode(fr)),
       "anyonwiki_code"                      => anyonwiki_code(fr),

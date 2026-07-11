@@ -89,7 +89,7 @@ function fcfromjs(js)::Union{Missing,Vector{Int64}}
     return missing
   end
 
-  if fc === nothing || length(fc) == 0
+  if isnothing(fc) || length(fc) == 0
     missing
   else
     [fc[i] for i in 1:4]
@@ -156,8 +156,8 @@ function nchfromjs(js)::Union{Missing, Matrix{ComplexF64}}
 
   isnothing(ncvecs) && return missing
 
-    r = length(ncvecs)
-    [vec_to_cflt(ncvecs[i][j]) for i in 1:r, j in 1:r]
+  r = length(ncvecs)
+  [vec_to_cflt(ncvecs[i][j]) for i in 1:r, j in 1:r]
 end
 
 # characters
@@ -631,7 +631,7 @@ function fusion_ring_string(fr::FusionRing)
     global ringidcounter = ringidcounter + 1
     return "fr_" * string(ridc)
   else
-  us = fill("_", 3)
+    us = fill("_", 3)
     return stringriffle(string.(c), us)
   end
 end

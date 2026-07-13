@@ -5,7 +5,7 @@
 
 
 <<Anyonica`
-codes = Import["/home/gert/Projects/FusionRings/test/data/test_fusion_ring_codes.wdx"];
+codes = Import["/home/gert/Projects/FusionRings.jl/test/testdata/test_fusion_ring_codes.wdx"];
 
 
 (* Exporting data *)
@@ -17,7 +17,7 @@ tojson[ input_, output_, info_ ] :=
 	|>;
 
 exportjson[ fn_, dt_ ] := 
-	Export["/home/gert/Projects/FusionRings/test/testdata/"<>fn<>".json",dt,"JSON"];
+	Export["/home/gert/Projects/FusionRings.jl/test/testdata/"<>fn<>".json",dt,"JSON"];
 
 
 (* ::Section::Closed:: *)
@@ -105,8 +105,12 @@ exportjson["son2_tables",son2tables];
 
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Operations*)
+
+
+(* ::Subsection::Closed:: *)
+(*Permutations*)
 
 
 (* Generate 2 random permutations for 64 rings with rank > 3 *)
@@ -127,22 +131,26 @@ randomperm[ code_ ] :=
 	
 perms = randomperm /@ randomcodes;
 
-input = Transpose @ { MT@*FRBC/@randomcodes, perms }; 
+input = Transpose @ { randomcodes, perms }; 
 
 output = 
 	Table[ 
 		MT[PermutedRing[FusionRing[ "MultiplicationTable"->inp[[1]]],#]]&/@inp[[2]],
-		{inp,input}
+		{inp,MapAt[ MT@*FRBC, input, {All,1} ]}
 	];
 
 permtabs = 
 	tojson[ 
 		input,
 		output,
-		"Input: list { mt, perms } where mt is original mult tab of a ring and perms is list of 2 permutations, Output: list of mult tabs corresponding to permutations of mt"
+		"Input: list { code, perms } where code is formal code of fusion ring stored in package and perms is list of 2 permutations, Output: list of mult tabs corresponding to permutations of the stored ring"
 	];
 	
 exportjson[ "permuted_tabs", permtabs ]
+
+
+(* ::Subsection:: *)
+(*Tensor products*)
 
 
 (* tensor products between rings. We can only test for small rings *)
@@ -160,35 +168,237 @@ input =
 output = PMap[ MT[TensorProduct@@#]&, input ];
 
 tptabs = tojson[ 
-	Map[ MT, input, {2} ],
+	Map[ FC, input, {2} ],
 	output,
-	"Input: couple of mult tabs of 2 fusion rings, Output: mult tab of tensor product of the rings"
+	"Input: couple of formal codes of 2 stored fusion rings, Output: mult tab of tensor product of the rings"
 ];
 
 exportjson[ "tensor_product_tables", tptabs ]
 
 
-inputrings = FRBC/@codes;
-input = MT /@ inputrings;
-output = SubFusionRings/@inputrings/.r_FusionRing:>MT[r];
+(* ::Section:: *)
+(*Properties*)
+
+
+(* ::Subsection:: *)
+(*sub rings*)
+
+
+input = codes;
+output = SubFusionRings@*FRBC/@codes/.r_FusionRing:>FC[r];
 
 subrings = tojson[ 
 	input,
 	output,
-	"Input: mult tab of fusion ring, Output: either (1) empty list if ring has no non-trivial sub fusion rings or (2) list of couples ( els, mt ) where els are the elements in the parent ring that make up the subring and mt is the multiplication table of the subring"
+	"Input: formal code of fusion ring, Output: either (1) empty list if ring has no non-trivial sub fusion rings or (2) list of couples ( els, fc ) where els are the elements in the parent ring that make up the subring and fc is the formal code of the subring"
 ];
 
 exportjson[ "sub_ring_data", subrings ]
 
 
 inputrings = FRBC/@codes;
-input = MT /@ inputrings;
+input = FC /@ inputrings;
 output = Sort@*Rest@*FRA/@inputrings;
 
 autos = tojson[ 
 	input,
 	output,
-	"Input: mult tab of fusion ring, Output: non-trivial fusion ring automorphisms as permutation vectors, sorted lexicographically"	
+	"Input: formal code of fusion ring, Output: non-trivial fusion ring automorphisms as permutation vectors, sorted lexicographically"	
 ];
 
 exportjson[ "automorphisms", autos ]
+
+
+(* ::Subsection:: *)
+(*number non zero struct constants*)
+
+
+inputrings = FRBC/@codes;
+input = FC /@ inputrings;
+output = NNZSC/@inputrings;
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, Output: number non-zero structure constants"
+];
+
+exportjson[ "num_nonzero_structure_constants", json ]
+
+
+(* ::Subsection:: *)
+(*FPdims (numerical test)*)
+
+
+inputrings = FRBC/@codes;
+input = FC /@ inputrings;
+output = InfN[FPDims[#],16]&/@inputrings;
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: FPDims of elements of fusion ring"
+];
+
+exportjson[ "fpdims", json ]
+
+
+(* ::Subsection:: *)
+(*FPdim (numerical test)*)
+
+
+inputrings = FRBC/@codes;
+input = FC /@ inputrings;
+output = InfN[FPDim[#],16]&/@inputrings;
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: FPDim of fusion ring"
+];
+
+exportjson[ "fpdim", json ]
+
+
+(* ::Subsection:: *)
+(*group ring*)
+
+
+inputrings = FRBC/@codes;
+input = FC /@ inputrings;
+output = GroupRingQ/@inputrings;
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: boolean stating whether ring is group ring"
+];
+
+exportjson[ "is_group_ring", json ]
+
+
+(* ::Subsection:: *)
+(*tensor product decompositions*)
+
+
+inputrings = FRBC/@codes;
+input = FC /@ inputrings;
+output = WhichDecompositions/@inputrings/.r_FusionRing:>FC[r];
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: lists of formal codes of fusion rings arising in tensor product decompositions of fusion ring"
+];
+
+exportjson[ "tensor_product_decompositions", json ]
+
+
+(* ::Subsection:: *)
+(*adjoint fusion rings*)
+
+
+inputrings = FRBC/@codes;
+input = codes;
+output = AdjointFusionRing/@inputrings/.r_FusionRing:>FC[r];
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: couple [ els, fc ] where els are the elements of the fusion ring that form the adjoint ring and fc is the formal code of the adjoint fusion ring"
+];
+
+exportjson[ "adjoint_fusion_rings", json ]
+
+
+(* ::Subsection:: *)
+(*upper central series*)
+
+
+inputrings = FRBC/@codes;
+input = codes;
+output = UpperCentralSeries/@inputrings/.r_FusionRing:>FC[r];
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: upper central serie of fusion ring as list of couples [ [ els_1, fc_1 ], ..., [els_n, fc_n ] where els_i are the elements of the fusion ring with code fc_i that form the adjoint ring of fusion ring with code fc_{i-1}"
+];
+
+exportjson[ "upper_central_series", json ]
+
+
+(* ::Subsection:: *)
+(*adjoint irreps*)
+
+
+inputrings = FRBC/@codes;
+input = codes;
+output = PMap[ Sort[Sort/@AdjointIrreps[#]]&,inputrings]/.r_FusionRing:>FC[r];
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: partition of basis of fusion ring into adjoint irreps. Each subset is sorted and the partition is sorted lexicographically on the subsets"
+];
+
+exportjson[ "adjoint_irreps", json ]
+
+
+(* ::Subsection:: *)
+(*universal grading*)
+
+
+inputrings = FRBC/@codes;
+input = codes;
+gradingmaptoim[ ug_ ] := ug/.{ l_, fr_FusionRing }:> {Values[l], fr }
+
+output = PMap[ gradingmaptoim @* UniversalGrading @* SortedRing,inputrings]/.r_FusionRing:>FC[r];
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: universal_grading stored as vector [ im, ringid ] where im is a vector of images of the elements of the original ring under the grading map and ringid is the formal code of the fusion ring that is the universal grading."
+];
+
+exportjson[ "universal_grading", json ]
+
+
+(* ::Subsection:: *)
+(*Categorifiability*)
+
+
+inputrings = FRBC/@codes;
+input = codes;
+
+data = PMap[ 
+	TimeConstrained[
+		FC[#] -> {
+			ZSCriterion[#], 
+			LCriterion[#],
+			N[Catch[CSPCValue[32][#],False]]<0,
+			Catch[PDCCriterion[#],False], 
+			Catch[DNCriterion[#],False]
+			},
+		20,
+		Missing[]
+	]&,
+	inputrings
+];
+
+json = tojson[ 
+	input,
+	output,
+	"Input: formal code of fusion ring, " <> 
+	"Output: list of booleans indicating whether resp the zero spectrum criterion, "
+];
+
+exportjson[ "categorifiability", json ]

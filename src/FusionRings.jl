@@ -2,6 +2,8 @@ module FusionRings
 
 using Oscar, JSON, Base.Threads, Accessors
 using LinearAlgebra: eigen, eigvals, diag
+using ProgressMeter
+
 import Oscar:
   multiplication_table,
   is_commutative,
@@ -69,29 +71,32 @@ function __init__()
   # IF FIRST TIME USING PACKAGE: split number data in separate files
   # these will be loaded on demand rather than all at the same time.
 
-  if "split_number_data" ∉ fns
+  ids  = Oscar.load(joinpath(datadir, "qqb_ids.mrdi"))
+  nf = length(ids)
+  if "split_number_data" ∉ fns || length(readdir(joinpath(datadir,"split_number_data"))) < nf
     println("Dataset of algebraic numbers not yet optimized. Optimizing for future use.")
     # Create directory for numbers
     splitdatapath = joinpath(datadir, "split_number_data/")
-    mkdir(splitdatapath)
+    mkpath(splitdatapath)
 
     println("Importing algebraic numbers.")
     # Import qqb numbers from big files
     qqb_nums = begin
-      ids  = Oscar.load(joinpath(datadir, "qqb_ids.mrdi"))
       nums = Oscar.load(joinpath(datadir, "qqb_vals.mrdi"))
 
-      [ids[i], nums[i] for i in 1:length(ids)]
+      [(ids[i], nums[i]) for i in 1:length(ids)]
     end
 
     println("Exporting numbers separately.")
     # Export qqb numbers
     function exportnum(tuple)
-      dir = joinpath(datadir, "split_number_data/", tuple[1]*".mrdi")
+      path = joinpath(datadir, "split_number_data/", tuple[1]*".mrdi")
       return Oscar.save(path, tuple[2])
     end
 
-    exportnum.(qqb_nums)
+    @showprogress for num in qqb_nums
+      exportnum(num)
+    end
     println("Dataset is optimized.")
   end
 

@@ -2,6 +2,8 @@ module FusionRings
 
 using Oscar, JSON, Base.Threads, Accessors
 using LinearAlgebra: eigen, eigvals, diag
+using ProgressMeter
+
 import Oscar:
   multiplication_table,
   is_commutative,
@@ -75,7 +77,7 @@ function __init__()
     println("Dataset of algebraic numbers not yet optimized. Optimizing for future use.")
     # Create directory for numbers
     splitdatapath = joinpath(datadir, "split_number_data/")
-    mkdir(splitdatapath)
+    mkpath(splitdatapath)
 
     println("Importing algebraic numbers.")
     # Import qqb numbers from big files
@@ -92,7 +94,9 @@ function __init__()
       return Oscar.save(path, tuple[2])
     end
 
-    exportnum.(qqb_nums)
+    @showprogress for num in qqb_nums
+      exportnum(num)
+    end
     println("Dataset is optimized.")
   end
 

@@ -69,7 +69,9 @@ function __init__()
   # IF FIRST TIME USING PACKAGE: split number data in separate files
   # these will be loaded on demand rather than all at the same time.
 
-  if "split_number_data" ∉ fns
+  ids  = Oscar.load(joinpath(datadir, "qqb_ids.mrdi"))
+  nf = length(ids)
+  if "split_number_data" ∉ fns || length(readdir(joinpath(datadir,"split_number_data"))) < nf
     println("Dataset of algebraic numbers not yet optimized. Optimizing for future use.")
     # Create directory for numbers
     splitdatapath = joinpath(datadir, "split_number_data/")
@@ -78,7 +80,6 @@ function __init__()
     println("Importing algebraic numbers.")
     # Import qqb numbers from big files
     qqb_nums = begin
-      ids  = Oscar.load(joinpath(datadir, "qqb_ids.mrdi"))
       nums = Oscar.load(joinpath(datadir, "qqb_vals.mrdi"))
 
       [ids[i], nums[i] for i in 1:length(ids)]

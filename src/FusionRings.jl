@@ -84,13 +84,13 @@ function __init__()
     qqb_nums = begin
       nums = Oscar.load(joinpath(datadir, "qqb_vals.mrdi"))
 
-      [ids[i], nums[i] for i in 1:length(ids)]
+      [(ids[i], nums[i]) for i in 1:length(ids)]
     end
 
     println("Exporting numbers separately.")
     # Export qqb numbers
     function exportnum(tuple)
-      dir = joinpath(datadir, "split_number_data/", tuple[1]*".mrdi")
+      path = joinpath(datadir, "split_number_data/", tuple[1]*".mrdi")
       return Oscar.save(path, tuple[2])
     end
 

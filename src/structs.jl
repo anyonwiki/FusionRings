@@ -10,6 +10,7 @@ export FusionRing
 #     ...
 #   ]
 # * grading groups 
+# * taggs : [ "nilpotent", "groupring", "neargroup", "quantumgroup", ... ]
 
 struct FusionRing
   multiplication_table::Array{Int, 3}

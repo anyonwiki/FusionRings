@@ -123,7 +123,7 @@ function frobenius_perron_dimensions(
   r::FusionRing; force_compute = false
 )::Vector{QQBarFieldElem}
   stored_dims = r.frobenius_perron_dimensions
-  if stored_dims===missing || force_compute
+  if ismissing(stored_dims) || force_compute
     mt = multiplication_table(r)
     multmats = [matrix(ZZ, mt[i, :, :]) for i in 1:rank(r)]
     return [first(eigenvalues(QQBar, A)) for A in multmats]

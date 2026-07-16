@@ -188,9 +188,59 @@ function riffle(v::Vector{T}, w::Vector{T}) where {T}
   return result
 end
 
+# riffle two strings together a la Mathematica
 export stringriffle
 
 function stringriffle(v::Vector{String}, w::Vector{String})
   l = riffle(v, w)
   return string(l ...)
+end
+
+# returns dictionary with keys equal to f(l) for l in lis
+# and values equal to all l ∈ lis that map to the key
+
+function group_by(f, lis)
+  isempty(lis) && return Dict()
+
+  result = Dict{Any, Vector{eltype(lis)}}()
+  for item in lis
+    key = f(item)
+    if !haskey(result, key)
+      result[key] = eltype(lis)[]
+    end
+    push!(result[key], item)
+  end
+  return result
+end
+
+# group elements together in vectors by their value under
+# f while keeping their relative order within the subgroups,
+# i.e. if a came before b in lis and a and b belong
+# to the same group then a will come before b in their group
+
+function gather_by(f, lis)
+  isempty(lis) && return Vector{eltype(lis)}[]
+
+  # Use vector of tuples to preserve order:
+  # (key, ind_of_first_occurrence)
+  keys_in_order = Tuple{Any, Int}[]
+  groups = Dict{Any, Vector{eltype(lis)}}()
+
+  for (index, el) in enumerate(lis)
+    key = f(el)
+    # if key is new
+    if !haskey(groups, key)
+      # create collection for key
+      groups[key] = eltype(lis)[]
+      # store index of key to
+      push!(keys_in_order, (key, index))
+    end
+    # push element to group whose values evaluate to f(el)
+    push!(groups[key], el)
+  end
+
+  # Sort keys_in_order by index
+  sort!(keys_in_order; by = x -> x[2])
+
+  return [groups[key] for (key, _) in keys_in_order]
 end

@@ -467,10 +467,10 @@
   end
 
   # ============================================================
-  # adjoint_fusion_ring / upper_central_series / is_nilpotent
+  # adjoint_fusion_ring / upper_central_series / is_nilpotent / universal_grading
   # ============================================================
 
-  @testset "adjoint_fusion_ring / upper_central_series / is_nilpotent" begin
+  @testset "adjoint_fusion_ring / upper_central_series / is_nilpotent / universal_grading" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
 
@@ -510,10 +510,150 @@
     end
 
     maybe_testset("reference", "3. reference / Anyonica parity") do
-      @test true
+      data = load_anyonica_data("adjoint_fusion_ring.json")
+
+      for idx in oracle_case_indices("adjoint_fusion_ring.json", data)
+        code = data["Input"][idx]
+        r = ring_from_anyonica_code(code)
+        afr = adjoint_fusion_ring(r)
+        fusion_rings_output = [afr[1], anyonwiki_code(afr[2])]
+
+        anyonica_output = data["Output"][idx]
+
+        check_equal(
+          fusion_rings_output,
+          anyonica_output,
+          "adjoint fusion ring did not match Anyonica adjoint_fusion_ring.json for case $idx, with ring with code $code"
+        )
+      end
+
+      data = load_anyonica_data("upper_central_series.json")
+
+      for idx in oracle_case_indices("upper_central_series.json", data)
+        code = data["Input"][idx]
+        r = ring_from_anyonica_code(code)
+        fusion_rings_output =
+          map(
+            vec -> [ vec[1], anyonwiki_code(vec[2]) ],
+            upper_central_series(r)
+          )
+
+        anyonica_output= data["Output"][idx]
+
+        check_equal(
+          fusion_rings_output,
+          anyonica_output,
+          "upper central series did not match Anyonica upper_central_series.json for case $idx, with ring with code $code"
+        )
+      end
+
+
+      data = load_anyonica_data("universal_grading.json")
+
+      for idx in oracle_case_indices("universal_grading.json", data)
+        code = data["Input"][idx]
+        r = ring_from_anyonica_code(code)
+        ug = universal_grading(r)
+        fusion_rings_output = [ ug[1], anyonwiki_code(ug[2]) ]
+
+        testdata = anyonica_output
+
+        check_equal(
+          fusion_rings_output,
+          anyonica_output,
+          "universal grading did not match Anyonica universal_grading.json for case $idx, with ring with code $code"
+        )
+      end
     end
   end
 
+  # ============================================================
+  # all_gradings
+  # ============================================================
+
+  @testset "all_gradings" begin
+    maybe_testset("basic", "1. basic construction") do
+      z6 = zn_fusion_ring(6)
+      D_3 = fawc(6,1,2,1)
+      trivial_ring = frl[1]
+
+      ag1 = all_gradings(z6)
+      ag2 = all_gradings(D_3)
+      ag3 = all_gradings(trivial_ring)
+
+      check_true(
+        ag1 isa Vector,
+        "all_gradings(z6) did not return a vector",
+      )
+
+      check_true(
+        ag2 isa Vector,
+        "all_gradings(D_3) did not return a vector",
+      )
+      return check_true(
+        ag3 isa Vector,
+        "all_gradings(trivial_ring) did not return a vector",
+      )
+    end
+
+    maybe_testset("intermediate", "2. intermediate correctness") do
+      z6 = zn_fusion_ring(6)
+      D_3 = fawc(6,1,2,1)
+      trivial_ring = frl[1]
+
+      rings_to_codes(ag) = [ [ gr[1], anyonwiki_code(gr[2]) ] for gr in ag  ]
+
+      ag1 = rings_to_codes(all_gradings(z6))
+      ag2 = rings_to_codes(all_gradings(D_3))
+      ag3 = rings_to_codes(all_gradings(trivial_ring))
+
+      check_equal(
+        ag1,
+        [
+          [[1, 1, 1, 1, 1, 1], [1,1,0,1] ],
+          [[1, 2, 1, 2, 1, 2], [2,1,0,1] ],
+          [[1, 2, 3, 1, 2, 3], [3,1,2,1] ],
+          [[1, 3, 5, 2, 6, 4], [6,1,4,1] ]
+        ]
+        , """all_gradings(z6) did not return
+        [
+          [ [1, 1, 1, 1, 1, 1], FC(1,1,0,1) ],
+          [ [1, 2, 1, 2, 1, 2], FC(2,1,0,1) ],
+          [ [1, 2, 3, 1, 2, 3], FC(3,1,2,1) ],
+          [ [1, 3, 5, 2, 6, 4], FC(6,1,4,1) ]
+        ]
+        """
+      )
+
+      check_equal(
+        ag2,
+        [
+          [[1, 1, 1, 1, 1, 1], [1,1,0,1] ],
+          [[1, 2, 2, 2, 1, 1], [2,1,0,1] ],
+          [[1, 2, 3, 4, 5, 6], [6,1,2,1] ]
+        ]
+        , """all_gradings(D_3) did not return
+        [
+          [[1, 1, 1, 1, 1, 1], FR(1,1,0,1)]
+          [[1, 2, 2, 2, 1, 1], FR(2,1,0,1)]
+          [[1, 2, 3, 4, 5, 6], FR(6,1,2,1)]
+        ]
+        """
+      )
+
+      check_equal(
+        ag3,
+        [
+          [[1], [1,1,0,1] ]
+        ]
+        , """all_gradings(triv_ring) did not return
+        [
+          [[1], FR(1,1,0,1)]
+        ]
+        """
+      )
+    end
+  end
   # ============================================================
   # unfinished / placeholder functions
   # ============================================================

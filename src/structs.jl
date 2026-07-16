@@ -13,11 +13,14 @@ export FusionRing
 
 struct FusionRing
   multiplication_table::Array{Int, 3}
+  rank::Int64
+  multiplicity::Int64
+  numnonselfdual::Int64
   names::Array{String, 1}
   texnames::Array{String, 1}
   labels::Array{String, 1}
   barcode
-  anyonwiki_code::Union{Array{Int, 1}, Missing}
+  anyonwiki_id::Union{Missing,String}
   characters
   sub_fusion_rings
   frobenius_perron_dimension
@@ -33,6 +36,7 @@ struct FusionRing
   software
   comments
   non_cat_reasons
+  uuid::Union{Missing,String}
 end
 
 export fusion_ring
@@ -82,7 +86,7 @@ function fusion_ring(
   names                               = [],
   texnames                            = [],
   barcode                             = missing,
-  anyonwiki_code                      = missing,
+  anyonwiki_id                        = missing,
   characters                          = missing,
   sub_fusion_rings                    = missing,
   frobenius_perron_dimension          = missing,
@@ -98,6 +102,7 @@ function fusion_ring(
   software                            = missing,
   comments                            = missing,
   non_cat_reasons                     = missing,
+  uuid                                = missing,
   skip_check                          = false,
 )
   if !skip_check
@@ -120,11 +125,14 @@ function fusion_ring(
 
   return FusionRing(
     mt,
+    r,
+    maximum(mt),
+    nsd,
     names,
     texnames,
     labels,
     barcode,
-    anyonwiki_code,
+    anyonwiki_id,
     characters,
     sub_fusion_rings,
     projective_SL2Z_reps,
@@ -141,5 +149,6 @@ function fusion_ring(
     software,
     comments,
     non_cat_reasons,
+    id,
   )
 end

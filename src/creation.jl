@@ -44,8 +44,8 @@ function group_fusion_ring(
     mt;
     labels = [bold_integer(i) for i in 1:r],
     names = names,
-    frobenius_perron_dimension = ZZ(r),
-    frobenius_perron_dimensions = fill(ZZ(1), r),
+    frobenius_perron_dimension = qqb_id(QQBar(r)),
+    frobenius_perron_dimensions = fill(qqb_id(QQBar(1)), r),
   )
 end
 

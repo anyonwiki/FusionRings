@@ -9,7 +9,7 @@ export FusionRing
 #     [ non_unitary, reason_nu ],
 #     ...
 #   ]
-# * grading groups 
+# * grading groups
 # * taggs : [ "nilpotent", "groupring", "neargroup", "quantumgroup", ... ]
 
 struct FusionRing

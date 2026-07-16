@@ -1,74 +1,22 @@
 using Pkg;
 Pkg.activate("/home/gert/Projects/FusionRings.jl")
-using Revise, Oscar, Accessors, JSON, FusionRings
-using Pkg;
-Pkg.activate("/home/gert/Projects/FusionRings.jl")
-using Revise, Oscar, Accessors, JSON, FusionRings
+using Revise, Oscar, Accessors, JSON, FusionRings, ProgressMeter
 
 function to_qqb_arr(mat)
   return [mat[i] for i in eachindex(mat)]
 end
 
-function import_and_fix(fr)
-  path = "/home/gert/Projects/FusionRings.jl/src/data/FusionRings/"
+# TODO: make sure numeric characters match the symbolic ones
 
-  js = JSON.parsefile(joinpath(path, fr_fn(fr)))
+function import_and_fix( )
+  fn = "/home/gert/Projects/FusionRings.jl/src/data/fusionrings.json"
+
+  js = JSON.parsefile(fn)
 
   # Mult tables were incorrect
   mt = multiplication_table(fr)
 
-  # Song names contain \\| which should be |
-  tnames = replace(tnfromjs(js), "\\|" => "|")
 
-  iscategorifiable = cfromjs(js)
-  if iscategorifiable === true # could be missing
-    prpdict = ctpfromjs(js)
-    uq = prpdict["Unitary"]
-    sq = prpdict["Spherical"]
-    bq = prpdict["Braided"]
-    rq = prpdict["Ribbon"]
-    mq = prpdict["Modular"]
-
-    function reasontext(string, bool)
-      bool === missing && []
-
-      if bool
-        ["Example", "See categorifications"]
-      else
-        ["Computer", "No " * string * " category found using Anyonica v < 0.9.7.0"]
-      end
-    end
-
-    catswithprops = [
-      ["Fusion", true, reasontext("fusion", true)],
-      ["Pivotal", true, reasontext("pivotal", true)],
-      ["Unitary", uq, reasontext("unitary", uq)],
-      ["Spherical", sq, reasontext("spherical", sq)],
-      ["BraidedQ", bq, reasontext("braided", bq)],
-      ["Ribbon", rq, reasontext("ribbon", rq)],
-      ["Modular", mq, reasontext("modular", mq)],
-    ]
-  elseif iscategorifiable === false
-    catswithprops = [
-      ["Fusion", false, ["Computer", "No category found using Anyonica v < 0.9.7.0"]],
-      ["Pivotal", false, ["Computer", "See fusion category"]],
-      ["Unitary", false, ["Computer", "See fusion category"]],
-      ["Spherical", false, ["Computer", "See fusion category"]],
-      ["Braided", false, ["Computer", "See fusion category"]],
-      ["Ribbon", false, ["Computer", "See fusion category"]],
-      ["Modular", false, ["Computer", "See fusion category"]],
-    ]
-  else
-    catswithprops = [
-      ["Fusion", missing, ["", "Unknown to AnyonWiki"]],
-      ["Pivotal", missing, ["", "Unknown to AnyonWiki"]],
-      ["Unitary", missing, ["", "Unknown to AnyonWiki"]],
-      ["Spherical", missing, ["", "Unknown to AnyonWiki"]],
-      ["Braided", missing, ["", "Unknown to AnyonWiki"]],
-      ["Ribbon", missing, ["", "Unknown to AnyonWiki"]],
-      ["Modular", missing, ["", "Unknown to AnyonWiki"]],
-    ]
-  end
 
   return fusion_ring(
     mt;

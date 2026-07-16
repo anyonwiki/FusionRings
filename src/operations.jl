@@ -56,13 +56,13 @@ function replace_by_known(fr::FusionRing; keep_order = true, safe_return = true)
   target = nothing
   for ring in proposals
     p = which_permutation(ring, fr)
-    if p ≠ nothing
+    if !isnothing(p)
       target = ring
       break
     end
   end
 
-  if p === nothing
+  if isnothing(p)
     safe_return && return fr
     return missing
   end

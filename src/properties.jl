@@ -994,121 +994,57 @@ is  universal grading,  every grading  obtained from U/N,
 where N is a normal subgroup of U.
 """
 
-function all_gradings(fr::FusionRing)
-  ag = fr.all_gradings
-  !ismissing(ag) && return ag
+function all_gradings(fr::FusionRing; force_compute = false)
+  #TODO: uncomment line once FusionRing has field all_gradings
+  #!force_compute && !ismissing(fr.all_gradings) && return fr.all_gradings
 
-  grading, universal_group = universal_grading(fr)
+  rank(fr) == 1 && return [ [1], fawc(1,1,0,1) ]
 
-  universal_blocks = blocks_from_grading_pairs(grading)
+  grvec, ug = universal_grading(fr)
 
-  G    = to_group(universal_group)
-  mult = cayley_table(universal_group)
+  UG, ϕ = to_group_with_emb(ug)
 
-  gradings = Vector{Dict{String, Any}}()
+  gradings = Vector{Vector{Any}}()
 
-  for N in normal_subgroups(G)
-    cosets = cosets_as_index_blocks(G, N)
+  for N in normal_subgroups(UG)
+    UGoverN, π = quo(UG,N)
+    fr_UGoverN = replace_by_known(group_fusion_ring(UGoverN))
+    UGel = collect(UG)
 
-    partition = merge_universal_blocks(universal_blocks, cosets)
+    UGoverNeltoInt(el) = findfirst( ==(el) , collect(UGoverN) )
 
-    quotient_mult = quotient_mult_table(mult, cosets)
-    quotient_group_ring = group_ring_from_cayley_table(quotient_mult)
+    grading_UGoverN = UGoverNeltoInt.(π.([ UGel[ ϕ[gr] ] for gr in grvec ]))
 
-    Q, proj = quo(G, N)
+    #fr_UGoverN might have different mult table from built-in ring
+    code = anyonwiki_code(fr_UGoverN)
+    σ    = first( which_permutation( fr_UGoverN, fawc(code) ) )
 
-    push!(
-      gradings,
-      Dict{String, Any}(
-        "partition" => partition,
-        "group_ring" => quotient_group_ring,
-        "normal_subgroup" => N,
-        "quotient_group" => Q,
-        "quotient_projection" => proj,
-        "cosets" => cosets,
-      ),
-    )
+    g = [ invperm(σ)[gr] for gr in grading_UGoverN ]
+    f = permute( σ, fr_UGoverN )
+
+    push!( gradings, [ g, f ] )
   end
 
-  sort!(gradings; by = g -> -length(g["partition"]))
+  sort!(gradings; by = g -> rank(g[2]))
 
   return gradings
 end
 
-function blocks_from_grading_pairs(grading::Vector{Pair{Int, Int}})
-  ngrades = maximum(last.(grading))
-  blocks = [Int[] for _ in 1:ngrades]
 
-  for p in grading
-    simple = first(p)
-    grade = last(p)
-    push!(blocks[grade], simple)
-  end
+# to_group_with_emb(fr::FusionRing) returns an oscar group G and a vector
+# v such that the v[i]'th element of collect(G) corresponds to the
+# i'th element of fr
+function to_group_with_emb(fr::FusionRing)::Tuple{Group,Vector}
+  G  = to_group(fr)
 
-  foreach(sort!, blocks)
-  return blocks
+  ct  = cayley_table(G)
+  frG = group_fusion_ring(ct)
+  vec = first(which_permutation(frG,fr))
+
+  G, vec
 end
 
-function merge_universal_blocks(
-  universal_blocks::Vector{Vector{Int}}, cosets::Vector{Vector{Int}}
-)
-  partition = Vector{Vector{Int}}()
 
-  for C in cosets
-    block = Int[]
-
-    for g in C
-      append!(block, universal_blocks[g])
-    end
-
-    push!(partition, sort(unique(block)))
-  end
-
-  sort!(partition; by = B -> minimum(B))
-
-  return partition
-end
-
-function quotient_mult_table(mult::AbstractMatrix{<:Integer}, cosets::Vector{Vector{Int}})
-  q = length(cosets)
-
-  element_to_coset = Dict{Int, Int}()
-
-  for (i, C) in pairs(cosets)
-    for g in C
-      element_to_coset[g] = i
-    end
-  end
-
-  quotient_mult = zeros(Int, q, q)
-
-  for A in 1:q
-    for B in 1:q
-      a = cosets[A][1]
-      b = cosets[B][1]
-      c = mult[a, b]
-
-      quotient_mult[A, B] = element_to_coset[c]
-    end
-  end
-
-  return quotient_mult
-end
-
-function group_ring_from_cayley_table(mult::AbstractMatrix{<:Integer})
-  q = size(mult, 1)
-
-  mt = zeros(Int, q, q, q)
-
-  for a in 1:q
-    for b in 1:q
-      c = mult[a, b]
-      mt[a, b, c] = 1
-    end
-  end
-
-  return replace_by_known(fusion_ring(mt))
-end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                    commutator                                   ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

@@ -57,10 +57,14 @@ function from_qqb_id(s::String)
   end
 end
 
-function from_qqb_id(a::Array{Any})
+function from_qqb_id(a::Vector)
   return from_qqb_id.(a)
 end
-function from_qqb_id(a::Matrix{String})
+
+function from_qqb_id(a::Array)
+  return from_qqb_id.(a)
+end
+function from_qqb_id(a::Matrix)
   return from_qqb_id.(a)
 end
 
@@ -77,24 +81,48 @@ end
 # compatibility. Once all json files have the correct format
 # we should remove it since it slows down the import
 
-# formal code
-function fcfromjs(js)::Union{Missing,Vector{Int64}}
+# used to be formal code but now creates a string
+# anyonwiki_fcrm_fr__a_b_c_d
+function fcfromjs(js)::Union{Missing,String}
   k = keys(js)
 
-  if "formal_code" ∈ k
-    fc = js["formal_code"]
+  if "anyonwiki_id" ∈ k
+    return isnothing(js["anyonwiki_id"]) ? missing : js["anyonwiki_id"]
+  end
+
+  fc = if "formal_code" ∈ k
+    js["formal_code"]
   elseif "anyonwiki_code" ∈ k
-    fc = js["anyonwiki_code"]
+    js["anyonwiki_code"]
   else
-    return missing
+    nothing
   end
 
   if isnothing(fc) || length(fc) == 0
-    missing
+    return missing
   else
-    [fc[i] for i in 1:4]
+    return "anyonwiki_fcrm_fr__" * join( string.(fc), "_" )
   end
 end
+
+function formal_code_to_id(code::Vector{Int64})
+  "anyonwiki_fcrm_fr__" * join( string.(code), "_" )
+end
+
+function id_to_formal_code(id::String)
+  c = parse.(Int64, split( id[20:end], "_" ) )
+
+  length(c) ≠ 4 && error("Invalid fusion ring id")
+
+  c
+end
+
+function uuidfromjs(js)::Union{String,Missing}
+  k = keys(js)
+
+  "UUID" ∈ keys(js) ? js["UUID"] : missing
+end
+
 
 # mult tab
 function mtfromjs(js)::Array{Int64, 3}
@@ -343,7 +371,7 @@ function import_ring(filename::String)
     labels                              = lfromjs(js),
     texnames                            = tnfromjs(js),
     barcode                             = bcfromjs(js),
-    anyonwiki_code                      = fcfromjs(js),
+    anyonwiki_id                        = fcfromjs(js),
     characters                          = chfromjs(js),
     sub_fusion_rings                    = sfrfromjs(js),
     projective_SL2Z_reps                = psrfromjs(js),
@@ -382,7 +410,7 @@ function import_rings(filename::String)
       labels                              = lfromjs(js),
       texnames                            = tnfromjs(js),
       barcode                             = bcfromjs(js),
-      anyonwiki_code                      = fcfromjs(js),
+      anyonwiki_id                        = fcfromjs(js),
       characters                          = chfromjs(js),
       sub_fusion_rings                    = sfrfromjs(js),
       projective_SL2Z_reps                = psrfromjs(js),
@@ -556,11 +584,15 @@ function ring_to_dict(fr)
   infostring = "Fusion ring. mult_tab: structure constants. barcode & formal_code: unique identifiers see (DOI: 10.1063/5.0148848). non_trivial_sub_fusion_rings: tuples where the first element = elements of ring that form subring isomorphic to subring identified by second element of the tuple. software: doi of original software used to represent fusion ring. references: doi of paper from which data was obtained. categorifiable: false=not categorifiable, null= unknown. categorifications: if categorifiable then anyonwiki codes of pivotal (braided) fusion cats that categorify ring. numeric_projective_SL2Z_reps: each rep consists of a generalized S-matrix and a vector of vectors representing the ln(diag(T))/(2 pi i) of a generalized T-matrix. Algebraic numbers are encoded as a0_..._an__m where ai are polynomial coefficients and m is root number, ordered via Mathematica's convention."
   return Dict(
     "mult_tab"                            => mttojs(fr),
+    "rank"                                => rank(fr),
+    "multiplicity"                        => multiplicity(fr),
+    "numnonselfdual"                      => nnsd(fr),
+    "uuid"                                => uuid(fr),
     "names"                               => names(fr),
     "labels"                              => labels(fr),
     "texnames"                            => tex_names(fr),
     "barcode"                             => string(barcode(fr)),
-    "anyonwiki_code"                      => anyonwiki_code(fr),
+    "anyonwiki_id"                        => anyonwiki_id(fr),
     "characters"                          => chtojs(fr),
     "non_trivial_sub_fusion_rings"        => sfrtojs(fr),
     "projective_SL2Z_reps"                => psrtojs(fr),
@@ -589,11 +621,15 @@ function rings_to_dict(frs::Vector{FusionRing})
   function ringtodict(fr)
     return Dict(
       "mult_tab"                            => mttojs(fr),
+      "rank"                                => rank(fr),
+      "multiplicity"                        => multiplicity(fr),
+      "numnonselfdual"                      => nnsd(fr),
+      "uuid"                                => uuid(fr),
       "names"                               => names(fr),
       "labels"                              => labels(fr),
       "texnames"                            => tex_names(fr),
       "barcode"                             => string(barcode(fr)),
-      "anyonwiki_code"                      => anyonwiki_code(fr),
+      "anyonwiki_id"                        => anyonwiki_id(fr),
       "characters"                          => chtojs(fr),
       "non_trivial_sub_fusion_rings"        => sfrtojs(fr),
       "projective_SL2Z_reps"                => psrtojs(fr),
@@ -624,20 +660,20 @@ end
 global ringidcounter = 0
 
 function fusion_ring_string(fr::FusionRing)
-  c  = anyonwiki_code(fr)
+  c  = uuid(fr)
   if ismissing(c)
-    @warn "creating ID fr_"*string(ringidcounter) *" for fusionring without defined ID. You can avoid this by setting the field anyonwiki_code of the ring."
-    ridc = ringidcounter
-    global ringidcounter = ringidcounter + 1
-    return "fr_" * string(ridc)
-  else
-    us = fill("_", 3)
-    return stringriffle(string.(c), us)
+    id = string(UUIDs.uuid1())
+    return id
   end
+  return c
 end
 
 function fusion_ring_file_name(fr::FusionRing)
-  return fusion_ring_string(fr) * ".json"
+  awid = anyonwiki_id(fr)
+  ismissing(awid) && (awid = uuid(fr))
+  ismissing(awid) && (awid = string(UUIDs.uuid1()))
+
+  return awid * ".json"
 end
 
 export export_ring

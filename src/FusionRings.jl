@@ -3,6 +3,7 @@ module FusionRings
 using Oscar, JSON, Base.Threads, Accessors
 using LinearAlgebra: eigen, eigvals, diag
 using ProgressMeter
+using UUIDs
 
 import Oscar:
   multiplication_table,
@@ -47,14 +48,24 @@ This requires package data to be loaded (normally happens during `__init__`).
 """
 function from_anyonwiki_code(r::Integer, m::Integer, nnsd::Integer, i::Integer)
   _ensure_frd_initialized()
-  return frd[Int[r, m, nnsd]][i]
+  !haskey(frd,[r,m,nnsd]) && error("code not found in database")
+
+  proposals =  frd[Int[r, m, nnsd]]
+
+  lastindex(ring) = parse( Int, last( split( (ring.anyonwiki_id)[20:end], "_" ) ) )
+
+  p = findfirst( r -> lastindex(r) == i, proposals )
+
+  isnothing(p) && error("code not found in database")
+
+  return proposals[p]
 end
 
 function from_anyonwiki_code(v::AbstractVector{<:Integer})
   _ensure_frd_initialized()
   length(v) == 4 || error("anyonwiki_code expects a vector of 4 integers.")
   r, m, nnsd, i = Int.(collect(v))
-  return frd[[r, m, nnsd]][i]
+  return from_anyonwiki_code(r,m,nnsd,i)
 end
 
 const fawc = from_anyonwiki_code
@@ -118,14 +129,14 @@ function __init__()
 
   grouped_by_first3 = Dict{Vector{Int64}, Vector{FusionRing}}()
   for ring in frl
-    key = anyonwiki_code(ring)[1:3]
+    key = [ ring.rank, ring.multiplicity, ring.numnonselfdual ]
     if !haskey(grouped_by_first3, key)
       grouped_by_first3[key] = FusionRing[]
     end
     push!(grouped_by_first3[key], ring)
   end
 
-  fourth_to_dict(v::Vector{FusionRing}) = Dict((r.anyonwiki_code)[4] => r for r in v)
+  fourth_to_dict(v::Vector{FusionRing}) = Dict(r.uuid => r for r in v)
 
   global fusion_ring_dict = Dict(k => fourth_to_dict(v) for (k, v) in grouped_by_first3)
   #Dict( anyonwiki_code(r) => r for r in frl )

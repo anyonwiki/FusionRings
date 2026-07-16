@@ -311,13 +311,40 @@ function conjugate_pairs(fr::FusionRing)::Vector{Vector{Int}}
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  anyonwiki_id                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export anyonwiki_id
+
+function anyonwiki_id(r::FusionRing)::Union{String,Missing}
+  return r.anyonwiki_id
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                 anyonwiki_code                                  ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export anyonwiki_code
 
 function anyonwiki_code(r::FusionRing)::Union{Array{Int, 1}, Missing}
-  return r.anyonwiki_code
+  id = r.anyonwiki_id
+  ismissing(id) && return missing
+
+  c = parse.(Int64, split( id[20:end], "_" ) )
+  length(c) != 4 && error("anyonwiki code must have length 4")
+
+  c
+end
+
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     uuid                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export uuid
+
+function uuid(r::FusionRing)::Union{Missing,String}
+  return r.uuid
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

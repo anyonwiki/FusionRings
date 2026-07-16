@@ -116,6 +116,12 @@ function fusion_ring(
 
   labels == [] && (labels = String[bold_integer(i) for i in 1:size(mt, 1)])
 
+  id = ismissing(uuid) ? string(UUIDs.uuid1()) : uuid
+
+  r   = size(mt,1)
+  sd  = count(x -> x == 1, diag(mt[:,:,1]))
+  nsd = r - sd
+
   return FusionRing(
     mt,
     names,

@@ -88,8 +88,8 @@
       js_nfpd = Dict("numeric_frobenius_perron_dimension" => [3.0, 0.0])
 
       check_true(
-        FusionRings.fcfromjs(js_fc) isa Vector,
-        "FusionRings.fcfromjs did not return a vector on a basic formal_code input",
+        FusionRings.fcfromjs(js_fc) isa String,
+        "FusionRings.fcfromjs did not return a string on a basic formal_code input",
       )
       check_true(
         FusionRings.mtfromjs(js_mt) isa Array{Int, 3},
@@ -125,11 +125,11 @@
       js_fc3 = Dict("formal_code" => Any[])
 
       check_equal(
-        FusionRings.fcfromjs(js_fc1), [2, 1, 0, 7], "FusionRings.fcfromjs did not decode formal_code correctly"
+        FusionRings.fcfromjs(js_fc1), "anyonwiki_fcrm_fr__2_1_0_7", "FusionRings.fcfromjs did not decode formal_code correctly"
       )
       check_equal(
         FusionRings.fcfromjs(js_fc2),
-        [3, 1, 2, 9],
+        "anyonwiki_fcrm_fr__3_1_2_9",
         "FusionRings.fcfromjs did not decode legacy anyonwiki_code correctly",
       )
       check_equal(
@@ -239,12 +239,12 @@
 
         check_equal(
           FusionRings.fcfromjs(Dict("formal_code" => code)),
-          code,
+          FusionRings.formal_code_to_id(code),
           "FusionRings.fcfromjs failed on formal_code for Anyonica properties case $idx",
         )
         check_equal(
           FusionRings.fcfromjs(Dict("anyonwiki_code" => code)),
-          code,
+          FusionRings.formal_code_to_id(code),
           "FusionRings.fcfromjs failed on anyonwiki_code for Anyonica properties case $idx",
         )
       end
@@ -391,8 +391,8 @@
         "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"mult_tab\"",
       )
       check_true(
-        haskey(d, "anyonwiki_code"),
-        "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"anyonwiki_code\"",
+        haskey(d, "anyonwiki_id"),
+        "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"anyonwiki_id\"",
       )
       return check_true(
         haskey(d, "frobenius_perron_dimension"),

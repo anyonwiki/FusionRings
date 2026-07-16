@@ -58,8 +58,9 @@ function Base.show(io::IO, ring::FusionRing)
   p(str) = print(io, str);
   if ring.names != []
     p("FR(" * names(ring)[1] * ")")
-  elseif ring.anyonwiki_code ≢ missing
-    p("FR(" * string(ring.anyonwiki_code)[2:(end - 1)] * ")")
+  elseif !ismissing(ring.anyonwiki_id)
+    c = join( split( (ring.anyonwiki_id)[20:end], "_" ),",")
+    p("FR(" * c * ")")
   else
     props = map(string, comap([rank, multiplicity, nnsd], ring))
     p("FR(" * join(props, ", ") * ", ? )")

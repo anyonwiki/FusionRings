@@ -1085,7 +1085,6 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export characters
-export characters
 
 function characters(ring::FusionRing; use_numerics = true)
   if !(ring.characters === missing)

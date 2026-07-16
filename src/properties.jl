@@ -375,6 +375,7 @@ function sub_fusion_rings(r::FusionRing)
     ]
   else
     subsets = sub_fusion_ring_subsets(r)
+    mt = multiplication_table(r)
     [
       Dict("injection" => s, "fusion_ring" => replace_by_known(fusion_ring(mt[s, s, s])))
       for s in subsets
@@ -448,6 +449,11 @@ function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
   # indices in S must lie in range 1, ...,  r
   r = rank(fr)
   !all(i -> 1 <= i <= r, S) && return false
+
+  # multiplication must be internal
+  for a ∈ S, b ∈ S
+    fusion_outcomes(fr,a,b) ⊈ S && return false
+  end
 
   mt = multiplication_table(fr)[S, S, S]
 

@@ -574,6 +574,7 @@ function ncrtojs(fr::FusionRing)
   return missing_to_nothing(fr.non_cat_reasons)
 end
 
+
 function write_json(filename::String, data::Dict)
   open(filename, "w") do f
     return JSON.json(f, data; pretty = true, inline_limit = 10)

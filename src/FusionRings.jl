@@ -115,17 +115,14 @@ function __init__()
   global qqb_dict = Dict{String, QQBarFieldElem}()
 
   # IMPORT FUSION RINGS
-  # TODO: how long does sorting take? Might want to store the permutation vector 
-  # once and reuse it
-  global fusion_ring_list = sort( # Stored list is unsorted so we still need to sort
+  global fusion_ring_list =
     import_rings(joinpath(datadir, "fusionrings.json"));
-    by = (x -> (x.anyonwiki_code)[[2, 1, 3, 4]]),
-  )
+
   global frl = fusion_ring_list
 
-  # for unknown rings the first 3 indices of the anyonwiki_code can 
+  # for unknown rings the rank, mult, and nnsd can
   # be determined quickly. We will group the known fusion rings by 
-  # the first 3 indices and then, separately, by the 4th
+  # those properties
 
   grouped_by_first3 = Dict{Vector{Int64}, Vector{FusionRing}}()
   for ring in frl

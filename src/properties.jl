@@ -955,6 +955,7 @@ function universal_grading(fr::FusionRing)
     end
   end
   sort!(grading; by = p -> first(p))
+  grading = [ grading[i][2] for i in 1:length(grading) ]
 
   function _cond(l1::Vector{Int}, l2::Vector{Int}, l3::Vector{Int})::Bool
     @inbounds for i in l1, j in l2

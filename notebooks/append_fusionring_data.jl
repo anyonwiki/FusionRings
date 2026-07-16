@@ -16,8 +16,6 @@ function import_and_fix( )
   # Mult tables were incorrect
   mt = multiplication_table(fr)
 
-
-
   return fusion_ring(
     mt;
     names                               = nfromjs(js),
@@ -26,12 +24,10 @@ function import_and_fix( )
     anyonwiki_code                      = fcfromjs(js),
     characters                          = chfromjs(js),
     sub_fusion_rings                    = sfrfromjs(js),
-    projective_SL2Z_reps                = psrfromjs(js),
     frobenius_perron_dimension          = fpdfromjs(js),
     frobenius_perron_dimensions         = fpdsfromjs(js),
     tensor_product_decompositions       = tpdfromjs(js),
     numeric_characters                  = nchfromjs(js),
-    numeric_projective_SL2Z_reps        = npsrfromjs(js),
     numeric_frobenius_perron_dimension  = nfpdfromjs(js),
     numeric_frobenius_perron_dimensions = nfpdsfromjs(js),
     has_categories_with_props           = catswithprops,

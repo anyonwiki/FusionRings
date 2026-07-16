@@ -20,12 +20,10 @@ struct FusionRing
   anyonwiki_code::Union{Array{Int, 1}, Missing}
   characters
   sub_fusion_rings
-  projective_SL2Z_reps
   frobenius_perron_dimension
   frobenius_perron_dimensions
   tensor_product_decompositions
   numeric_characters
-  numeric_projective_SL2Z_reps
   numeric_frobenius_perron_dimension
   numeric_frobenius_perron_dimensions
   has_categories_with_props
@@ -87,14 +85,12 @@ function fusion_ring(
   anyonwiki_code                      = missing,
   characters                          = missing,
   sub_fusion_rings                    = missing,
-  projective_SL2Z_reps                = missing,
   frobenius_perron_dimension          = missing,
   frobenius_perron_dimensions         = missing,
   tensor_product_decompositions       = missing,
   numeric_characters                  = missing,
   numeric_frobenius_perron_dimension  = missing,
   numeric_frobenius_perron_dimensions = missing,
-  numeric_projective_SL2Z_reps        = missing,
   has_categories_with_props           = missing,
   categorifiable                      = missing,
   categorifications                   = missing,
@@ -136,7 +132,6 @@ function fusion_ring(
     frobenius_perron_dimensions,
     tensor_product_decompositions,
     numeric_characters,
-    numeric_projective_SL2Z_reps,
     numeric_frobenius_perron_dimension,
     numeric_frobenius_perron_dimensions,
     has_categories_with_props,

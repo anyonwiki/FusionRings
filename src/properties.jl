@@ -1679,21 +1679,6 @@ function num_char_sort_crit(v)
   return (- are_real(v), angl(v), absval(v))
 end
 
-#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                              projective_SL2Z_reps                               ┃
-#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-#TODO: function not yet ready for export: not even sure I want to keep it...
-#export projective_SL_2_ZZ_reps
-
-function projective_SL_2_ZZ_reps(fr::FusionRing)
-  md = fr.projective_SL2Z_reps
-  if md !== missing
-    return md
-  else
-    error("No data available and calculation not implemented yet")
-  end
-end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  is_commutative                                 ┃

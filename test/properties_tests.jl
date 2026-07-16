@@ -612,31 +612,4 @@
     end
   end
 
-  # ============================================================
-  # projective_SL_2_ZZ_reps
-  # ============================================================
-
-  @testset "projective_SL_2_ZZ_reps" begin
-    maybe_testset("basic", "1. basic construction") do
-      z3 = zn_fusion_ring(3)
-
-      return check_throws(
-        () -> projective_SL_2_ZZ_reps(z3),
-        "projective_SL_2_ZZ_reps(z3) should have thrown when no data is available",
-      )
-    end
-
-    maybe_testset("intermediate", "2. intermediate correctness") do
-      z3 = zn_fusion_ring(3)
-
-      return check_throws(
-        () -> projective_SL_2_ZZ_reps(z3),
-        "projective_SL_2_ZZ_reps(z3) should have thrown when no data is available",
-      )
-    end
-
-    maybe_testset("reference", "3. reference / Anyonica parity") do
-      @test true
-    end
-  end
 end

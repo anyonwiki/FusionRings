@@ -237,35 +237,6 @@ function ctpfromjs(js)
   return props
 end
 
-# TODO: it should be possible to add type to output but I get the following error when importing FR^{2,10,0}_{1}:
-# MethodError: Cannot `convert` an object of type Vector{Dict{String, Array}} to an object of type Dict{String, Array}
-# The error is not reproducible when using the REPL
-function npsrfromjs(js)#::Vector{Dict{String, Array}}
-  try
-    npsr = js["numeric_projective_SL2Z_reps"]
-    if npsr == Any[]
-      return Dict{String, Array}[]
-    else
-      dicts = Dict{String, Array}[]
-      for rep in eachindex(npsr)
-        sm = npsr[rep]["SMatrix"];
-        tf = npsr[rep]["TwistFactors"];
-        r  = size(sm, 1);
-        push!(
-          dicts,
-          Dict(
-            "S_matrix"      => [vec_to_cflt(sm[i][j]) for i in 1:r, j in 1:r],
-            "twist_factors" => [[vec_to_cflt(tf[i][j]) for j in 1:r] for i in 1:length(tf)],
-          ),
-        )
-      end
-      return dicts
-    end
-  catch e
-    return missing
-  end
-end
-
 # import names. Might fail
 function nfromjs(js)
   try
@@ -284,38 +255,6 @@ function tnfromjs(js)
   end
 end
 
-# import projective SL2Z reps
-function psrfromjs(js)
-  k = keys(js)
-  if "projective_SL2Z_reps" ∈ k
-    psr = js["projective_SL2Z_reps"]
-  else
-    return missing
-  end
-
-  if psr == "NotImplementedYet"
-    return missing
-  end
-
-  if psr == Any[]
-    return Dict{String, Array}[]
-  else
-    dicts = Dict{String, Array}[]
-    for rep in eachindex(psr)
-      sm = psr[rep]["SMatrix"];
-      tf = psr[rep]["TwistFactors"];
-      r  = size(sm, 1);
-      push!(
-        dicts,
-        Dict(
-          "S_matrix"      => from_qqb_id([sm[i][j] for i in 1:r, j in 1:r]),
-          "twist_factors" => from_qqb_id([[vec[j] for j in 1:r] for vec in tf]),
-        ),
-      )
-    end
-    return dicts
-  end
-end
 
 # import fpdim. Might fail
 function fpdfromjs(js)
@@ -374,16 +313,13 @@ function import_ring(filename::String)
     anyonwiki_id                        = fcfromjs(js),
     characters                          = chfromjs(js),
     sub_fusion_rings                    = sfrfromjs(js),
-    projective_SL2Z_reps                = psrfromjs(js),
     frobenius_perron_dimension          = fpdfromjs(js),
     frobenius_perron_dimensions         = fpdsfromjs(js),
     tensor_product_decompositions       = tpdfromjs(js),
     numeric_characters                  = nchfromjs(js),
-    numeric_projective_SL2Z_reps        = npsrfromjs(js),
     numeric_frobenius_perron_dimension  = nfpdfromjs(js),
     numeric_frobenius_perron_dimensions = nfpdsfromjs(js),
     has_categories_with_props           = ctpfromjs(js),
-    #categorifiable                      = cfromjs( js ),
     categorifications = ctsfromjs(js),
     references        = js["references"],
     software          = js["software"],
@@ -413,12 +349,10 @@ function import_rings(filename::String)
       anyonwiki_id                        = fcfromjs(js),
       characters                          = chfromjs(js),
       sub_fusion_rings                    = sfrfromjs(js),
-      projective_SL2Z_reps                = psrfromjs(js),
       frobenius_perron_dimension          = fpdfromjs(js),
       frobenius_perron_dimensions         = fpdsfromjs(js),
       tensor_product_decompositions       = tpdfromjs(js),
       numeric_characters                  = nchfromjs(js),
-      numeric_projective_SL2Z_reps        = npsrfromjs(js),
       numeric_frobenius_perron_dimension  = nfpdfromjs(js),
       numeric_frobenius_perron_dimensions = nfpdsfromjs(js),
       has_categories_with_props           = ctpfromjs(js),
@@ -508,20 +442,6 @@ function nchtojs(fr::FusionRing)::Union{Vector{Vector{Vector{Float64}}}, Nothing
   end
 end
 
-function npsrtojs(fr::FusionRing)
-  npsr = fr.numeric_projective_SL2Z_reps
-  if npsr !== missing
-    dicts = []
-    for rep in npsr
-      tf = reim(rep["twist_factors"])
-      sm = reim(rep["S_matrix"])
-      push!(dicts, Dict("twist_factors" => tf, "S_matrix" => sm))
-    end
-    return dicts
-  else
-    return nothing
-  end
-end
 
 #TODO: for some rings we automatically know these props e.g.
 # abelian groups: all true (exept maybe modular?)
@@ -582,7 +502,7 @@ function write_json(filename::String, data::Dict)
 end
 
 function ring_to_dict(fr)
-  infostring = "Fusion ring. mult_tab: structure constants. barcode & formal_code: unique identifiers see (DOI: 10.1063/5.0148848). non_trivial_sub_fusion_rings: tuples where the first element = elements of ring that form subring isomorphic to subring identified by second element of the tuple. software: doi of original software used to represent fusion ring. references: doi of paper from which data was obtained. categorifiable: false=not categorifiable, null= unknown. categorifications: if categorifiable then anyonwiki codes of pivotal (braided) fusion cats that categorify ring. numeric_projective_SL2Z_reps: each rep consists of a generalized S-matrix and a vector of vectors representing the ln(diag(T))/(2 pi i) of a generalized T-matrix. Algebraic numbers are encoded as a0_..._an__m where ai are polynomial coefficients and m is root number, ordered via Mathematica's convention."
+  infostring = "Fusion ring. mult_tab: structure constants. barcode & formal_code: unique identifiers see (DOI: 10.1063/5.0148848). non_trivial_sub_fusion_rings: tuples where the first element = elements of ring that form subring isomorphic to subring identified by second element of the tuple. software: doi of original software used to represent fusion ring. references: doi of paper from which data was obtained. categorifiable: false=not categorifiable, null= unknown. categorifications: if categorifiable then anyonwiki codes of pivotal (braided) fusion cats that categorify ring.  Algebraic numbers are encoded as a0_..._an__m where ai are polynomial coefficients and m is root number, ordered via Mathematica's convention."
   return Dict(
     "mult_tab"                            => mttojs(fr),
     "rank"                                => rank(fr),
@@ -596,12 +516,10 @@ function ring_to_dict(fr)
     "anyonwiki_id"                        => anyonwiki_id(fr),
     "characters"                          => chtojs(fr),
     "non_trivial_sub_fusion_rings"        => sfrtojs(fr),
-    "projective_SL2Z_reps"                => psrtojs(fr),
     "frobenius_perron_dimension"          => fpdtojs(fr),
     "frobenius_perron_dimensions"         => fpdstojs(fr),
     "tensor_product_decompositions"       => tpdtojs(fr),
     "numeric_characters"                  => nchtojs(fr),
-    "numeric_projective_SL2Z_reps"        => npsrtojs(fr),
     "numeric_frobenius_perron_dimension"  => nfpdtojs(fr),
     "numeric_frobenius_perron_dimensions" => nfpdstojs(fr),
     "has_categories_with_props"           => cpropstojs(fr),
@@ -616,7 +534,7 @@ end
 export rings_to_dict
 
 function rings_to_dict(frs::Vector{FusionRing})
-  infostring = "the \"data\" field maps to a Dictionary of fusion rings where the keys are identifiers. The \"order\" field maps to a list of identifiers of the fusion rings in the original order of the list of rings that was exported.\n More info on the keys of the data per fusion ring follows now. mult_tab: structure constants. labels: string names of the elements which are purely decorative. barcode & formal_code: unique identifiers see (DOI: 10.1063/5.0148848). non_trivial_sub_fusion_rings: tuples (els,sr) with els = elements of ring that form subring isomorphic to ring sr. software: doi of original software used to represent fusion ring. references: doi of paper from which data was obtained. categorifications: if categorifiable then anyonwiki codes of pivotal (braided) fusion cats. numeric_projective_SL2Z_reps: each rep consists of a generalized S-matrix and a vector of vectors representing the ln(diag(T))/(2 pi i) of a generalized T-matrix. Algebraic numbers are encoded as a0_..._an__m where ai are polynomial coefficients and m is root number, ordered via Mathematica's convention. has_categories_with_props: triples [ prop, bool, reason ] where prop is the property, bool is true when its known at least one cat with prop exists, false when its known no cat with prop exists and null when no information is known. reason is a tuple [ method, str ] where method could be computer or theory and str gives more info."
+  infostring = "the \"data\" field maps to a Dictionary of fusion rings where the keys are identifiers. The \"order\" field maps to a list of identifiers of the fusion rings in the original order of the list of rings that was exported.\n More info on the keys of the data per fusion ring follows now. mult_tab: structure constants. labels: string names of the elements which are purely decorative. barcode & formal_code: unique identifiers see (DOI: 10.1063/5.0148848). non_trivial_sub_fusion_rings: tuples (els,sr) with els = elements of ring that form subring isomorphic to ring sr. software: doi of original software used to represent fusion ring. references: doi of paper from which data was obtained. categorifications: if categorifiable then anyonwiki codes of pivotal (braided) fusion cats. Algebraic numbers are encoded as a0_..._an__m where ai are polynomial coefficients and m is root number, ordered via Mathematica's convention. has_categories_with_props: triples [ prop, bool, reason ] where prop is the property, bool is true when its known at least one cat with prop exists, false when its known no cat with prop exists and null when no information is known. reason is a tuple [ method, str ] where method could be computer or theory and str gives more info."
 
   # We don't want to copy the infostring for each ring
   function ringtodict(fr)
@@ -633,12 +551,10 @@ function rings_to_dict(frs::Vector{FusionRing})
       "anyonwiki_id"                        => anyonwiki_id(fr),
       "characters"                          => chtojs(fr),
       "non_trivial_sub_fusion_rings"        => sfrtojs(fr),
-      "projective_SL2Z_reps"                => psrtojs(fr),
       "frobenius_perron_dimension"          => fpdtojs(fr),
       "frobenius_perron_dimensions"         => fpdstojs(fr),
       "tensor_product_decompositions"       => tpdtojs(fr),
       "numeric_characters"                  => nchtojs(fr),
-      "numeric_projective_SL2Z_reps"        => npsrtojs(fr),
       "numeric_frobenius_perron_dimension"  => nfpdtojs(fr),
       "numeric_frobenius_perron_dimensions" => nfpdstojs(fr),
       "has_categories_with_props"           => cpropstojs(fr),
@@ -649,7 +565,6 @@ function rings_to_dict(frs::Vector{FusionRing})
     )
   end
 
-  # we create the fusion ring strings twice
   frstrings = Dict( fr => fusion_ring_string(fr) for fr in frs )
   return Dict(
     "data"  => Dict(frstrings[fr] => ringtodict(fr) for fr in frs),
@@ -657,8 +572,6 @@ function rings_to_dict(frs::Vector{FusionRing})
     "order" => [frstrings[fr] for fr in frs ] # to preserve the order when importing
   )
 end
-
-global ringidcounter = 0
 
 function fusion_ring_string(fr::FusionRing)
   c  = uuid(fr)

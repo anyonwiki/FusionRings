@@ -123,6 +123,20 @@ function fusion_ring(
   sd  = count(x -> x == 1, diag(mt[:,:,1]))
   nsd = r - sd
 
+  fpd =
+    if frobenius_perron_dimension isa Oscar.QQBarFieldElem
+      qqb_id(frobenius_perron_dimension)
+    else
+      frobenius_perron_dimension
+    end
+
+  fpds =
+    if frobenius_perron_dimensions isa Vector{Oscar.QQBarFieldElem}
+      qqb_id.(frobenius_perron_dimensions)
+    else
+      frobenius_perron_dimensions
+    end
+
   return FusionRing(
     mt,
     r,
@@ -135,9 +149,8 @@ function fusion_ring(
     anyonwiki_id,
     characters,
     sub_fusion_rings,
-    projective_SL2Z_reps,
-    frobenius_perron_dimension,
-    frobenius_perron_dimensions,
+    fpd,
+    fpds,
     tensor_product_decompositions,
     numeric_characters,
     numeric_frobenius_perron_dimension,

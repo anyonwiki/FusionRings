@@ -657,67 +657,45 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                           tensor_product_decompositions                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-export tensor_product_decompositions
+export non_trivial_tensor_product_decompositions
 
-###
 """
-    tensor_product_decompositions(r::FusionRing; digits::Int=10)
+    tensor_product_decompositions(r::FusionRing)
 
-Return decompositions of `r` as tensor products of fusion rings.
-
-combines:
-1. known-ring search;
-2. internal subring discovery;
-3. Frobenius-Perron dimension signatures.
-
-FPdims are used as  necessary tensor-product invariant:
-
-    FPdim_R simples = products of FPdim_factor simples.
-
- FPdims alone do not prove a tensor product decomposition.
-Every returned decomposition is still verified using `is_equivalent_fusion_ring`.
-
-
-returns a vector of decompositions, where each decomposition is itself
-       a vector of fusion rings:
-
-           [
-               [A, B],
-               [C, D, E],
-               ...
-           ]
+Return non-trivial decompositions of `r` as tensor products of fusion rings.
 """
-function tensor_product_decompositions(r::FusionRing; digits::Int = 10)
+function non_trivial_tensor_product_decompositions(fr::FusionRing)::Vector{Vector{FusionRing}}
+  r = rank(fr)
+
+  # since every fusion ring has an identity 1, every component
+  # in the tensor product is a subring whose rank divides the rank of fr
+  subrings  = unique( [ d["fusion_ring"] for d in sub_fusion_rings(fr) ] )
+
+  length(subrings) == 0 && return Vector{Vector{FusionRing}}[]
+
+  proposals = filter( ring -> rem(r,rank(ring)) == 0, subrings )
+
+  propsbyrank = group_by( rank, proposals )
+  pos_ranks = collect(keys(propsbyrank))
+
+  pts = filter( p -> p ⊆ pos_ranks , multiplicative_partitions(r) )
+
   decomps = Vector{Vector{FusionRing}}()
 
-  append!(decomps, known_tensor_product_decompositions(r; digits = digits))
-  append!(decomps, discover_tensor_product_decompositions(r; digits = digits))
+  for p in pts
+    pos_sub_rings_per_rank = [ propsbyrank[rk] for rk in p ]
+    combinations = cartesian_choices(pos_sub_rings_per_rank)
 
-  return unique_decomps!(decomps)
+    for combination in combinations
+      prod = tensor_product(combination...)
+      is_equivalent_fusion_ring(prod,fr) && push!(decomps, combination)
+    end
+  end
+
+  return decomps
+
 end
 
-#reminder to self (so when I come back to this later I won't forget):
-# Mathematical idea:
-#   If R is  tensor product of factors A, B, ..., then  simple objects should
-#   behave like tuples
-#
-#       (a, b, ...)
-#
-#    a is  simple object of A, b is a simple object of B ..etc
-#
-#   necessary rank condition is:
-#
-#       rank(R) = rank(A) * rank(B) * ...
-#
-#    condition is useful but weak. Many unrelated fusion rings can have
-#   compatible ranks.
-#
-#       FPdim_R(a, b) = FPdim_A(a) * FPdim_B(b).
-#
-#   Tif R equiv A cross B,  multiset of FPdims of R =  multiset of
-#    prods FPdim_A(a) * FPdim_B(b)
-#
-#   () a ranges over simples of A and b ranges over simples of B.)
 
 """_multiplicative_partitions(n)
     Returns all unordered multiplicative decompositions of n into factors     >= 2.
@@ -743,7 +721,7 @@ function multiplicative_partitions(n::Int; minfactor::Int = 2)
     end
 
     for d in start:rem
-      rem % d == 0 || continue
+      rem % d ≠ 0 && continue
 
       push!(acc, d)
       go(rem ÷ d, d, acc)
@@ -797,306 +775,6 @@ function cartesian_choices(lists::Vector{Vector{FusionRing}})
   return out
 end
 
-#I'm pretty sure we already have these lol
-
-function raw_fpdims(fr::FusionRing)
-  try
-    return fpdims(fr)
-  catch
-    return frobenius_perron_dimensions(fr)
-  end
-end
-
-function numeric_fpdim_values(fr::FusionRing)
-  try
-    return numeric_fpdims(fr)
-  catch
-    return raw_fpdims(fr)
-  end
-end
-
-#        Converts an FPdim value to a real Float64.
-#
-#       This is needed because FPdims may come from OSCAR/QQBar or other exact
-#       algebraic number types, not just ordinary Julia floats.
-function to_float_real(x)
-  try
-    return Float64(real(x))
-  catch
-    return Float64(x)
-  end
-end
-
-#   fpdim_signature(fr; digits=10)
-#       Computes a sorted, rounded multiset of the FPdims of fr.
-#
-#       Example:
-#           [1, sqrt(2), 1]
-#
-#       becomes approximately:
-#           [1.0, 1.0, 1.4142135624]
-#
-#       Sorting makes the signature independent of the order of simple objects.
-#       Rounding avoids tiny numerical differences from eigenvalue computation.
-function fpdim_signature(fr::FusionRing; digits::Int = 10)
-  ds = _numeric_fpdim_values(fr)
-  vals = [_to_float_real(d) for d in ds]
-  return sort(round.(vals; digits = digits))
-end
-
-#   fpdim_product_signature(factors; digits=10)
-#       Computes the FPdim signature that the tensor product of the given factors
-#       would have.
-#
-#       For factors A and B, it computes all products:
-#
-#           FPdim_A(a) * FPdim_B(b).
-#
-#       For more than two factors  computes all products across all factors.
-#
-#        lets us test whether a proposed list of factors could possibly have
-#       tensor product equivalent to R.
-function fpdim_product_signature(factors::Vector{FusionRing}; digits::Int = 10)
-  vals = [1.0]
-
-  for F in factors
-    ds = [_to_float_real(d) for d in _numeric_fpdim_values(F)]
-    vals = [x * y for x in vals for y in ds]
-  end
-
-  return sort(round.(vals; digits = digits))
-end
-
-#   fpdim_signatures_match(R, factors; digits=10)
-#       Checks the necessary FPdim condition:
-#
-#           FPdims(R) == product FPdims(factors).
-#
-#       If  returns false,  factors cannot tensor to R.
-#       If it returns true, the factors are only candidates and still need final
-#       verification.
-function fpdim_signatures_match(
-  R::FusionRing, factors::Vector{FusionRing}; digits::Int = 10
-)::Bool
-  return fpdim_signature(R; digits = digits) ==
-         fpdim_product_signature(factors; digits = digits)
-end
-
-#   decomp_key(decomp)
-#       Builds a key used to remove duplicate decompositions.
-#
-#       It uses each factor's rank and FPdim signature rather than barcode,
-#       because newly constructed or restricted rings may not have reliable
-#       AnyonWiki barcodes.
-function decomp_key(decomp::Vector{FusionRing})
-  return sort([(rank(R), _fpdim_signature(R)) for R in decomp])
-end
-
-#   unique_decomps!(decomps)
-#       Removes duplicate decompositions in-place using _decomp_key.
-#
-function unique_decomps!(decomps::Vector{Vector{FusionRing}})
-  unique!(decomp_key, decomps)
-  return decomps
-end
-
-#   candidate_known_factors_by_rank(R)
-#       Groups  known fusion rings frl by rank, keeping only rings whose rank
-#       could divide rank(R).
-#
-#       We use this to cheaply restrict the known-ring search. If rank(K) does
-#       not divide rank(R), then K cannot be a tensor factor of R.
-#
-function candidate_known_factors_by_rank(r::FusionRing)
-  Rrank = rank(r)
-
-  by_rank = Dict{Int, Vector{FusionRing}}()
-
-  for K in frl
-    rk = rank(K)
-
-    rk <= 1 && continue
-    rk == Rrank && continue
-    Rrank % rk == 0 || continue
-
-    push!(get!(by_rank, rk, FusionRing[]), K)
-  end
-
-  return by_rank
-end
-
-#   _known_tensor_product_decompositions(R; digits=10)
-#       Searches for tensor product decompositions using known rings from frl.
-#
-#       Steps:
-#           1. Factor rank(R) multiplicatively.
-#           2. For each possible factor-rank pattern, choose known rings with
-#              those ranks.
-#           3. Check the FPdim product signature.
-#           4. Construct the tensor product using tensor_product(choice).
-#           5. Verify actual fusion-rule equivalence with
-#              is_equivalent_fusion_ring(R, T).
-#
-#       This method can find decompositions when the factors already appear in
-#       the known-ring database.
-function known_tensor_product_decompositions(r::FusionRing; digits::Int = 10)
-  Rrank = rank(r)
-  Rrank <= 1 && return Vector{Vector{FusionRing}}()
-
-  by_rank = candidate_known_factors_by_rank(r)
-  decomps = Vector{Vector{FusionRing}}()
-
-  for parts in multiplicative_partitions(Rrank)
-    length(parts) <= 1 && continue
-    all(p -> haskey(by_rank, p), parts) || continue
-
-    lists = [by_rank[p] for p in parts]
-
-    for choice in cartesian_choices(lists)
-
-      # Necessary tensor-product invariant:
-      # FPdims of R must =  pairwise/product FPdims of the factors.
-      fpdim_signatures_match(r, choice; digits = digits) || continue
-
-      T = tensor_product(choice)
-
-      # FPdims are not enough  - actual fusion rules.
-      is_equivalent_fusion_ring(r, T) || continue
-
-      push!(decomps, replace_by_known.(choice))
-    end
-  end
-
-  return unique_decomps!(decomps)
-end
-
-#   all_subring_sets_for_factorization(R)
-#       Collects candidate subfusion-ring subsets of R.
-#
-#        includes:
-#           [1]                 - trivial unit subring,
-#           sub_fusion_ring_subsets(R),
-#           collect(1:rank(R))   whole ring.
-#
-#        decomposition search later ignores trivial and whole-ring factors,
-#       but including them here makes the helper complete and reusable.
-# Internal subring discovery
-function all_subring_sets_for_factorization(fr::FusionRing)
-  r = rank(fr)
-
-  sets = Vector{Vector{Int}}()
-
-  push!(sets, [1])
-  append!(sets, sub_fusion_ring_subsets(fr))
-  push!(sets, collect(1:r))
-
-  unique!(sets)
-  sort!(sets; by = S -> (length(S), S))
-
-  return sets
-end
-
-#       Tests whether two subring subsets Aset and Bset multiply like independent
-#       tensor factors inside R.
-#
-#       In a clean tensor product R = A cross B, objects from A and B should satisfy:
-#
-#           (a, 1) ⊗ (1, b) = (a, b),
-#
-#       which is single simple object.
-#
-#        for each a in Aset and b in Bset  product a ⊗ b should:
-#           1. have exactly one fusion outcome;
-#           2. produce a simple object not already produced by another pair;
-#           3. collectively cover every simple object of R.
-#
-#       If these conditions hold,  products form a Cartesian grid of simples.
-#       This is strong evidence that Aset and Bset are internal tensor factors.
-#
-function unique_product_grid(fr::FusionRing, Aset::Vector{Int}, Bset::Vector{Int})
-  r = rank(fr)
-
-  grid = Dict{Tuple{Int, Int}, Int}()
-  seen = falses(r)
-
-  @inbounds for a in Aset, b in Bset
-    outs = fusion_outcomes(fr, a, b)
-
-    # In  clean tensor product, (a,1) ⊗ (1,b) = (a,b),
-    # so  product should be exactly one simple object.
-    length(outs) == 1 || return nothing
-
-    x = only(outs)
-
-    # Each pair (a,b) should produce  different simple object.
-    seen[x] && return nothing
-
-    grid[(a, b)] = x
-    seen[x] = true
-  end
-
-  # Product Aset ⊗ Bset should cover all simples of fr.
-  all(seen) || return nothing
-
-  return grid
-end
-
-#   discover_tensor_product_decompositions(R; digits=10)
-#       Searches for decompositions using subfusion rings inside R itself.
-#
-#       Steps:
-#           1. Enumerate candidate subring subsets Aset and Bset.
-#           2. Require the rank condition:
-#
-#                  length(Aset) * length(Bset) == rank(R).
-#
-#           3. Construct restricted fusion rings A and B.
-#           4. Check the FPdim product signature.
-#           5. Check the Cartesian product grid condition using
-#              unique_product_grid.
-#           6. Construct tensor_product([A, B]).
-#           7. Verify actual fusion-rule equivalence.
-#
-#        can find decompositions even when the factors are not already
-#       registered as known rings, provided they appear internally as subrings of
-#       R.
-function discover_tensor_product_decompositions(r::FusionRing; digits::Int = 10)
-  Rrank = rank(r)
-  Rrank <= 1 && return Vector{Vector{FusionRing}}()
-
-  subrings = all_subring_sets_for_factorization(r)
-  decomps = Vector{Vector{FusionRing}}()
-
-  for Aset in subrings, Bset in subrings
-
-    # Ignore trivial and whole-ring factors.
-    length(Aset) <= 1 && continue
-    length(Bset) <= 1 && continue
-    length(Aset) == Rrank && continue
-    length(Bset) == Rrank && continue
-
-    # Necessary rank condition for R equiv A cross B.
-    length(Aset) * length(Bset) == Rrank || continue
-
-    A = restrict_subring(r, copy(Aset); check_closed = true)
-    B = restrict_subring(r, copy(Bset); check_closed = true)
-
-    # Necessary FPdim condition for "   "
-    fpdim_signatures_match(r, [A, B]; digits = digits) || continue
-
-    #  check whether products a ⊗ b form  unique Cartesian grid.
-    grid = _unique_product_grid(r, Aset, Bset)
-    grid === nothing && continue
-
-    T = tensor_product([A, B])
-
-    is_equivalent_fusion_ring(r, T) || continue
-
-    push!(decomps, [replace_by_known(A), replace_by_known(B)])
-  end
-
-  return unique_decomps!(decomps)
-end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                adjoint_fusion_ring                              ┃

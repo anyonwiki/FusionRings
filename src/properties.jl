@@ -17,8 +17,6 @@ end
 #┃                                    rank                                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-#TODO: write test: rank(ring) = anyonwiki_code(ring)[1]
-
 export rank
 
 function rank(r::FusionRing)::Int

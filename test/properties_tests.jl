@@ -281,6 +281,19 @@
         is_sub_fusion_ring(z4, [1, 3]),
         "is_sub_fusion_ring(z4, [1,3]) should have returned true",
       )
+      
+     #fix: added tests to check proper subring behaviour
+     #SU(2) -> obj 2 fuses with itself to include obj 3 (which is outside [1,2])
+      check_false(
+         is_sub_fusion_ring(su2k_fusion_ring(2), [1, 2]),
+  "is_sub_fusion_ring ignored an outcome outside the proposed subset",
+)
+    #endfix
+
+      check_false(
+        is_sub_fusion_ring(z4, [1, 1]),
+        "is_sub_fusion_ring accepted duplicate indices",
+)
       check_false(
         is_sub_fusion_ring(z4, [1, 2]),
         "is_sub_fusion_ring(z4, [1,2]) should have returned false",

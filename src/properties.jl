@@ -340,23 +340,36 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export sub_fusion_rings
+#fix: introducing force_Compute and fixes undefined mt
+function sub_fusion_rings(
+  r::FusionRing;
+  force_compute::Bool = false,
+)
+  stored_subrings = r.sub_fusion_rings
 
-function sub_fusion_rings(r::FusionRing)
-  dictvec = r.sub_fusion_rings
-  if dictvec !== missing
-    [
-      Dict("injection" => dict["injection"], "fusion_ring" => fawc(dict["anyonwiki_code"]))
-      for dict in dictvec
-    ]
-  else
-    subsets = sub_fusion_ring_subsets(r)
-    [
-      Dict("injection" => s, "fusion_ring" => replace_by_known(fusion_ring(mt[s, s, s])))
-      for s in subsets
+  if !force_compute && stored_subrings !== missing
+    return [
+      Dict(
+        "injection" => dict["injection"],
+        "fusion_ring" => fawc(dict["anyonwiki_code"]),
+      )
+      for dict in stored_subrings
     ]
   end
-end
 
+  mt = multiplication_table(r)
+  subsets = sub_fusion_ring_subsets(r)
+
+  return [
+    Dict(
+      "injection" => s,
+      "fusion_ring" => replace_by_known(
+        fusion_ring(mt[s, s, s]),
+      ),
+    )
+    for s in subsets
+  ]
+end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                             sub_fusion_ring_subsets                             ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

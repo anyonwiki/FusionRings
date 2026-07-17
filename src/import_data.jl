@@ -549,30 +549,24 @@ end
 # nonabelian groups: fusion, piv, unitary, spherical true, rest false
 # quantum group like rings: need to look this up but a lot is known as well
 #
+#fix: had unreachable code
 function cpropstojs(fr::FusionRing)
   props = fr.has_categories_with_props
-  if ismissing(props)
-    return
-    [
-      ["Fusion",null,["","Unknown to AnyonWiki"]],
-      ["Pivotal",null,["","Unknown to AnyonWiki"]],
-      ["Unitary",null,["","Unknown to AnyonWiki"]],
-      ["Spherical",null,["","Unknown to AnyonWiki"]],
-      ["Braided",null,["","Unknown to AnyonWiki"]],
-      ["Ribbon",null,["","Unknown to AnyonWiki"]],
-      ["Modular",null,["","Unknown to AnyonWiki"]]
-    ]
-  end
 
-  function missing_to_nothing(v)
-    if v[2] === missing
-      [v[1], nothing, v[3]]
-    else
-      v
+  ismissing(props) &&
+    return nothing
+
+  function encode_property(property)
+    encoded = copy(property)
+
+    if encoded[2] === missing
+      encoded[2] = nothing
     end
+
+    return encoded
   end
 
-  return missing_to_nothing.(props)
+  return encode_property.(props)
 end
 
 function ctojs(fr::FusionRing)

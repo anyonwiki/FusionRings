@@ -43,9 +43,14 @@ function check_struct_const(mt)
   return all(x -> x isa Integer && x >= 0, mt)
 end
 
+
+#fix: preventing zero multiplication tables from being accepted
 function check_mt_dims(mt)
   dims = size(mt)
-  return length(dims) == 3 && is_constant_array(dims)
+
+  return length(dims) == 3 &&
+         first(dims) >= 1 &&
+         is_constant_array(dims)
 end
 
 function check_unit(mt)

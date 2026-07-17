@@ -1464,44 +1464,57 @@ universal grading group by a normal subgroup.
 is  universal grading,  every grading  obtained from U/N,
 where N is a normal subgroup of U.
 """
-
+#fix:  fusion ring has no field called all_gradings
+#also renamed some variables for clarity
 function all_gradings(fr::FusionRing)
-  ag = fr.all_gradings
-  !ismissing(ag) && return ag
+  grading, universal_group_ring =
+    universal_grading(fr)
 
-  grading, universal_group = universal_grading(fr)
+  universal_blocks =
+    blocks_from_grading_pairs(grading)
 
-  universal_blocks = blocks_from_grading_pairs(grading)
+  group =
+    to_group(universal_group_ring)
 
-  G    = to_group(universal_group)
-  mult = cayley_table(universal_group)
+  multiplication =
+    cayley_table(universal_group_ring)
+  
+  for normal_subgroup in normal_subgroups(group)
+  cosets = cosets_as_index_blocks(
+    group,
+    normal_subgroup,
+  )
 
-  gradings = Vector{Dict{String, Any}}()
+  partition = merge_universal_blocks(
+    universal_blocks,
+    cosets,
+  )
 
-  for N in normal_subgroups(G)
-    cosets = cosets_as_index_blocks(G, N)
+  quotient_multiplication = quotient_mult_table(
+    multiplication,
+    cosets,
+  )
 
-    partition = merge_universal_blocks(universal_blocks, cosets)
-
-    quotient_mult = quotient_mult_table(mult, cosets)
-    quotient_group_ring = group_ring_from_cayley_table(quotient_mult)
-
-    Q, proj = quo(G, N)
-
-    push!(
-      gradings,
-      Dict{String, Any}(
-        "partition" => partition,
-        "group_ring" => quotient_group_ring,
-        "normal_subgroup" => N,
-        "quotient_group" => Q,
-        "quotient_projection" => proj,
-        "cosets" => cosets,
-      ),
+  quotient_group_ring =
+    group_ring_from_cayley_table(
+      quotient_multiplication,
     )
-  end
 
-  sort!(gradings; by = g -> -length(g["partition"]))
+  quotient_group, projection =
+    quo(group, normal_subgroup)
+
+  push!(
+    gradings,
+    Dict{String,Any}(
+      "partition" => partition,
+      "group_ring" => quotient_group_ring,
+      "normal_subgroup" => normal_subgroup,
+      "quotient_group" => quotient_group,
+      "quotient_projection" => projection,
+      "cosets" => cosets,
+    ),
+  )
+end
 
   return gradings
 end

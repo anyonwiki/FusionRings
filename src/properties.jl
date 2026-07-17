@@ -1051,7 +1051,7 @@ function known_tensor_product_decompositions(r::FusionRing; digits::Int = 10)
 
       # Necessary tensor-product invariant:
       # FPdims of R must =  pairwise/product FPdims of the factors.
-      fpdim_signatures_match(r, choice; digits = digits) || continue
+      fpdim_signatures_match(r, choice; digits = digits, force_compute = true,) || continue
 
       T = tensor_product(choice)
 
@@ -1177,7 +1177,7 @@ function discover_tensor_product_decompositions(r::FusionRing; digits::Int = 10)
     B = restrict_subring(r, copy(Bset); check_closed = true)
 
     # Necessary FPdim condition for "   "
-    fpdim_signatures_match(r, [A, B]; digits = digits) || continue
+    fpdim_signatures_match(r, [A, B]; digits = digits, force_compute = true,)|| continue
 
     #  check whether products a ⊗ b form  unique Cartesian grid.
     grid = unique_product_grid(r, Aset, Bset)

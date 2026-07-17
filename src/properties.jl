@@ -1667,12 +1667,20 @@ export numeric_characters
 
 Throws if no common eigenbasis is found after `tries` attempts.
 """
-function numeric_characters(ring, tries::Int = 64, tol = 1e-12)
-  if !(ring.numeric_characters === missing)
+
+#fix: added force_compute option to allow recomputation of characters even if they are already cached in the ring
+function numeric_characters(
+  ring;
+  tries::Int = 64,
+  tol::Real = 1e-12,
+  force_compute::Bool = false,
+)
+  if !force_compute && ring.numeric_characters !== missing
     return ring.numeric_characters
-  elseif !FusionRings.is_commutative(ring)
+  elseif !is_commutative(ring)
     error(
-      "Calculation of characters for non-commutative fusion ring is not implemented yet."
+      "Calculation of characters for non-commutative " *
+      "fusion rings is not implemented.",
     )
   elseif rank(ring) == 1
     return [qqbar(1)]

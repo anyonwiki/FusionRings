@@ -618,6 +618,8 @@ function ring_to_dict(fr)
     #fixed: added
     "categorifiable"                      => ctojs(fr),
     "categorifications"                   => ctstojs(fr),
+    #fixed: added
+    "non_cat_reasons"                     => ncrtojs(fr),
     "references"                          => fr.references,
     "software"                            => fr.software,
     "comments"                            => fr.comments,

@@ -81,6 +81,7 @@ end
 export restrict_subring
 
 # restrict ring to subindices S (Anyonica's MT[ring][[el,el,el]])
+#fix: ensuring restricted ring has correct obj labels
 function restrict_subring(
   fr::FusionRing, S::Vector{Int}; check_closed::Bool = true
 )::FusionRing
@@ -108,7 +109,10 @@ function restrict_subring(
 
   # TODO: might want to conserve as much information as possible, but 
   # it's better to wait until all fields of the FusionRing struct are finalized
-  return fusion_ring(Nsub)
+  return fusion_ring(
+  Nsub;
+  labels = labels(fr)[sS],
+)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

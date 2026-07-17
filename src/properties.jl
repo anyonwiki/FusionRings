@@ -663,17 +663,29 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export decompositions
-
-function decompositions(fr::FusionRing, product = "TensorProduct")#::Vector{ Vector{FusionRing} }
+#fix: added force_Compute
+function decompositions(
+  fr::FusionRing,
+  product = "TensorProduct";
+  force_compute::Bool = false,
+)
   product == "TensorProduct" ||
-    error("Only tensor product decompositions are defined at the moment.")
+    throw(
+      ArgumentError(
+        "Only tensor-product decompositions are implemented.",
+      ),
+    )
 
-  tpd = fr.tensor_product_decompositions
-  if tpd !== missing
-    [[awc(code) for code in decomp] for decomp in tpd]
-  else
-    tensor_product_decompositions(fr)
+  stored = fr.tensor_product_decompositions
+
+  if !force_compute && stored !== missing
+    return [
+      [awc(code) for code in decomposition]
+      for decomposition in stored
+    ]
   end
+
+  return tensor_product_decompositions(fr)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

@@ -1382,35 +1382,68 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export universal_grading
+#fix: 
+#previousy: tested each component with _cond(irreps[a], irreps[b], irreps[c])
+#and assigned mt[a, b, c] = _cond(...) ? 1 : 0
+#Assumed that exactly one c would pass
+#did not check: -every simple obj belongs to component, -input pair produces output  - input pair does not produce multiple component
+#constructs grade_of[simple] = grade and gathers grades of all fusion outcomes output_grades = Set{Int}()
+#checks explictly length(output_grades) == 1
+function universal_grading(
+  fr::FusionRing,
+)::Tuple{Vector{Pair{Int,Int}},FusionRing}
+  components = adjoint_irreps(fr)
+  number_of_components = length(components)
 
-function universal_grading(fr::FusionRing)
-  irreps = adjoint_irreps(fr)
-  n = size(irreps, 1)
+  grading = Pair{Int,Int}[]
+  grade_of = zeros(Int, rank(fr))
 
-  grading = Pair{Int, Int}[]
-  @inbounds for a in 1:n
-    for x in irreps[a]
-      push!(grading, x => a)
+  for grade in 1:number_of_components
+    for simple in components[grade]
+      push!(grading, simple => grade)
+      grade_of[simple] = grade
     end
   end
-  sort!(grading; by = p -> first(p))
 
-  function _cond(l1::Vector{Int}, l2::Vector{Int}, l3::Vector{Int})::Bool
-    @inbounds for i in l1, j in l2
-      for c in fusion_outcomes(fr, i, j)
-        c ∉ l3 && return false
+  sort!(grading; by = first)
+
+  all(grade_of .> 0) ||
+    error("adjoint components did not cover every simple object")
+
+  grading_mt = zeros(
+    Int,
+    number_of_components,
+    number_of_components,
+    number_of_components,
+  )
+
+  for a in 1:number_of_components
+    for b in 1:number_of_components
+      output_grades = Set{Int}()
+
+      for x in components[a]
+        for y in components[b]
+          for z in fusion_outcomes(fr, x, y)
+            push!(output_grades, grade_of[z])
+          end
+        end
       end
+
+      length(output_grades) == 1 ||
+        error(
+          "fusion of universal-grading components $a and $b " *
+          "produced multiple output grades: " *
+          string(sort(collect(output_grades))),
+        )
+
+      output_grade = only(output_grades)
+      grading_mt[a, b, output_grade] = 1
     end
-    return true
   end
 
-  mt = zeros(Int, n, n, n)
-  @inbounds for a in 1:n, b in 1:n, c in 1:n
-    mt[a, b, c] = _cond(irreps[a], irreps[b], irreps[c]) ? 1 : 0
-  end
+  grading_ring = fusion_ring(grading_mt)
 
-  groupRing = fusion_ring(mt)
-  return grading, replace_by_known(groupRing)
+  return grading, replace_by_known(grading_ring)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

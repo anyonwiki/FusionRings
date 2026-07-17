@@ -103,6 +103,20 @@
         is_group_ring(r),
         "fusion_ring constructed a valid Z2 table but the result was not detected as a group ring",
       )
+
+
+      # Fix: added Keep  same total number of unit coefficients while assigning
+# the wrong duals.  guards against checking only
+# sum(mt[:, :, 1]) == rank.
+      mt_bad_dual_distribution = make_z3_mt()
+      mt_bad_dual_distribution[2, 3, 1] = 0
+      mt_bad_dual_distribution[2, 2, 1] = 1
+
+      check_false(
+      FusionRings.check_inverse(mt_bad_dual_distribution),
+      "check_inverse accepted an invalid distribution of dual objects",)
+
+
       check_equal(
         FusionRings.fusion_product(r, 1, 1),
         Dict(1 => 1),

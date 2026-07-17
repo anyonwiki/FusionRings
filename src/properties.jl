@@ -406,7 +406,9 @@ export is_sub_fusion_ring
 
 #TODO: write test that checks whether all fusion rings obained via sub_fusion_rings are fusion rings
 #TODO: write test: pick some rings that are not sub fusion rings and check whether this is recognized
-
+#fix: closure now checked before slicing
+#before: erased all outcomes outside S 
+#so potientially nonclosed subset could be valid
 """
     is_sub_fusion_ring(fr, S) -> Bool
 
@@ -416,15 +418,25 @@ Return `true` iff `S` is a fusion-closed subset of simples containing the unit.
 (`String`/`Symbol`).
 """
 function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
-  # any subring must contain unit
   isempty(S) && return false
   1 ∉ S && return false
 
-  # indices in S must lie in range 1, ...,  r
   r = rank(fr)
-  !all(i -> 1 <= i <= r, S) && return false
 
-  mt = multiplication_table(fr)[S, S, S]
+  all(i -> 1 <= i <= r, S) || return false
+  length(unique(S)) == length(S) || return false
+
+  N = multiplication_table(fr)
+  Sset = Set(S)
+
+  # Check closure in the original ring before restricting the
+  # multiplication table.
+  for a in S, b in S, c in 1:r
+    c in Sset && continue
+    N[a, b, c] == 0 || return false
+  end
+
+  mt = N[S, S, S]
 
   return check_struct_const(mt) &&
          check_mt_dims(mt) &&

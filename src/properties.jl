@@ -831,14 +831,16 @@ function cartesian_choices(lists::Vector{Vector{FusionRing}})
   return out
 end
 
-#I'm pretty sure we already have these lol
-
-function raw_fpdims(fr::FusionRing)
-  try
-    return fpdims(fr)
-  catch
-    return frobenius_perron_dimensions(fr)
-  end
+#fix: fpdims is already alias for frobenius_perron_dim 
+#so fallback calls same funct. twice
+function raw_fpdims(
+  fr::FusionRing;
+  force_compute::Bool = false,
+)
+  return fpdims(
+    fr;
+    force_compute = force_compute,
+  )
 end
 
 function numeric_fpdim_values(fr::FusionRing)

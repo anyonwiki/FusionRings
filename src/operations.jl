@@ -116,46 +116,99 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 #TODO: implement permute for permutations from OSCAR
-export permute
+#fix: permute changes meaning of every simple-object index
+#previously: multp. table was permuted but data attached to indices was left same
+#mental model for recollection (for me lol):
+#ring: labels = ["0", "1", "2"]
+#perm = [1, 3, 2]
+#new_mt[a, b, c] =
+# old_mt[perm[a], perm[b], perm[c]]
+"""
+    permute(perm, ring) -> FusionRing
 
-"""permute(perm,r) – return a new `FusionRing` with all data
-    permuted by `perm`.  `perm[1]` **must** equal 1 to keep the vacuum first."""
-function permute(perm::Vector{Int}, r::FusionRing)::FusionRing
-  n = rank(r)
-  n == length(perm) || throw(ArgumentError("perm length ≠ rank"))
-  sort(perm) == collect(1:n) || throw(ArgumentError("perm must be a true permutation"))
-  perm[1] == 1 || throw(ArgumentError("vacuum must stay at index 1"))
+Return  isomorphic presentation of `ring` in which new simple object `i`
+corresponds to old simple object `perm[i]`.
 
-  # Core table
-  pmt = permute_mult_tab(multiplication_table(r), perm)
+ permutation must fix the tensor unit.
+"""
+function permute(
+  perm::Vector{Int},
+  ring::FusionRing,
+)::FusionRing
+  r = rank(ring)
 
-  pr = @set r.multiplication_table = pmt
+  length(perm) == r ||
+    throw(ArgumentError("permutation length must equal the ring rank"))
 
+  sort(perm) == collect(1:r) ||
+    throw(ArgumentError("perm must contain every index from 1 to $r exactly once"))
 
-  permute_vector(p,v) = [ p[v[i]] for i in 1:size(v,1) ]
-  permute_sub_fus_ring(d) =
-    Dict(
-      "injection"   => permute_vector(invperm(perm),d["injection"]),
-      "anyonwiki_code" => d["anyonwiki_code"]
-    )
+  perm[1] == 1 ||
+    throw(ArgumentError("the tensor unit at index 1 must remain fixed"))
 
-  # Data that needs re‑ordering (guard against `missing`)
-  sr = r.sub_fusion_rings
-  if !ismissing(sr)
-    pr = @set pr.sub_fusion_rings = permute_sub_fus_ring.(sr)
+  new_mt = permute_mult_tab(
+    multiplication_table(ring),
+    perm,
+  )
+
+  result = @set ring.multiplication_table = new_mt
+
+  # New id i -> old index perm[i].
+  result = @set result.labels = ring.labels[perm]
+
+  # Exact FP dims are indexed by simple objects.
+  if ring.frobenius_perron_dimensions !== missing
+    result = @set result.frobenius_perron_dimensions =
+      ring.frobenius_perron_dimensions[perm]
   end
 
-  fpd = r.frobenius_perron_dimensions
-  if !ismissing(fpd)
-    pr = @set pr.frobenius_perron_dimensions = fpd[perm]
+  # Numeric FP dims  also indexed by simple objects.
+  if ring.numeric_frobenius_perron_dimensions !== missing
+    result = @set result.numeric_frobenius_perron_dimensions =
+      ring.numeric_frobenius_perron_dimensions[perm]
   end
 
-  ch = r.characters
-  if !ismissing(ch)
-    pr = @set pr.characters = ch[:,perm]
+  # char table cols correspond to simple objects.
+  if ring.characters !== missing
+    result = @set result.characters =
+      ring.characters[:, perm]
   end
 
-  return pr
+  if ring.numeric_characters !== missing
+    result = @set result.numeric_characters =
+      ring.numeric_characters[:, perm]
+  end
+
+  #  every old subring index  its new position.
+  if ring.sub_fusion_rings !== missing
+    old_to_new = invperm(perm)
+
+    permuted_subrings = [
+      begin
+        new_subring = copy(subring)
+        new_subring["injection"] =
+          old_to_new[subring["injection"]]
+        new_subring
+      end
+      for subring in ring.sub_fusion_rings
+    ]
+
+    result = @set result.sub_fusion_rings =
+      permuted_subrings
+  end
+
+  #  representations are indexed by simple objects, but  precise
+  # stored schemas need separate transformation methods. Keeping them would
+  # attach incorrectly indexed data to the permuted ring.
+  if ring.projective_SL2Z_reps !== missing
+    result = @set result.projective_SL2Z_reps = missing
+  end
+
+  if ring.numeric_projective_SL2Z_reps !== missing
+    result = @set result.numeric_projective_SL2Z_reps = missing
+  end
+
+  return result
 end
 
 """

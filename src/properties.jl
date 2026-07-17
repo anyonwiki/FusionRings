@@ -907,8 +907,9 @@ end
 #       because newly constructed or restricted rings may not have reliable
 #       AnyonWiki barcodes.
 function decomp_key(decomp::Vector{FusionRing})
-  return sort([(rank(R), _fpdim_signature(R)) for R in decomp])
+  return sort([(rank(R), fpdim_signature(R)) for R in decomp])
 end
+#fix: replaced depreciated names
 
 #   unique_decomps!(decomps)
 #       Removes duplicate decompositions in-place using _decomp_key.

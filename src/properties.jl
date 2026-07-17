@@ -189,18 +189,23 @@ fpdim = frobenius_perron_dimension
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export numeric_fpdims
+#fix: added force compute and streamlined code
+function numeric_fpdim(
+  fr::FusionRing;
+  force_compute::Bool = false,
+)
+  stored_dim = fr.numeric_frobenius_perron_dimension
 
-function numeric_fpdims(fr::FusionRing)
-  r = rank(fr)
-  S = zeros(Float64, r, r)
-  N = multiplication_table(fr)
-  for a in 1:r
-    @views S .+= N[a, :, :]
+  if !force_compute && stored_dim !== missing
+    return Float64(real(stored_dim))
   end
-  vals, vecs = eigen(S)
-  idx = argmax(vals)
-  v = abs.(vecs[:, idx])
-  return v ./ v[1]
+
+  dims = numeric_fpdims(
+    fr;
+    force_compute = force_compute,
+  )
+
+  return sum(x -> x*x, dims)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

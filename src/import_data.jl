@@ -402,9 +402,10 @@ function import_ring(filename::String)
     numeric_projective_SL2Z_reps        = npsrfromjs(js),
     numeric_frobenius_perron_dimension  = nfpdfromjs(js),
     numeric_frobenius_perron_dimensions = nfpdsfromjs(js),
-    has_categories_with_props           = ctpfromjs(js),
-    #categorifiable                      = cfromjs( js ),
-    categorifications = ctsfromjs(js),
+    #fixed: changed to correspond to proper references:
+    has_categories_with_props = ctpfromjs(js),
+    categorifiable            = cfromjs(js),
+    categorifications          = ctsfromjs(js),
     references        = js["references"],
     software          = js["software"],
     comments          = js["comments"],

@@ -652,7 +652,11 @@ function rings_to_dict(frs::Vector{FusionRing})
       "numeric_frobenius_perron_dimension"  => nfpdtojs(fr),
       "numeric_frobenius_perron_dimensions" => nfpdstojs(fr),
       "has_categories_with_props"           => cpropstojs(fr),
+      #fix: added
+      "categorifiable"                      => ctojs(fr),
       "categorifications"                   => ctstojs(fr),
+      "non_cat_reasons"                     => ncrtojs(fr),
+      #end fix
       "references"                          => fr.references,
       "software"                            => fr.software,
       "comments"                            => fr.comments,

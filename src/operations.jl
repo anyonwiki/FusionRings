@@ -216,14 +216,26 @@ end
 
 Apply permutation `p` (fixing 1) to all three indices of `N`.
 """
-function permute_mult_tab(N::Array{Int, 3}, p::Vector{Int})
-  p[1] == 1 || error("Permutation must fix the unit at index 1")
-  r = size(N, 1)
-  M = fill(0, r, r, r)
-  @inbounds for a in 1:r, b in 1:r, c in 1:r
-    M[a, b, c] = N[p[a], p[b], p[c]]
-  end
-  return M
+#fix: replaced triple loop with direct indexing
+function permute_mult_tab(
+  table::Array{Int,3},
+  perm::Vector{Int},
+)::Array{Int,3}
+  r = size(table, 1)
+
+  size(table) == (r, r, r) ||
+    throw(ArgumentError("multiplication table must be cubic"))
+
+  length(perm) == r ||
+    throw(ArgumentError("permutation length must equal table rank"))
+
+  sort(perm) == collect(1:r) ||
+    throw(ArgumentError("perm is not a valid permutation"))
+
+  perm[1] == 1 ||
+    throw(ArgumentError("permutation must fix the tensor unit"))
+
+  return table[perm, perm, perm]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

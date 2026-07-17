@@ -856,10 +856,11 @@ end
 #       Sorting makes the signature independent of the order of simple objects.
 #       Rounding avoids tiny numerical differences from eigenvalue computation.
 function fpdim_signature(fr::FusionRing; digits::Int = 10)
-  ds = _numeric_fpdim_values(fr)
-  vals = [_to_float_real(d) for d in ds]
+  ds = numeric_fpdim_values(fr)
+  vals = [to_float_real(d) for d in ds]
   return sort(round.(vals; digits = digits))
 end
+#fix: replaced depreciated names
 
 #   fpdim_product_signature(factors; digits=10)
 #       Computes the FPdim signature that the tensor product of the given factors

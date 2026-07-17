@@ -65,8 +65,27 @@ function check_unit(mt)
   return true
 end
 
+#fix: sum(mt[:, :, 1]) == size(mt, 1) only checked total number of coefficients
+#did not make sure each simple object had exactly one dual
 function check_inverse(mt)
-  return sum(mt[:, :, 1]) == size(mt, 1)
+  r = size(mt, 1)
+
+  for i in 1:r
+    left_duals = findall(j -> mt[j, i, 1] == 1, 1:r)
+    right_duals = findall(j -> mt[i, j, 1] == 1, 1:r)
+
+    # Every simple object must have exactly one left dual.
+    length(left_duals) == 1 || return false
+
+    #  left and right duals must agree.
+    left_duals == right_duals || return false
+
+    # Unit coefficients must be either zero or one.
+    all(j -> mt[j, i, 1] in (0, 1), 1:r) || return false
+    all(j -> mt[i, j, 1] in (0, 1), 1:r) || return false
+  end
+
+  return true
 end
 
 function check_associativity(mt::Array{Int, 3})

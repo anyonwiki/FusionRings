@@ -35,9 +35,30 @@ function root_sort_crit(x)
   return (- Int(is_real(x)), real(x), imag(x))
 end
 
-function save_qqb_num(x::QQBarFieldElem)
-  path = joinpath(@__DIR__, "data", "split_data", qqb_id(x)*".mrdi")
-  return Oscar.save(data, x)
+#fix: original used undefined data, constructed path without using it
+#and wrote to directory name different than loader
+function save_qqb_num(
+  x::QQBarFieldElem;
+  directory::AbstractString = joinpath(
+    datadir,
+    "split_number_data",
+  ),
+)
+  id = qqb_id(x)
+
+  mkpath(directory)
+
+  path = joinpath(
+    directory,
+    id * ".mrdi",
+  )
+
+  Oscar.save(path, x)
+
+  # Keep  in-memory lookup cache synchronized.
+  qqb_dict[id] = x
+
+  return id
 end
 
 # Loading from library of qqb elements

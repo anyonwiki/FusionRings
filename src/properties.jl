@@ -291,9 +291,14 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export cayley_table
-
+#fix: replaced error
 function cayley_table(fr::FusionRing)
-  !is_group_ring(fr) && message("Ring must be group ring")
+  is_group_ring(fr) ||
+  throw(
+    ArgumentError(
+      "cayley_table requires a group fusion ring",
+    ),
+  )
 
   mt = multiplication_table(fr)
   r  = rank(fr)

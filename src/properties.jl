@@ -121,17 +121,35 @@ nnzsc(r::FusionRing) = size(nonzero_structure_constants(r),1)
 
 export frobenius_perron_dimensions
 
-function frobenius_perron_dimensions(
-  r::FusionRing; force_compute = false
-)::Vector{QQBarFieldElem}
-  stored_dims = r.frobenius_perron_dimensions
-  if stored_dims===missing || force_compute
-    mt = multiplication_table(r)
-    multmats = [matrix(ZZ, mt[i, :, :]) for i in 1:rank(r)]
-    return [first(eigenvalues(QQBar, A)) for A in multmats]
-  else
-    return from_qqb_id(stored_dims)
+#fix added helpers:
+_stored_qqbar_value(x::String) = from_qqb_id(x)
+_stored_qqbar_value(x::QQBarFieldElem) = x
+_stored_qqbar_value(x) = QQBar(x)
+
+function _stored_qqbar_array(xs)
+  return _stored_qqbar_value.(xs)
+end
+#why? - Imported rings store QQBar as strings
+#constructors like group_fusion_ring stores actual oscar ints
+#also added force_compute
+
+
+function frobenius_perron_dimension(
+  r::FusionRing;
+  force_compute::Bool = false,
+)::QQBarFieldElem
+  stored_dim = r.frobenius_perron_dimension
+
+  if !force_compute && stored_dim !== missing
+    return _stored_qqbar_value(stored_dim)
   end
+
+  dims = fpdims(
+    r;
+    force_compute = force_compute,
+  )
+
+  return sum(dims .^ 2)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

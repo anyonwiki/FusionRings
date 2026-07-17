@@ -1177,16 +1177,29 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export upper_central_series
-
+#fix: compares multiplication table instead of using obj. identity
 function upper_central_series(fr::FusionRing)
-  chain = Tuple{Vector{Int}, FusionRing}[]
+  chain = Tuple{Vector{Int},FusionRing}[]
   push!(chain, (collect(1:rank(fr)), fr))
+
   while true
-    S, adj = adjoint_fusion_ring(last(chain)[2])
-    last(chain)[2] === adj && break
+    current = last(chain)[2]
+
+    S, adj = adjoint_fusion_ring(
+      current;
+      represent_by_known = false,
+    )
+
+    if multiplication_table(current) ==
+       multiplication_table(adj)
+      break
+    end
+
     push!(chain, (S, adj))
+
     length(S) == 1 && break
   end
+
   return chain
 end
 

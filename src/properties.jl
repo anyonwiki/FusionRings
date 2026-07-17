@@ -1254,26 +1254,32 @@ end
 
 export upper_central_series
 #fix: compares multiplication table instead of using obj. identity
-function upper_central_series(fr::FusionRing)
-  chain = Tuple{Vector{Int},FusionRing}[]
-  push!(chain, (collect(1:rank(fr)), fr))
+function upper_central_series(
+  fr::FusionRing,
+)::Vector{Tuple{Vector{Int},FusionRing}}
+  chain = Tuple{Vector{Int},FusionRing}[
+    (collect(1:rank(fr)), fr),
+  ]
 
   while true
-    current = last(chain)[2]
+    current_ring = last(chain)[2]
 
-    S, adj = adjoint_fusion_ring(
-      current;
+    subset, adjoint_ring = adjoint_fusion_ring(
+      current_ring;
       represent_by_known = false,
     )
 
-    if multiplication_table(current) ==
-       multiplication_table(adj)
+    # The series has stabilized if taking the adjoint subring
+    # does not change the multiplication table.
+    if multiplication_table(adjoint_ring) ==
+       multiplication_table(current_ring)
       break
     end
 
-    push!(chain, (S, adj))
+    push!(chain, (subset, adjoint_ring))
 
-    length(S) == 1 && break
+    # A rank-one adjoint ring is the trivial fusion ring.
+    length(subset) == 1 && break
   end
 
   return chain

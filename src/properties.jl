@@ -843,11 +843,27 @@ function raw_fpdims(
   )
 end
 
-function numeric_fpdim_values(fr::FusionRing)
+
+#fix: fixed fallback 
+function numeric_fpdim_values(
+  fr::FusionRing;
+  force_compute::Bool = false,
+)
   try
-    return numeric_fpdims(fr)
-  catch
-    return raw_fpdims(fr)
+    return numeric_fpdims(
+      fr;
+      force_compute = force_compute,
+    )
+  catch error
+    @debug "Numeric FP-dimension calculation failed; using exact values" exception = (
+      error,
+      catch_backtrace(),
+    )
+
+    return raw_fpdims(
+      fr;
+      force_compute = force_compute,
+    )
   end
 end
 

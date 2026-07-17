@@ -230,6 +230,33 @@ function ctpfromjs(js)
   return props
 end
 
+
+"""
+Decode categorifiability field.
+
+- `true` or `false` represent known information
+- `nothing` or  absent field represents unknown information.
+"""
+function cfromjs(js)::Union{Missing,Bool}
+  haskey(js, "categorifiable") ||
+    return missing
+
+  value = js["categorifiable"]
+
+  value === nothing &&
+    return missing
+
+  value isa Bool ||
+    throw(
+      ArgumentError(
+        "categorifiable must be true, false, or null; " *
+        "received $(repr(value))",
+      ),
+    )
+
+  return value
+end
+
 # TODO: it should be possible to add type to output but I get the following error when importing FR^{2,10,0}_{1}:
 # MethodError: Cannot `convert` an object of type Vector{Dict{String, Array}} to an object of type Dict{String, Array}
 # The error is not reproducible when using the REPL

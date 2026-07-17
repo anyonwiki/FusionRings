@@ -192,11 +192,12 @@
       z3 = zn_fusion_ring(3)
       pz3 = permute([1, 3, 2], z3)
 
-      check_equal(
-        labels(pz3),
-        ["0", "1", "2"],
-        "permute([1,3,2], z3) did not permute labels correctly",
-      )
+    #fix: old test encoded bug by expecting labels not to move
+    check_equal(
+      labels(pz3), ["0", "2", "1"], "permute([1,3,2], z3) did not permute labels correctly",
+)
+
+    
 
       check_true(
         is_equivalent_fusion_ring(z3, pz3),

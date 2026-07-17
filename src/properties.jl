@@ -919,16 +919,30 @@ end
 #        lets us test whether a proposed list of factors could possibly have
 #       tensor product equivalent to R.
 
-#fix: replace depreciated names
-function fpdim_product_signature(factors::Vector{FusionRing}; digits::Int = 10)
-  vals = [1.0]
+#fix: replace depreciated names, 
+function fpdim_product_signature(
+  factors::Vector{FusionRing};
+  digits::Int = 10,
+  force_compute::Bool = false,
+)
+  values = [1.0]
 
-  for F in factors
-    ds = [to_float_real(d) for d in numeric_fpdim_values(F)]
-    vals = [x * y for x in vals for y in ds]
+  for factor in factors
+    dims = numeric_fpdim_values(
+      factor;
+      force_compute = force_compute,
+    )
+
+    numeric_dims = [to_float_real(d) for d in dims]
+
+    values = [
+      existing * dimension
+      for existing in values
+      for dimension in numeric_dims
+    ]
   end
 
-  return sort(round.(vals; digits = digits))
+  return sort(round.(values; digits = digits))
 end
 
 #   fpdim_signatures_match(R, factors; digits=10)
@@ -939,11 +953,27 @@ end
 #       If  returns false,  factors cannot tensor to R.
 #       If it returns true, the factors are only candidates and still need final
 #       verification.
+
+#fixed: add force compute
 function fpdim_signatures_match(
-  R::FusionRing, factors::Vector{FusionRing}; digits::Int = 10
+  ring::FusionRing,
+  factors::Vector{FusionRing};
+  digits::Int = 10,
+  force_compute::Bool = false,
 )::Bool
-  return fpdim_signature(R; digits = digits) ==
-         fpdim_product_signature(factors; digits = digits)
+  ring_signature = fpdim_signature(
+    ring;
+    digits = digits,
+    force_compute = force_compute,
+  )
+
+  factor_signature = fpdim_product_signature(
+    factors;
+    digits = digits,
+    force_compute = force_compute,
+  )
+
+  return ring_signature == factor_signature
 end
 
 #   decomp_key(decomp)

@@ -615,6 +615,8 @@ function ring_to_dict(fr)
     "numeric_frobenius_perron_dimension"  => nfpdtojs(fr),
     "numeric_frobenius_perron_dimensions" => nfpdstojs(fr),
     "has_categories_with_props"           => cpropstojs(fr),
+    #fixed: added
+    "categorifiable"                      => ctojs(fr),
     "categorifications"                   => ctstojs(fr),
     "references"                          => fr.references,
     "software"                            => fr.software,

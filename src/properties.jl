@@ -1291,10 +1291,12 @@ end
 
 export is_nilpotent
 
+#fix: last_ring was never used
 function is_nilpotent(r::FusionRing)::Bool
   chain = upper_central_series(r)
-  last_set, last_ring = last(chain)
-  return length(last_set) == 1
+  last_subset = first(last(chain))
+
+  return length(last_subset) == 1
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

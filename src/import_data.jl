@@ -354,21 +354,18 @@ function fpdsfromjs(js)
   end
 end
 
+#fix: relies on julia missing , not dict with values
+#who contain string "missing"
 function ncrfromjs(js)
-  k = keys(js)
-  if "non_cat_reasons" ∈ k
-    return js["non_cat_reasons"]
-  else
-    return Dict(
-      "Fusion"    => "missing",
-      "Pivotal"   => "missing",
-      "Spherical" => "missing",
-      "Unitary"   => "missing",
-      "Braided"   => "missing",
-      "Ribbon"    => "missing",
-      "Modular"   => "missing",
-    )
-  end
+  haskey(js, "non_cat_reasons") ||
+    return missing
+
+  reasons = js["non_cat_reasons"]
+
+  reasons === nothing &&
+    return missing
+
+  return reasons
 end
 
 function lfromjs(js)

@@ -1104,7 +1104,8 @@ function discover_tensor_product_decompositions(r::FusionRing; digits::Int = 10)
     fpdim_signatures_match(r, [A, B]; digits = digits) || continue
 
     #  check whether products a ⊗ b form  unique Cartesian grid.
-    grid = _unique_product_grid(r, Aset, Bset)
+    grid = unique_product_grid(r, Aset, Bset)
+    #fix: replaced depcreciated names
     grid === nothing && continue
 
     T = tensor_product([A, B])

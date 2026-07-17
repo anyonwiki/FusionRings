@@ -891,11 +891,13 @@ end
 #
 #        lets us test whether a proposed list of factors could possibly have
 #       tensor product equivalent to R.
+
+#fix: replace depreciated names
 function fpdim_product_signature(factors::Vector{FusionRing}; digits::Int = 10)
   vals = [1.0]
 
   for F in factors
-    ds = [_to_float_real(d) for d in _numeric_fpdim_values(F)]
+    ds = [to_float_real(d) for d in numeric_fpdim_values(F)]
     vals = [x * y for x in vals for y in ds]
   end
 

@@ -788,4 +788,188 @@ function export_rings(filename::String, frs::Vector{FusionRing})
   return write_json(filename, d)
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                      ADDING NEW RINGS TO THE DATABASE                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export auto_complete_missing_info
+
+"""auto_complete_missing_info(fr::FusionRing)::FusionRing
+
+returns a fusion ring where the following data is computed and added if it was missing:
+* characters
+* sub_fusion_rings
+* frobenius_perron_dimension(s)
+* formal_codegrees
+* all_gradings
+* upper_central_series
+* realizations (as tensor_product)
+* automorphism_group
+"""
+
+function auto_complete_missing_info(fr::FusionRing)::FusionRing
+  # is always defined
+  mt = multiplication_table(fr)
+
+  # should always be defined but just in case...
+  id = ismissing(fr.uuid) ? UUIDs.uuid1() : fr.uuid
+
+  # can't be autocompleted
+  awc = fr.anyonwiki_code
+
+  # autocompletion is too expensive on case-by-case basis
+  nms = fr.names
+
+  # autocompletion is too expensive on case-by-case basis
+  tnms = fr.texnames
+
+  # no autocompletion necessary
+  lbls = fr.labels
+
+  # automatically loads if stored and computes if missing
+  chrs = is_commutative(fr) ? characters(fr) : missing
+
+  sfr = sub_fusion_rings(fr)
+
+  fpd = frobenius_perron_dimension(fr)
+
+  fpds = frobenius_perron_dimensions(fr)
+
+  fcds = formal_codegrees(fr)
+
+  # way to expensive to autocomplete in general
+  # TODO: can be (partially) completed for special cases
+  hcwp = fr.has_categories_with_props
+
+  # way to expensive to autocomplete in general
+  cts = fr.categorifications
+
+  # can't be autocompleted
+  # TODO: if this software is used for certain properties the (future) corresponding paper should be added
+  rfs = fr.references
+
+  # can't be autocompleted
+  # TODO: if this software is used for certain properties, it should be added
+  sftw = fr.software
+
+  # automatically loads if stored and computes if missing
+  ags = all_gradings(fr)
+
+  ucs = upper_central_series(fr)
+
+  # need to manually check and add for this property
+  rlztns = fr.realizations
+  if ismissing(rlztns["tensor_product"]) || isnothing(rlztns["tensor_product"])
+    rlztns["tensor_product"] = decompositions(fr,kind="tensor_product")
+  end
+
+  # automatically loads if stored and computes if missing
+  ag = automorphism_group(fr)
+
+  fusion_ring(
+    mt,
+    uuid                           = id,
+    anyonwiki_code                 = awc,
+    names                          = nms,
+    texnames                       = tnms,
+    labels                         = lbls,
+    characters                     = chrs,
+    sub_fusion_rings               = sfr,
+    frobenius_perron_dimension     = fpd,
+    frobenius_perron_dimensions    = fpds,
+    formal_codegrees               = fcds,
+    has_categories_with_props      = hcwp,
+    categorifications              = cts,
+    references                     = rfs,
+    software                       = sftw,
+    all_gradings                   = ags,
+    upper_central_series           = ucs,
+    realizations                   = rlztns,
+    automorphism_group             = ag,
+    skip_check                     = true #Otherwise the input wouldn't be a FusionRing
+  )
+end
+
+
+function auto_complete_missing_info(a::Array{Int64,3})::FusionRing
+  return auto_complete_missing_info(fusion_ring(a))
+end
+
+export change_properties
+
+"""change_properties(fr::FusionRing,d::Dict{Symbol,Any})
+
+takes a fusion ring fr and a dictionary d that maps field names of a FusionRing to new values and returns a new fusion ring where each field has that new value
+
+change_properties(fr::FusionRing,:s => v)
+
+is equal to change_property( fr, Dict( :s => v ) )
+"""
+
+function change_properties(fr::FusionRing,d::Dict{Symbol,T}) where T
+  isempty(d) && return fr
+
+  fns = fieldnames(FusionRing)
+
+  kys = collect(keys(d))
+
+  invalid_keys = setdiff(kys,fns)
+  !isempty(invalid_keys) && error("The following keys are invalid fields of a FusionRing: $invalid_keys")
+
+  vals = []
+
+  for fn ∈ fns
+    if fn ∈ kys
+      push!(vals, d[fn] )
+    else
+      push!(vals, getproperty(fr, fn) )
+    end
+  end
+
+  FusionRing(vals...)
+  #result = fr
+  #for (k,v) in pairs(d)
+  #  @info (k,v)
+  #  result = @set result.$k = v
+  #end
+  #return result
+  #
+end
+
+
+function change_properties(fr::FusionRing, tup::Pair{Symbol,T} ) where {T}
+  return change_properties(fr,Dict(tup))
+end
+
+export add_names
+
+function add_names(fr::FusionRing, tup::Pair{String,Vector{String}})
+  add_nms(fr,tup,kind="nontex")
+end
+
+export add_tex_names
+
+function add_tex_names(fr::FusionRing, tup::Pair{String,Vector{String}})
+  add_nms(fr,tup,kind="tex")
+end
+
+function add_nms(fr::FusionRing, tup::Pair{String,Vector{String}}; kind = "tex")
+  id, newnames = tup
+  if id ∉ _naming_priority_order
+    error("$(tup[1]) should be an element of $_naming_priority_order")
+  end
+
+  nms = kind == "tex" ? deepcopy(tex_names(fr)) : deepcopy(names(fr))
+
+  if ismissing(nms[id])
+    nms[id] = newnames
+  else
+    nms[id] = vcat(newnames,nms[id])
+  end
+
+  if kind == "tex"
+    return change_properties(fr,:texnames => nms)
+  else
+    return change_properties(fr,:names => nms)
+  end
 end

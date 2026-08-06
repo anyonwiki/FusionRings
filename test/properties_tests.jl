@@ -553,7 +553,7 @@ using Oscar
         ug = universal_grading(r)
         fusion_rings_output = [ ug[1], anyonwiki_code(ug[2]) ]
 
-        testdata = anyonica_output
+        anyonica_output = data["Output"][idx]
 
         check_equal(
           fusion_rings_output,

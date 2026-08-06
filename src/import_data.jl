@@ -424,7 +424,7 @@ function chtojs(fr::FusionRing)
   ch = fr.characters
   if ch !== missing
     r = rank(fr)
-    return [[ch[i, j] for j in 1:r] for i in 1:r]
+    return [ch[i, j] for j in 1:r, i in 1:r]
   else
     return nothing
   end

@@ -22,6 +22,10 @@ function qqb_id(arr::Array{QQBarFieldElem})
   return qqb_id.(arr)
 end
 
+function qqb_id(melem::AbstractAlgebra.Generic.MatSpaceElem{QQBarFieldElem})
+  qqb_id.(Matrix(melem))
+end
+
 function rootnum(x::QQBarFieldElem)
   p   = minimal_polynomial(x)
   rts = roots(QQBar, p)
@@ -36,8 +40,8 @@ function root_sort_crit(x)
 end
 
 function save_qqb_num(x::QQBarFieldElem)
-  path = joinpath(@__DIR__, "data", "split_data", qqb_id(x)*".mrdi")
-  return Oscar.save(data, x)
+  path = joinpath(@__DIR__, "data", "split_number_data", qqb_id(x)*".mrdi")
+  return Oscar.save(path, x)
 end
 
 # Loading from library of qqb elements
@@ -51,9 +55,23 @@ function from_qqb_id(s::String)
     return qqb_dict[s]
   else
     fn = joinpath(datadir, "split_number_data", s*".mrdi")
+
+    if isfile(fn)
     val = Oscar.load(fn)
     qqb_dict[s] = val
     return val
+    else
+      spl = split(s,"_")
+      l   = length(spl)
+      n   = parse(Int64,last(spl))
+      cfs = ZZ.(parse.(Int64,spl[1:end-2]))
+
+      qqbval = sort(roots(QQBar,polynomial(ZZ,cfs)), by = root_sort_crit)[n]
+
+      save_qqb_num(qqbval)
+
+      return qqbval
+    end
   end
 end
 

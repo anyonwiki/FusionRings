@@ -527,9 +527,11 @@
         code = data["Input"][idx]
         r = ring_from_anyonica_code(code)
         fusion_rings_output =
+        unique(
           map(
             vec -> [ vec[1], anyonwiki_code(vec[2]) ],
             upper_central_series(r)
+          )
           )
 
         anyonica_output= data["Output"][idx]

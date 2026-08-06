@@ -13,7 +13,10 @@ import Oscar:
   group,
   upper_central_series,
   is_nilpotent,
-  tensor_product
+  tensor_product,
+  automorphism_group,
+  is_simple,
+  is_integral
 import Base: sort, names
 
 include("general_functions.jl")

@@ -1,49 +1,86 @@
-using Pkg;
-Pkg.activate("/home/gert/Projects/FusionRings.jl")
 using Revise, Oscar, Accessors, JSON, FusionRings, ProgressMeter
 
-function to_qqb_arr(mat)
-  return [mat[i] for i in eachindex(mat)]
-end
+datadir = "/home/gert/Projects/FusionRings.jl/src/data/"
 
-# TODO: make sure numeric characters match the symbolic ones
+unique_rings =
+  try
+    if length(unique_rings) == 25138
+      unique_rings
+    else
+      import_rings("/home/gert/Projects/FusionRings.jl/src/data/unique_frl.json")
+    end
+  catch e
+    import_rings("/home/gert/Projects/FusionRings.jl/src/data/unique_frl.json")
+  end
 
-function import_and_fix( )
-  fn = "/home/gert/Projects/FusionRings.jl/src/data/fusionrings.json"
 
-  js = JSON.parsefile(fn)
+#updated_rings = FusionRing[]
 
-  # Mult tables were incorrect
-  mt = multiplication_table(fr)
+#@showprogress dt=1 desc="Updating ring info" for fr in unique_rings
+#  push!(updated_rings,auto_complete_missing_info(fr))
+#end
+#
 
-  return fusion_ring(
-    mt;
-    names                               = nfromjs(js),
-    texnames                            = tnames,
-    barcode                             = bcfromjs(js),
-    anyonwiki_code                      = fcfromjs(js),
-    characters                          = chfromjs(js),
-    sub_fusion_rings                    = sfrfromjs(js),
-    frobenius_perron_dimension          = fpdfromjs(js),
-    frobenius_perron_dimensions         = fpdsfromjs(js),
-    tensor_product_decompositions       = tpdfromjs(js),
-    numeric_characters                  = nchfromjs(js),
-    numeric_frobenius_perron_dimension  = nfpdfromjs(js),
-    numeric_frobenius_perron_dimensions = nfpdsfromjs(js),
-    has_categories_with_props           = catswithprops,
-    categorifications                   = ctsfromjs(js),
-    references                          = js["references"],
-    software                            = js["software"],
-    comments                            = js["comments"],
+#updated_rings2 = updated_rings
+#@showprogress for i in 1:length(updated_rings)
+#  subrings = sub_fusion_rings(updated_rings[i])
+#  if isempty(subrings)
+#    nr = updated_rings2[i]
+#    nr = @set nr.sub_fusion_rings = Tuple{Vector{Int64},String}[]
+#    updated_rings2[i] = nr
+#  else
+#    sfrstr = [ ( t[1], uuid(t[2]) ) for t in subrings ]
+#    nr = updated_rings2[i]
+#    nr = @set nr.sub_fusion_rings = sfrstr
+#    updated_rings2[i] = nr
+#  end
+#end
+
+
+#export_rings(joinpath(datadir,"updated_unique_frl.json"),updated_rings2)
+
+#tabs = Oscar.load("src/data/unique_rk10_multtabs.mrdi")
+
+
+#r10rings = FusionRing[]
+
+function fix_central_series(fr)
+  ucs = upper_central_series(fr;force_compute=true)
+
+  ucss = [ (t[1],uuid(t[2])) for t in ucs ]
+
+  change_properties(
+    fr,
+    :upper_central_series => ucss
   )
 end
 
-function fix_characters(fr::FusionRing)
-  ch = fr.characters
-  ch === missing && return fr
 
-  @set fr.characters = string.(permutedims(ch))
+function fix_sfr(fr)
+  sfr = sub_fusion_rings(fr;force_compute=true)
+
+  sfrs = [ (t[1],uuid(t[2])) for t in sfr ]
+
+  change_properties(
+    fr,
+    :sub_fusion_rings => sfrs
+  )
 end
+
+function fix_r(fr)
+  r = decompositions(fr;force_compute=true)
+
+  sr = Dict{String,Any}( "tensor_product" => [ [ uuid(ring) for ring in decomp ] for decomp in r ] )
+
+  change_properties(
+    fr,
+    :realizations => sr
+  )
+end
+#@showprogress dt=1 desc="Updating ring info" for mt in tabs
+#  push!(r10rings,fusion_ring(mt))
+#end
+
 
 function fr_fn(fr::FusionRing)
   c  = string.(anyonwiki_code(fr))
@@ -52,31 +89,5 @@ function fr_fn(fr::FusionRing)
 end
 
 function export_new_rings(v::Vector{Int64})
-  datadir = "/home/gert/Projects/FusionRings.jl/src/data/FusionRings/"
   return export_rings(joinpath(datadir, "newrings.json"), import_and_fix.(frl[v]))
-end
-
-macro timeout(seconds, expr_to_run, expr_when_fails = nothing)
-  quote
-    timer = Channel{Timer}(1)
-    tsk = @task begin
-      x = $(esc(expr_to_run))
-      close(take!(timer))
-      x
-    end
-    schedule(tsk)
-
-    put!(
-      timer,
-      Timer($(esc(seconds))) do timer
-        return istaskdone(tsk) || schedule(tsk, InterruptException(); error = true)
-      end,
-    )
-
-    try
-      fetch(tsk)
-    catch _
-      $(esc(expr_when_fails))
-    end
-  end
 end

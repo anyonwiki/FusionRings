@@ -930,6 +930,25 @@ function cartesian_choices(lists::Vector{Vector{FusionRing}})
   return out
 end
 
+function is_equivalent_decomposition(d1,d2)
+  length(d1) ≠ length(d2) && return false
+
+  r_m_nnsd_nnzsc(ring::FusionRing) = ( rank(ring), multiplicity(ring), nnsd(ring), nnzsc(ring) )
+
+  sort(r_m_nnsd_nnzsc.(d1)) ≠ sort(r_m_nnsd_nnzsc.(d1)) && return false
+
+  # check if uuids exist and if so compare these
+  uuids1 = uuid.(d1)
+  uuids2 = uuid.(d2)
+  if !any(ismissing,uuids1) && !any(ismissing, uuids2)
+    return sort(uuids1) == sort(uuids2)
+  end
+
+  # if standard tests fail we have to do it the hard way
+  return length(filter_equivalents( is_equivalent_fusion_ring, vcat( d1, d2 ) ) ) == length(d1)
+end
+
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                adjoint_fusion_ring                              ┃

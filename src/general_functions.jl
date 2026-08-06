@@ -70,6 +70,33 @@ function is_constant_array(arr; equalfunc = ===)
   return all(equalfunc(element, first) for element in arr)
 end
 
+"""
+    filter_equivalents(is_equivalent::Function, l::AbstractVector)
+
+Remove elements from `l` so that no two remaining elements are considered
+equivalent according to the function `is_equivalent`.
+Keeps the first occurrence of each equivalence class.
+
+# Arguments
+- `is_equivalent::Function`: A binary function defining the equivalence relation
+- `l::AbstractVector`: The input collection
+
+# Returns
+A vector containing only non-equivalent elements from `l`
+
+"""
+function filter_equivalents(is_equivalent::Function, l::AbstractVector)
+    result = eltype(l)[]
+    for e in l
+        # Add e only if it's not equivalent to any element already in result
+        if !any(x -> is_equivalent(e, x), result)
+            push!(result, e)
+        end
+    end
+    return result
+end
+
+
 function intidmat(dim::Int64)::Matrix{Int}
   id = zeros(Int, dim, dim)
   for i in 1:dim

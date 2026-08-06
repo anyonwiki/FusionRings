@@ -73,7 +73,7 @@ end
 ############################################################
 # The fusion rings are stored as json files. Not all data 
 # types (e.g. complex numbers) are supported by JSON so we 
-# had to store those using a variety of hacks. 
+# store those using a variety of hacks.
 # The following functions convert the stored data back 
 # to their proper types.
 #
@@ -386,11 +386,9 @@ end
 ############################################################
 
 function missing_to_nothing(x)
-  if x !== missing
-    return x
-  else
+  !ismissing(x) && return x
+
     return nothing
-  end
 end
 
 function mttojs(fr::FusionRing)::Vector{Vector{Vector{Int64}}}

@@ -441,7 +441,7 @@
   @testset "decompositions" begin
     maybe_testset("basic", "1. basic construction") do
       z2 = zn_fusion_ring(2)
-      r = decompositions(z2)
+      r  = decompositions(z2)
 
       return check_true(r isa Vector, "decompositions(z2) did not return a vector")
     end

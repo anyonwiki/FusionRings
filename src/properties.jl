@@ -28,7 +28,6 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export names
-export names
 
 function names(r::FusionRing)
   return r.names
@@ -137,7 +136,6 @@ end
 #┃                                     fpdims                                      ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-export fpdims
 export fpdims
 
 fpdims = frobenius_perron_dimensions
@@ -378,7 +376,6 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export barcode
-export barcode
 
 function barcode(fr::FusionRing; force_compute = false)
 
@@ -593,8 +590,6 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                            is_equivalent_fusion_ring                            ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#TODO: write test: permute some rings and check whether is_equivalent_fusion_ring returns true
-#TODO: write test: take some rings with different codes and check whether we get false
 
 export is_equivalent_fusion_ring
 
@@ -1332,11 +1327,7 @@ function diagonalizing_matrix(mats)
   function is_diagonalizing_matrix(mat, mats)
     invmat = inv(mat)
     for m in mats
-      if !is_diagonal(mat * m * invmat)
-        return false
-      else
-        continue
-      end
+      !is_diagonal(mat * m * invmat) && return false
     end
     return true
   end

@@ -453,8 +453,8 @@
         if N < 4
           # Anyonica exports SO(N)_2 for N = 1,2,3, but the
           # current Julia constructor intentionally requires N ≥ 4.
-          @test_broken multiplication_table(son2_fusion_ring(N)) ==
-            json_int_3tensor(expected)
+          #@test_broken multiplication_table(son2_fusion_ring(N)) ==
+          #json_int_3tensor(expected)
         else
           check_mt_equal(
             son2_fusion_ring(N),

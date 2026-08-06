@@ -1,6 +1,6 @@
-############################################################
-# Exporting and importing QQBarFieldElems
-############################################################
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                   EXPORTING AND IMPORTING QQBARFIELDELEMS                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 # The QQBarFieldElem objects are quite heavy to load so we will load them all in a dictionary 
 # and provide functions to convert qqbar elems to keys and vice versa
@@ -82,13 +82,14 @@ end
 function from_qqb_id(a::Array)
   return from_qqb_id.(a)
 end
+
 function from_qqb_id(a::Matrix)
   return from_qqb_id.(a)
 end
 
-############################################################
-# Importing fusion rings
-############################################################
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           IMPORTING FUSION RINGS                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 # The fusion rings are stored as json files. Not all data 
 # types (e.g. complex numbers) are supported by JSON so we 
 # store those using a variety of hacks.

@@ -331,7 +331,8 @@ function tpnames(nms1,nms2)
 end
 
 function tensor_product(rings::Vector{FusionRing})::FusionRing
-  isempty(rings) && error("Need at least one fusion ring")
+  # empty product is unit by default
+  isempty(rings) && return from_anyonwiki_code([1,1,0,1])
   length(rings) == 1 && return rings[1]
 
   out = rings[1]

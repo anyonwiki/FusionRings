@@ -3,42 +3,41 @@ export FusionRing
 struct FusionRing
   multiplication_table::Array{Int, 3}
 
-  uuid::Union{Missing,String}
+  uuid::Union{Missing, String}
 
-  anyonwiki_code::Union{Missing,Vector{Int64}}
+  anyonwiki_code::Union{Missing, Vector{Int64}}
 
-  names::Dict{String,Union{Missing,Vector{String}}}
+  names::Dict{String, Union{Missing, Vector{String}}}
 
-  texnames::Dict{String,Union{Missing,Vector{String}}}
+  texnames::Dict{String, Union{Missing, Vector{String}}}
 
   labels::Array{String, 1}
 
-  characters::Union{Missing,Matrix{String}}
+  characters::Union{Missing, Matrix{String}}
 
-  sub_fusion_rings::Union{Missing,Vector{Tuple{Vector{Int64},String}}}
+  sub_fusion_rings::Union{Missing, Vector{Tuple{Vector{Int64}, String}}}
 
-  frobenius_perron_dimension::Union{Missing,String}
+  frobenius_perron_dimension::Union{Missing, String}
 
-  frobenius_perron_dimensions::Union{Missing,Vector{String}}
+  frobenius_perron_dimensions::Union{Missing, Vector{String}}
 
-  formal_codegrees::Union{Missing,Vector{String}}
+  formal_codegrees::Union{Missing, Vector{String}}
 
-  has_categories_with_props::Dict{String,Vector{Any}}
+  has_categories_with_props::Dict{String, Vector{Any}}
 
-  categorifications::Union{Missing,Vector{String}}
+  categorifications::Union{Missing, Vector{String}}
 
-  references::Union{Missing,Dict{String,Vector{String}}}
+  references::Union{Missing, Dict{String, Vector{String}}}
 
-  software::Union{Missing,Dict{String,Vector{String}}}
+  software::Union{Missing, Dict{String, Vector{String}}}
 
-  all_gradings::Union{Missing,Vector{Tuple{Vector{Int64},String}}}
+  all_gradings::Union{Missing, Vector{Tuple{Vector{Int64}, String}}}
 
-  upper_central_series::Union{Missing,Vector{Tuple{Vector{Int64},String}}}
+  upper_central_series::Union{Missing, Vector{Tuple{Vector{Int64}, String}}}
 
-  realizations::Union{Missing,Dict{String,Any}}
+  realizations::Union{Missing, Dict{String, Any}}
 
   automorphism_group::Union{Missing, PermGroup}
-
 end
 
 export fusion_ring
@@ -83,30 +82,30 @@ function check_labels(mt, names)
 end
 
 function is_valid_uuid(s::String)
-    return !isnothing(tryparse(UUID, s))
+  return !isnothing(tryparse(UUID, s))
 end
 
 function fusion_ring(
-  mt::Array{Int,3};
-  uuid                                = missing,
-  anyonwiki_code                      = missing,
-  names                               = missing,
-  texnames                            = missing,
-  labels                              = missing,
-  characters                          = missing,
-  sub_fusion_rings                    = missing,
-  frobenius_perron_dimension          = missing,
-  frobenius_perron_dimensions         = missing,
-  formal_codegrees                    = missing,
-  has_categories_with_props           = missing,
-  categorifications                   = missing,
-  references                          = missing,
-  software                            = missing,
-  all_gradings                        = missing,
-  upper_central_series                = missing,
-  realizations                        = missing,
-  automorphism_group                  = missing,
-  skip_check                          = false,
+  mt::Array{Int, 3};
+  uuid                        = missing,
+  anyonwiki_code              = missing,
+  names                       = missing,
+  texnames                    = missing,
+  labels                      = missing,
+  characters                  = missing,
+  sub_fusion_rings            = missing,
+  frobenius_perron_dimension  = missing,
+  frobenius_perron_dimensions = missing,
+  formal_codegrees            = missing,
+  has_categories_with_props   = missing,
+  categorifications           = missing,
+  references                  = missing,
+  software                    = missing,
+  all_gradings                = missing,
+  upper_central_series        = missing,
+  realizations                = missing,
+  automorphism_group          = missing,
+  skip_check                  = false,
 )
   if !skip_check
     check_struct_const(mt) || error("All structure constants must be non-negative integers")
@@ -122,68 +121,65 @@ function fusion_ring(
 
   #@info (mt::Array{Int,3},  uuid, anyonwiki_code, names, texnames, labels, characters, sub_fusion_rings, frobenius_perron_dimension, frobenius_perron_dimensions, formal_codegrees, has_categories_with_props           ,  categorifications                   ,  references                          ,  software                            ,  all_gradings                        ,  upper_central_series,  realizations, automorphism_group)
 
-  ( ismissing(labels) || labels == [] ) && (labels = String[bold_integer(i) for i in 1:size(mt, 1)])
+  (ismissing(labels) || labels == []) &&
+    (labels = String[bold_integer(i) for i in 1:size(mt, 1)])
 
   id = ismissing(uuid) ? string(UUIDs.uuid1()) : uuid
 
   !is_valid_uuid(id) && error("UUID string is invalid")
 
-  r   = size(mt,1)
-  sd  = count(x -> x == 1, diag(mt[:,:,1]))
+  r   = size(mt, 1)
+  sd  = count(x -> x == 1, diag(mt[:, :, 1]))
   nsd = r - sd
 
-  fpd =
-    if frobenius_perron_dimension isa Oscar.QQBarFieldElem
-      qqb_id(frobenius_perron_dimension)
-    else
-      frobenius_perron_dimension
-    end
+  fpd = if frobenius_perron_dimension isa Oscar.QQBarFieldElem
+    qqb_id(frobenius_perron_dimension)
+  else
+    frobenius_perron_dimension
+  end
 
-  fpds =
-    if frobenius_perron_dimensions isa Vector{Oscar.QQBarFieldElem}
-      qqb_id.(frobenius_perron_dimensions)
-    else
-      frobenius_perron_dimensions
-    end
+  fpds = if frobenius_perron_dimensions isa Vector{Oscar.QQBarFieldElem}
+    qqb_id.(frobenius_perron_dimensions)
+  else
+    frobenius_perron_dimensions
+  end
 
-  fcds =
-    if formal_codegrees isa Vector{Oscar.QQBarFieldElem}
-      qqb_id.(formal_codegrees)
-    else
-      formal_codegrees
-    end
+  fcds = if formal_codegrees isa Vector{Oscar.QQBarFieldElem}
+    qqb_id.(formal_codegrees)
+  else
+    formal_codegrees
+  end
 
   # characters can be encoded in a variety of different ways
   mtspceqqb = AbstractAlgebra.Generic.MatSpaceElem{Nemo.QQBarFieldElem}
 
-  chars =
-    if characters isa mtspceqqb || characters isa Matrix{QQBarFieldElem}
-      [ qqb_id(characters[i,j]) for i in 1:r, j in 1:r ]
-    elseif characters isa Vector{Vector{String}}
-      [ characters[i][j] for i in 1:r, j in 1:r  ]
-    elseif characters isa Vector{Vector{Any}}
-      String[ characters[i][j] for i in 1:r, j in 1:r  ]
-    else
-      characters
-    end
-
+  chars = if characters isa mtspceqqb || characters isa Matrix{QQBarFieldElem}
+    [qqb_id(characters[i, j]) for i in 1:r, j in 1:r]
+  elseif characters isa Vector{Vector{String}}
+    [characters[i][j] for i in 1:r, j in 1:r]
+  elseif characters isa Vector{Vector{Any}}
+    String[characters[i][j] for i in 1:r, j in 1:r]
+  else
+    characters
+  end
 
   function convert_nms(x)
     ismissing(x) && return missing
     isnothing(x) && return missing
     x isa Vector{String} && return x
-    all( el -> el isa String, x ) && return string.(x)
+    all(el -> el isa String, x) && return string.(x)
 
-    error("Values of names dictionary should be nothing, missing or a list of Strings")
+    return error(
+      "Values of names dictionary should be nothing, missing or a list of Strings"
+    )
   end
-
 
   nms = if ismissing(names)
     _nonames
   elseif names isa Vector
     mscnames(string.(names))
   else
-    Dict( k => convert_nms(v) for (k,v) in names )
+    Dict(k => convert_nms(v) for (k, v) in names)
   end
 
   texnms = if ismissing(texnames)
@@ -191,13 +187,13 @@ function fusion_ring(
   elseif texnames isa Vector
     mscnames(string.(names))
   else
-    Dict( k => convert_nms(v) for (k,v) in texnames )
+    Dict(k => convert_nms(v) for (k, v) in texnames)
   end
 
   # LEGACY compatibility
   hcwp = if has_categories_with_props isa Vector
     vec = has_categories_with_props
-    Dict{String,Vector{Any}}( row[1] => [ row[2],row[3][1],row[3][2]] for row in vec )
+    Dict{String, Vector{Any}}(row[1] => [row[2], row[3][1], row[3][2]] for row in vec)
   elseif ismissing(has_categories_with_props)
     Dict(
       "Fusion"    => [missing, "", "Unknown to AnyonWiki"],
@@ -206,7 +202,7 @@ function fusion_ring(
       "Spherical" => [missing, "", "Unknown to AnyonWiki"],
       "Braided"   => [missing, "", "Unknown to AnyonWiki"],
       "Ribbon"    => [missing, "", "Unknown to AnyonWiki"],
-      "Modular"   => [missing, "", "Unknown to AnyonWiki"]
+      "Modular"   => [missing, "", "Unknown to AnyonWiki"],
     )
   else
     has_categories_with_props
@@ -214,41 +210,38 @@ function fusion_ring(
 
   #TODO: let references be paper of FusionRings if missing.
   refs = if references isa Vector
-    Dict{String,Vector{String}}(
-      "All" => references
-    )
+    Dict{String, Vector{String}}("All" => references)
   else
     references
   end
 
   #TODO: let software be current version of FusionRings if missing.
   sftw = if software isa Vector
-    Dict{String,Vector{String}}(
-      "All" => software
-    )
+    Dict{String, Vector{String}}("All" => software)
   else
     software
   end
 
-  ag = if all_gradings isa Vector{Tuple{Vector{Int64},FusionRing}}
-    [ ( t[1], t[2].uuid ) for t in all_gradings ]
+  ag = if all_gradings isa Vector{Tuple{Vector{Int64}, FusionRing}}
+    [(t[1], t[2].uuid) for t in all_gradings]
   else
     all_gradings
   end
 
-  ucs = if upper_central_series isa Vector{Tuple{Vector{Int64},FusionRing}}
-    [ ( t[1], t[2].uuid ) for t in upper_central_series ]
+  ucs = if upper_central_series isa Vector{Tuple{Vector{Int64}, FusionRing}}
+    [(t[1], t[2].uuid) for t in upper_central_series]
   else
     upper_central_series
   end
 
-  sfr = if sub_fusion_rings isa Vector{Tuple{Vector{Int64},FusionRing}}
-    [ ( t[1], t[2].uuid ) for t in sub_fusion_rings ]
+  sfr = if sub_fusion_rings isa Vector{Tuple{Vector{Int64}, FusionRing}}
+    [(t[1], t[2].uuid) for t in sub_fusion_rings]
   else
     sub_fusion_rings
   end
 
-  rlztns = ismissing(realizations) ? Dict{String,Any}( "tensor_product" => missing ) : realizations
+  rlztns =
+    ismissing(realizations) ? Dict{String, Any}("tensor_product" => missing) : realizations
 
   return FusionRing(
     mt,
@@ -269,6 +262,6 @@ function fusion_ring(
     ag,
     ucs,
     rlztns,
-    automorphism_group
+    automorphism_group,
   )
 end

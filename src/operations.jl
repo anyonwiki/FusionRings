@@ -3,8 +3,6 @@
 #┃                          various helper functions                               ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-
-
 """
     fusion_product(fr, a, b) -> Dict{Int,Int}
 
@@ -23,7 +21,7 @@ end
 
 "Return vector of simple indices with positive multiplicity in `a × b`."
 function fusion_outcomes(fr::FusionRing, a::Int, b::Int)::Vector{Int}
-  return sort( [c for (c, m) in fusion_product(fr, a, b) if m>0] )
+  return sort([c for (c, m) in fusion_product(fr, a, b) if m>0])
 end
 
 # TODO: implement change_property function using the Accessors package
@@ -135,16 +133,16 @@ function permute(σ::Vector{Int}, r::FusionRing)::FusionRing
 
   pmt == mt && return r
 
-  permute_vector(p,v) = [ p[v[i]] for i in 1:size(v,1) ]
+  permute_vector(p, v) = [p[v[i]] for i in 1:size(v, 1)]
 
   # Data that needs re‑ordering (guard against `missing`)
   ch = r.characters
   if !ismissing(ch)
-    ch = ch[:,σ]
+    ch = ch[:, σ]
   end
 
   iσ = invperm(σ)
-  permute_sub_fus_ring(t) = ( permute_vector(iσ,t[1]), t[2] )
+  permute_sub_fus_ring(t) = (permute_vector(iσ, t[1]), t[2])
 
   sr = r.sub_fusion_rings
   if !ismissing(sr)
@@ -158,33 +156,33 @@ function permute(σ::Vector{Int}, r::FusionRing)::FusionRing
 
   ag = r.all_gradings
   if !ismissing(fpd)
-    ag = [ ( g[1][σ], g[2] ) for g in ag ]
+    ag = [(g[1][σ], g[2]) for g in ag]
   end
 
   aut = r.automorphism_group
   if !ismissing(ag)
-    aut = conjugate_group(aut,perm(iσ))
+    aut = conjugate_group(aut, perm(iσ))
   end
 
   ucs = r.upper_central_series
   if !ismissing(ucs)
-    ucs =
-      vcat(
-        [ (collect(1:rank(r)), uuid(r) ) ],
-        [ ( permute_vector(iσ,ucs[i][1]), ucs[i][2] ) for i in 2:length(ucs) ]
-      )
+    ucs = vcat(
+      [(collect(1:rank(r)), uuid(r))],
+      [(permute_vector(iσ, ucs[i][1]), ucs[i][2]) for i in 2:length(ucs)],
+    )
   end
 
-  return change_properties( r,
-                            Dict(
-                              :multiplication_table        => pmt,
-                              :sub_fusion_rings            => sr,
-                              :frobenius_perron_dimensions => fpd,
-                              :upper_central_series        => ucs,
-                              :all_gradings                => ag,
-                              :automorphism_group          => aut
-                            )
-                          )
+  return change_properties(
+    r,
+    Dict(
+      :multiplication_table        => pmt,
+      :sub_fusion_rings            => sr,
+      :frobenius_perron_dimensions => fpd,
+      :upper_central_series        => ucs,
+      :all_gradings                => ag,
+      :automorphism_group          => aut,
+    ),
+  )
 end
 
 """
@@ -240,14 +238,14 @@ function perm_vec_sd_conj(r::FusionRing; order::Symbol = :increasing)::Vector{In
   sd, nsd = binsplit(p -> length(p)==1, pairs)
 
   # flatten list of self-dual elements, remove unit, and and sort by fpdim
-  sdlist = reduce( vcat, sd, init = Int[] )[2:end]
+  sdlist = reduce(vcat, sd; init = Int[])[2:end]
   sort!(sdlist; by = i -> fpd[i], rev = (order == :decreasing))
 
   # sort pairs of dual elements and flatten the list
   sort!(nsd; by = p -> fpd[p[1]], rev = (order == :decreasing))
   nsdlist = reduce(vcat, nsd; init = Int[])
 
-  return vcat( [1], sdlist, nsdlist)
+  return vcat([1], sdlist, nsdlist)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -288,17 +286,18 @@ function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
   )
 end
 
-function tpnames(nms1,nms2)
-  d = Dict{String,Union{Missing,Vector{String}}}()
+function tpnames(nms1, nms2)
+  d = Dict{String, Union{Missing, Vector{String}}}()
   keys1 = keys(nms1)
   keys2 = keys(nms2)
-  sort(collect(keys1)) != sort( collect(keys2) ) && error("The naming keys of the fusion rings do not match")
+  sort(collect(keys1)) != sort(collect(keys2)) &&
+    error("The naming keys of the fusion rings do not match")
 
   for k in keys1
     nk1 = nms1[k]
     nk2 = nms2[k]
     if !ismissing(nk1) && !ismissing(nk2)
-      d[k] = [ n1 * "⊗" * n2 for n1 in nk1 for n2 in nk2 ]
+      d[k] = [n1 * "⊗" * n2 for n1 in nk1 for n2 in nk2]
     else
       d[k] = missing
     end
@@ -320,19 +319,17 @@ function tpnames(nms1,nms2)
       end
 
       for n1 in nk1, n2 in nk2
-        push!( d["miscellaneous"], n1 * "⊗" * n2 )
+        push!(d["miscellaneous"], n1 * "⊗" * n2)
       end
-
     end
   end
 
   return d
-
 end
 
 function tensor_product(rings::Vector{FusionRing})::FusionRing
   # empty product is unit by default
-  isempty(rings) && return from_anyonwiki_code([1,1,0,1])
+  isempty(rings) && return from_anyonwiki_code([1, 1, 0, 1])
   length(rings) == 1 && return rings[1]
 
   out = rings[1]

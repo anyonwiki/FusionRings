@@ -33,7 +33,6 @@ function names(r::FusionRing)
   return r.names
 end
 
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  tex_names                                      ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -61,7 +60,7 @@ end
 export conjugation_matrix
 
 function conjugation_matrix(fr::FusionRing)
-  multiplication_table(fr)[:, :, 1]
+  return multiplication_table(fr)[:, :, 1]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -111,7 +110,9 @@ nzsc = nonzero_structure_constants
 
 export nnzsc
 
-nnzsc(r::FusionRing) = size(nonzero_structure_constants(r),1)
+function nnzsc(r::FusionRing)
+  return size(nonzero_structure_constants(r), 1)
+end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                           frobenius_perron_dimensions                           ┃
@@ -153,9 +154,8 @@ Returns true if `fr` is integral, i.e. fpdim(x) ∈ ℤ for all x ∈ `fr`, and 
 
 """
 function is_integral(fr::FusionRing)::Bool
-  return all( isinteger, fpdims(fr) )
+  return all(isinteger, fpdims(fr))
 end
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                           frobenius_perron_dimension                            ┃
@@ -180,7 +180,6 @@ export fpdim
 
 fpdim = frobenius_perron_dimension
 
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                              is_weakly_integral                                 ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -197,15 +196,13 @@ function is_weakly_integral(fr::FusionRing)::Bool
   return isinteger(fpdim(fr))
 end
 
-
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  numeric_fpdims                                 ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export numeric_fpdims
 
-function numeric_fpdims(fr::FusionRing; force_compute = false )
+function numeric_fpdims(fr::FusionRing; force_compute = false)
   fpds = fr.frobenius_perron_dimensions
 
   if !ismissing(fpds) && !force_compute
@@ -230,7 +227,7 @@ end
 
 export numeric_fpdim
 
-function numeric_fpdim(fr::FusionRing; force_compute = false )
+function numeric_fpdim(fr::FusionRing; force_compute = false)
   fpd = fr.frobenius_perron_dimension
 
   if !ismissing(fpd) && !force_compute
@@ -355,7 +352,6 @@ function conjugate_pairs(fr::FusionRing)::Vector{Vector{Int}}
   return unique([us([a, d(a)]) for a in 1:rank(fr)])
 end
 
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                 anyonwiki_code                                  ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -366,14 +362,13 @@ function anyonwiki_code(r::FusionRing)::Union{Array{Int, 1}, Missing}
   return r.anyonwiki_code
 end
 
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                     uuid                                        ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export uuid
 
-function uuid(r::FusionRing)::Union{Missing,String}
+function uuid(r::FusionRing)::Union{Missing, String}
   return r.uuid
 end
 
@@ -389,7 +384,7 @@ function barcode(fr::FusionRing; force_compute = false)
   #non-self dual ones and non-self dual ones are grouped in dual pairs.
   #the self-dual ones are then sorted by increasing fpdim and the same
   #for the pairs of dual elements
-  sr = sort(fr,by = "sd_conj" )
+  sr = sort(fr; by = "sd_conj")
   r  = rank(sr)
 
   #we only allow permutations that preserve the order above
@@ -397,46 +392,47 @@ function barcode(fr::FusionRing; force_compute = false)
 
   #some useful functions
   fpd(i)     = fpdims(fr)[i]
-  addunit(v) = vcat( 1, v .+ 1 )
+  addunit(v) = vcat(1, v .+ 1)
 
   # first we set up possible permutations for self-dual elements
-  sd  = vcat( filter( p -> length(p) == 1, cp) )
+  sd = vcat(filter(p -> length(p) == 1, cp))
 
-  S_sd =
-    if length(sd) == 1
-      [[]]
-    else
-      tovecsd(σ)   = Vector( σ, length(sd)-1 )
-      map( addunit ∘ tovecsd, _sorted_symmetries(fpd.(sd[2:end])) )
+  S_sd = if length(sd) == 1
+    [[]]
+  else
+    function tovecsd(σ)
+      return Vector(σ, length(sd)-1)
     end
+    map(addunit ∘ tovecsd, _sorted_symmetries(fpd.(sd[2:end])))
+  end
 
   # now we set up possible permutations for non-selfdual elements
-  nsd = filter( p -> length(p) == 2, cp )
+  nsd = filter(p -> length(p) == 2, cp)
 
   S_nsd = if isempty(nsd)
     [[]]
-    else
-      vec = []
+  else
+    vec = []
 
-      for i in 1:length(nsd)
-        d = fpd(nsd[i][1])
-        push!(vec, [i,d] )
-        push!(vec, [i,d] )
-      end
+    for i in 1:length(nsd)
+      d = fpd(nsd[i][1])
+      push!(vec, [i, d])
+      push!(vec, [i, d])
+    end
 
     fixindices(v) = v .+ length(sd)
-    tovecnsd(σ)   = Vector( σ, r - length(sd) )
-    map( fixindices ∘ tovecnsd, _sorted_symmetries(vec) )
+    tovecnsd(σ)   = Vector(σ, r - length(sd))
+    map(fixindices ∘ tovecnsd, _sorted_symmetries(vec))
   end
 
   # don't expand. Do a loop :)
   #
   mt   = multiplication_table(sr)
   mult = multiplicity(sr)
-  max  = mult_tab_code( mt, mult )
+  max  = mult_tab_code(mt, mult)
   for σ_sd in S_sd, σ_nsd in S_nsd
-    perm = vcat( σ_sd, σ_nsd )
-    mtc = mult_tab_code( mt[perm,perm,perm], mult )
+    perm = vcat(σ_sd, σ_nsd)
+    mtc = mult_tab_code(mt[perm, perm, perm], mult)
     mtc > max && (max = mtc)
   end
 
@@ -445,14 +441,12 @@ end
 
 function mult_tab_code(mt::Array{Int64, 3}, mult::Int)
   strl = String[]
-  r = size(mt,1)
+  r = size(mt, 1)
   for a in 1:r, b in 1:r, c in 1:r
-    push!(strl, string(mt[a,b,c]) )
+    push!(strl, string(mt[a, b, c]))
   end
-  p = ZZ( parse( BigInt, join(strl), base = mult+1 ) )
-
+  return p = ZZ(parse(BigInt, join(strl); base = mult+1))
 end
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  is_simple                                      ┃
@@ -470,7 +464,6 @@ function is_simple(fr::FusionRing)::Bool
   return isempty(sub_fusion_rings(fr))
 end
 
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                               sub_fusion_rings                                  ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -480,17 +473,14 @@ export sub_fusion_rings
 function sub_fusion_rings(r::FusionRing; force_compute = false, represent_by_known = true)
   sfr = r.sub_fusion_rings
   if !ismissing(sfr) && !force_compute
-    return [ (t[1], from_uuid(t[2]) ) for t in sfr ]
+    return [(t[1], from_uuid(t[2])) for t in sfr]
   end
 
-    subsets = sub_fusion_ring_subsets(r)
-    mt = multiplication_table(r)
+  subsets = sub_fusion_ring_subsets(r)
+  mt = multiplication_table(r)
   rbk = represent_by_known ? replace_by_known : identity
 
-    [
-    ( s, rbk(fusion_ring(mt[s, s, s])))
-      for s in subsets
-    ]
+  return [(s, rbk(fusion_ring(mt[s, s, s]))) for s in subsets]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -561,8 +551,8 @@ function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
   !all(i -> 1 <= i <= r, S) && return false
 
   # multiplication must be internal
-  for a ∈ S, b ∈ S
-    fusion_outcomes(fr,a,b) ⊈ S && return false
+  for a in S, b in S
+    fusion_outcomes(fr, a, b) ⊈ S && return false
   end
 
   mt = multiplication_table(fr)[S, S, S]
@@ -580,18 +570,23 @@ end
 
 export realizations
 
-function realizations(fr::FusionRing;force_compute = false)::Dict{String,Any}
+function realizations(fr::FusionRing; force_compute = false)::Dict{String, Any}
   rlztns = fr.realizations
 
   vals = collect(values(rlztns))
 
-  if any( ismissing, vals) || any(isnothing, vals) || force_compute
-    return Dict{String,Any}("tensor_product" => decompositions(fr,kind="tensor_product",force_compute=force_compute))
+  if any(ismissing, vals) || any(isnothing, vals) || force_compute
+    return Dict{String, Any}(
+      "tensor_product" =>
+        decompositions(fr; kind = "tensor_product", force_compute = force_compute),
+    )
   end
 
-  return Dict{String,Any}("tensor_product" => [ [ from_uuid(r) for r in decomp ] for decomp in rlztns["tensor_product"] ] )
+  return Dict{String, Any}(
+    "tensor_product" =>
+      [[from_uuid(r) for r in decomp] for decomp in rlztns["tensor_product"]],
+  )
 end
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                            is_equivalent_fusion_ring                            ┃
@@ -775,10 +770,10 @@ Return all permutations `p` whose action on the indices leave the structure cons
 """
 #TODO: write test: should match data in test/testdata/properties
 
-function automorphism_group(fr::FusionRing; force_compute = false )::PermGroup
+function automorphism_group(fr::FusionRing; force_compute = false)::PermGroup
   ag = fr.automorphism_group
   if ismissing(ag) || force_compute
-    return permutation_group( rank(fr), perm.(fusion_ring_automorphisms(fr)) )
+    return permutation_group(rank(fr), perm.(fusion_ring_automorphisms(fr)))
   else
     return ag
   end
@@ -790,14 +785,17 @@ end
 
 export decompositions
 
-function decompositions(fr::FusionRing; kind = "tensor_product", force_compute = false, represent_by_known = true)#::Vector{ Vector{FusionRing} }
-  kind == "tensor_product" || error("Only tensor product decompositions are defined at the moment.")
+function decompositions(
+  fr::FusionRing; kind = "tensor_product", force_compute = false, represent_by_known = true
+)#::Vector{ Vector{FusionRing} }
+  kind == "tensor_product" ||
+    error("Only tensor product decompositions are defined at the moment.")
 
   tpd = (fr.realizations)["tensor_product"]
   if ismissing(tpd) || isnothing(tpd) || force_compute
-    return non_trivial_tensor_product_decompositions(fr,
-                                                     represent_by_known = represent_by_known
-                                                     )
+    return non_trivial_tensor_product_decompositions(
+      fr; represent_by_known = represent_by_known
+    )
   else
     [[from_uuid(id) for id in decomp] for decomp in tpd]
   end
@@ -806,6 +804,7 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                     non_trivial_tensor_product_decompositions                   ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export non_trivial_tensor_product_decompositions
 
 """
@@ -813,44 +812,42 @@ export non_trivial_tensor_product_decompositions
 
 Return non-trivial decompositions of `r` as tensor products of fusion rings.
 """
-function non_trivial_tensor_product_decompositions(fr::FusionRing;represent_by_known = true)::Vector{Vector{FusionRing}}
+function non_trivial_tensor_product_decompositions(
+  fr::FusionRing; represent_by_known = true
+)::Vector{Vector{FusionRing}}
   r = rank(fr)
 
   # since every fusion ring has an identity 1, every component
   # in the tensor product is a subring whose rank divides the rank of fr
-  subrings =
-    filter_equivalents(
-      is_equivalent_fusion_ring,
-      [ t[2] for t in sub_fusion_rings(fr) ]
-    )
+  subrings = filter_equivalents(
+    is_equivalent_fusion_ring, [t[2] for t in sub_fusion_rings(fr)]
+  )
 
   #@info subrings
 
   length(subrings) == 0 && return Vector{Vector{FusionRing}}[]
 
-  proposals = filter( ring -> rem(r,rank(ring)) == 0, subrings )
+  proposals = filter(ring -> rem(r, rank(ring)) == 0, subrings)
 
-  proposals_by_rank = group_by( rank, proposals )
-  posible_ranks   = collect(keys(proposals_by_rank))
+  proposals_by_rank = group_by(rank, proposals)
+  posible_ranks = collect(keys(proposals_by_rank))
 
-  pts = filter( p -> p ⊆ posible_ranks , multiplicative_partitions(r) )
+  pts = filter(p -> p ⊆ posible_ranks, multiplicative_partitions(r))
 
   decomps = Vector{Vector{FusionRing}}()
 
   for p in pts
-    posible_sub_rings_per_rank = [ proposals_by_rank[rk] for rk in p ]
+    posible_sub_rings_per_rank = [proposals_by_rank[rk] for rk in p]
     combinations = cartesian_choices(posible_sub_rings_per_rank)
 
     for combination in combinations
       prod = tensor_product(combination...)
-      is_equivalent_fusion_ring(prod,fr) && push!(decomps, combination)
+      is_equivalent_fusion_ring(prod, fr) && push!(decomps, combination)
     end
   end
 
-  return filter_equivalents( is_equivalent_decomposition, decomps )
-
+  return filter_equivalents(is_equivalent_decomposition, decomps)
 end
-
 
 """_multiplicative_partitions(n)
     Returns all unordered multiplicative decompositions of n into factors     >= 2.
@@ -930,25 +927,24 @@ function cartesian_choices(lists::Vector{Vector{FusionRing}})
   return out
 end
 
-function is_equivalent_decomposition(d1,d2)
+function is_equivalent_decomposition(d1, d2)
   length(d1) ≠ length(d2) && return false
 
-  r_m_nnsd_nnzsc(ring::FusionRing) = ( rank(ring), multiplicity(ring), nnsd(ring), nnzsc(ring) )
+  r_m_nnsd_nnzsc(ring::FusionRing) =
+    (rank(ring), multiplicity(ring), nnsd(ring), nnzsc(ring))
 
   sort(r_m_nnsd_nnzsc.(d1)) ≠ sort(r_m_nnsd_nnzsc.(d1)) && return false
 
   # check if uuids exist and if so compare these
   uuids1 = uuid.(d1)
   uuids2 = uuid.(d2)
-  if !any(ismissing,uuids1) && !any(ismissing, uuids2)
+  if !any(ismissing, uuids1) && !any(ismissing, uuids2)
     return sort(uuids1) == sort(uuids2)
   end
 
   # if standard tests fail we have to do it the hard way
-  return length(filter_equivalents( is_equivalent_fusion_ring, vcat( d1, d2 ) ) ) == length(d1)
+  return length(filter_equivalents(is_equivalent_fusion_ring, vcat(d1, d2))) == length(d1)
 end
-
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                adjoint_fusion_ring                              ┃
@@ -959,14 +955,13 @@ export adjoint_fusion_ring
 function adjoint_fusion_ring(
   ring::FusionRing; represent_by_known = true, force_compute = false
 )::Tuple{Vector{Int}, FusionRing}
-
   ucs = ring.upper_central_series
 
   if !ismissing(ucs) && !force_compute
     if length(ucs) == 1
-      return ( ucs[1][1], from_uuid(ucs[1][2]) )
+      return (ucs[1][1], from_uuid(ucs[1][2]))
     else
-      return ( ucs[2][1], from_uuid(ucs[2][2]) )
+      return (ucs[2][1], from_uuid(ucs[2][2]))
     end
   end
 
@@ -1021,13 +1016,14 @@ end
 
 export upper_central_series
 
-function upper_central_series(fr::FusionRing; force_compute = false, represent_by_known = true )::Vector{Tuple{Vector{Int64},FusionRing}}
+function upper_central_series(
+  fr::FusionRing; force_compute = false, represent_by_known = true
+)::Vector{Tuple{Vector{Int64}, FusionRing}}
   ucs = fr.upper_central_series
 
   if !ismissing(ucs) && !force_compute
-    return [ ( t[1], from_uuid(t[2]) ) for t in ucs  ]
+    return [(t[1], from_uuid(t[2])) for t in ucs]
   end
-
 
   chain = Tuple{Vector{Int}, FusionRing}[]
 
@@ -1036,9 +1032,7 @@ function upper_central_series(fr::FusionRing; force_compute = false, represent_b
   push!(chain, (collect(1:rank(fr)), rbk(fr)))
 
   adjfr(fr) = adjoint_fusion_ring(
-    fr,
-    force_compute = force_compute,
-    represent_by_known = represent_by_known
+    fr; force_compute = force_compute, represent_by_known = represent_by_known
   )
   while true
     S, adj = adjfr(last(chain)[2])
@@ -1156,7 +1150,7 @@ function universal_grading(fr::FusionRing)
     end
   end
   sort!(grading; by = p -> first(p))
-  grading = [ grading[i][2] for i in 1:length(grading) ]
+  grading = [grading[i][2] for i in 1:length(grading)]
 
   function _cond(l1::Vector{Int}, l2::Vector{Int}, l3::Vector{Int})::Bool
     @inbounds for i in l1, j in l2
@@ -1195,36 +1189,38 @@ is  universal grading,  every grading  obtained from U/N,
 where N is a normal subgroup of U.
 """
 
-function all_gradings(fr::FusionRing; force_compute = false)::Vector{Tuple{Vector{Int64},FusionRing}}
+function all_gradings(
+  fr::FusionRing; force_compute = false
+)::Vector{Tuple{Vector{Int64}, FusionRing}}
   #TODO: uncomment line once FusionRing has field all_gradings
   #!force_compute && !ismissing(fr.all_gradings) && return fr.all_gradings
 
-  rank(fr) == 1 && return Tuple{Vector{Int64},FusionRing}[ ( [1], fawc(1,1,0,1) ) ]
+  rank(fr) == 1 && return Tuple{Vector{Int64}, FusionRing}[([1], fawc(1, 1, 0, 1))]
 
   grvec, ug = universal_grading(fr)
 
   UG, ϕ = to_group_with_emb(ug)
 
-  gradings = Vector{Tuple{Vector{Int64},FusionRing}}()
+  gradings = Vector{Tuple{Vector{Int64}, FusionRing}}()
 
   for N in normal_subgroups(UG)
-    UGoverN, π = quo(UG,N)
+    UGoverN, π = quo(UG, N)
     fr_UGoverN = replace_by_known(group_fusion_ring(UGoverN))
     UGel = collect(UG)
 
-    UGoverNeltoInt(el) = findfirst( ==(el) , collect(UGoverN) )
+    UGoverNeltoInt(el) = findfirst(==(el), collect(UGoverN))
 
-    grading_UGoverN = UGoverNeltoInt.(π.([ UGel[ ϕ[gr] ] for gr in grvec ]))
+    grading_UGoverN = UGoverNeltoInt.(π.([UGel[ϕ[gr]] for gr in grvec]))
 
     #fr_UGoverN might have different mult table from built-in ring but we prefer to
     #use the built in rings so we need to permute the elements of the grading
     code = anyonwiki_code(fr_UGoverN)
-    σ    = first( which_permutation( fr_UGoverN, fawc(code) ) )
+    σ    = first(which_permutation(fr_UGoverN, fawc(code)))
 
-    g = [ invperm(σ)[gr] for gr in grading_UGoverN ]
-    f = permute( σ, fr_UGoverN )
+    g = [invperm(σ)[gr] for gr in grading_UGoverN]
+    f = permute(σ, fr_UGoverN)
 
-    push!( gradings, ( g, f ) )
+    push!(gradings, (g, f))
   end
 
   sort!(gradings; by = g -> rank(g[2]))
@@ -1232,20 +1228,18 @@ function all_gradings(fr::FusionRing; force_compute = false)::Vector{Tuple{Vecto
   return gradings
 end
 
-
 # to_group_with_emb(fr::FusionRing) returns an oscar group G and a vector
 # v such that the v[i]'th element of collect(G) corresponds to the
 # i'th element of fr
-function to_group_with_emb(fr::FusionRing)::Tuple{Group,Vector}
-  G  = to_group(fr)
+function to_group_with_emb(fr::FusionRing)::Tuple{Group, Vector}
+  G = to_group(fr)
 
   ct  = cayley_table(G)
   frG = group_fusion_ring(ct)
-  vec = first(which_permutation(frG,fr))
+  vec = first(which_permutation(frG, fr))
 
-  G, vec
+  return G, vec
 end
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                    commutator                                   ┃
@@ -1288,8 +1282,7 @@ end
 
 export characters
 
-function characters(ring::FusionRing; use_numerics = true, force_compute=false)
-
+function characters(ring::FusionRing; use_numerics = true, force_compute = false)
   if !ismissing(ring.characters) && !force_compute
     return from_qqb_id(ring.characters)
   end
@@ -1302,24 +1295,24 @@ function characters(ring::FusionRing; use_numerics = true, force_compute=false)
 
   rank(ring) == 1 && return [qqbar(1);]
 
-    mt   = multiplication_table(ring)
-    r    = rank(ring)
-    mats = [mt[i, :, :] for i in 1:r]
-    qqb  = algebraic_closure(QQ)
+  mt   = multiplication_table(ring)
+  r    = rank(ring)
+  mats = [mt[i, :, :] for i in 1:r]
+  qqb  = algebraic_closure(QQ)
 
-    sort_mat(mat) = sortslices(mat, dims = 1, by = char_sort_crit)
+  sort_mat(mat) = sortslices(mat; dims = 1, by = char_sort_crit)
 
-    if use_numerics
-      # find numeric diagonalizing matrix
-      V = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
-      # find symbolic evals
-      evals = union(vcat([eigenvalues(matrix(qqb, m)) for m in mats] ...))
-      # identify evals in V, sort mat, and convert to matrix of qqb's
-      chars = replace_by_known(evals).(V)
-    else
-      chars = (normalize_first_col ∘ diagonalizing_matrix)(mats)
-    end
-    matrix(qqb, sort_mat(chars))
+  if use_numerics
+    # find numeric diagonalizing matrix
+    V = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
+    # find symbolic evals
+    evals = union(vcat([eigenvalues(matrix(qqb, m)) for m in mats] ...))
+    # identify evals in V, sort mat, and convert to matrix of qqb's
+    chars = replace_by_known(evals).(V)
+  else
+    chars = (normalize_first_col ∘ diagonalizing_matrix)(mats)
+  end
+  return matrix(qqb, sort_mat(chars))
 end
 
 function numeric_diagonalizing_matrix(mats, tries::Int = 64, tol::Real = 1e-12)
@@ -1439,7 +1432,9 @@ end
 
 export formal_codegrees
 
-function formal_codegrees(fr::FusionRing; usecharacters = true, force_compute = false )::Vector{QQBarFieldElem}
+function formal_codegrees(
+  fr::FusionRing; usecharacters = true, force_compute = false
+)::Vector{QQBarFieldElem}
   fcd = fr.formal_codegrees
   !ismissing(fcd) && !force_compute && return from_qqb_id.(fcd)
 
@@ -1448,22 +1443,21 @@ function formal_codegrees(fr::FusionRing; usecharacters = true, force_compute = 
 
   if is_commutative(fr) && usecharacters
     chars = characters(fr)
-    φ(i) = j -> chars[i,j]
+    φ(i) = j -> chars[i, j]
 
-    return sort( [ sum( φ(i)(j) * φ(i)(d(j)) for j in 1:r ) for i in 1:r ], by = z -> abs(z) )
+    return sort([sum(φ(i)(j) * φ(i)(d(j)) for j in 1:r) for i in 1:r]; by = z -> abs(z))
   else
-    mat(i) = matrix(ZZ,multiplication_table(fr)[i,:,:])
-    m   = sum( mat(d(i)) * mat(i) for i in 1:r  )
-    es  = eigenspaces( QQBar, m )
+    mat(i) = matrix(ZZ, multiplication_table(fr)[i, :, :])
+    m = sum(mat(d(i)) * mat(i) for i in 1:r)
+    es = eigenspaces(QQBar, m)
     fcs = QQBarFieldElem[]
 
     for k in collect(keys(es))
       for i in 1:nrows(es[k])
-        push!(fcs,k)
+        push!(fcs, k)
       end
     end
-    return sort( fcs, by = z -> abs(z) )
-
+    return sort(fcs; by = z -> abs(z))
   end
 end
 
@@ -1500,13 +1494,12 @@ function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = 
 
   rank(ring) == 1 && return [1.0;]
 
+  mt   = multiplication_table(ring)
+  r    = rank(ring)
+  mats = [mt[i, :, :] for i in 1:r]
+  V    = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
 
-    mt   = multiplication_table(ring)
-    r    = rank(ring)
-    mats = [mt[i, :, :] for i in 1:r]
-    V    = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
-
-    sortslices(V; dims = 1, by = num_char_sort_crit)
+  return sortslices(V; dims = 1, by = num_char_sort_crit)
 end
 
 # Numeric sort criterion for characters
@@ -1522,7 +1515,6 @@ function num_char_sort_crit(v)
 
   return (- are_real(v), angl(v), absval(v))
 end
-
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  is_commutative                                 ┃

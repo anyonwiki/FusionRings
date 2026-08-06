@@ -58,39 +58,42 @@ sup_digits_dict = Dict(
 # Names are grouped per category. The user can change the order of importance preference of which
 # category is used to display the names of all rings
 
-global _naming_priority_order = [ "quantum_group_like", "group_like", "physics", "miscellaneous" ]
+global _naming_priority_order = [
+  "quantum_group_like", "group_like", "physics", "miscellaneous"
+]
 global _naming_allow_exceptions
-global _naming_exceptions = Dict(
-  [ 2, 1, 0, 2 ] => "Fibonacci",
-  [ 3, 1, 0, 1 ] => "Ising"
-)
+global _naming_exceptions = Dict([2, 1, 0, 2] => "Fibonacci", [3, 1, 0, 1] => "Ising")
 
 export set_naming_priority!
 
 function set_naming_priority!(v::Vector{String})
-  v ⊈ _naming_priority_order && error("The priorities given for naming should be a subset of [ \"quantum_group\", \"group_like\", \"physics\", \"miscellaneous\" ] ")
+  v ⊈ _naming_priority_order && error(
+    "The priorities given for naming should be a subset of [ \"quantum_group\", \"group_like\", \"physics\", \"miscellaneous\" ] ",
+  )
   np = v
   for s in _naming_priority_order
-    s ∉ np && push!(np,s)
+    s ∉ np && push!(np, s)
   end
-  global _naming_priority_order = np
+  return global _naming_priority_order = np
 end
 
 export set_naming_exceptions!
 
 function set_naming_exceptions!(b::Bool)
-  _naming_allow_exceptions = b
+  return _naming_allow_exceptions = b
 end
 
-function set_naming_exceptions(d::Dict{Vector{Int64},String})
-  !all( c -> length(c) == 4, collect( keys(d)) ) && error("The keys of the dictionary of naming exceptions should be anyonwiki_codes, i.e. integer vectors of lenght 4.")
+function set_naming_exceptions(d::Dict{Vector{Int64}, String})
+  !all(c -> length(c) == 4, collect(keys(d))) && error(
+    "The keys of the dictionary of naming exceptions should be anyonwiki_codes, i.e. integer vectors of lenght 4.",
+  )
 
-  global _naming_exceptions = d
+  return global _naming_exceptions = d
 end
 
 function name(fr::FusionRing)
   c = anyonwiki_code(fr)
-  haskey(_naming_exceptions,c) && return _naming_exceptions[c]
+  haskey(_naming_exceptions, c) && return _naming_exceptions[c]
 
   nms = names(fr)
 
@@ -109,7 +112,7 @@ function Base.show(io::IO, ring::FusionRing)
   !ismissing(n) && return p("FR(" * n * ")")
 
   if !ismissing(ring.anyonwiki_code)
-    return p("FR(" * join( string.(ring.anyonwiki_code) , ", " ) * ")")
+    return p("FR(" * join(string.(ring.anyonwiki_code), ", ") * ")")
   end
 
   props = string.(comap([rank, multiplicity, nnsd], ring))
@@ -197,18 +200,17 @@ end
 function product_string(fr::FusionRing, a::Int, b::Int)
   names = labels(fr)
   d = fusion_product(fr, a, b)
-  rhs =
-    if isempty(d)
-      "0"
-    else
-      function tostr(tuple)
-        c, m = tuple
-        m == 1 ? names[c] : string( m, " ", names[c] )
-      end
-
-      outcomes = sort(collect(d),by=(x->x[1]))
-      join(tostr.(outcomes), " ⊕ ")
+  rhs = if isempty(d)
+    "0"
+  else
+    function tostr(tuple)
+      c, m = tuple
+      return m == 1 ? names[c] : string(m, " ", names[c])
     end
+
+    outcomes = sort(collect(d); by = (x->x[1]))
+    join(tostr.(outcomes), " ⊕ ")
+  end
   return string(names[a], " × ", names[b], " = ", rhs)
 end
 

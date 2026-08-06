@@ -72,7 +72,8 @@
       fo = FusionRings.fusion_outcomes(z2, 1, 1)
 
       check_true(
-        fo isa Vector{Int}, "FusionRings.fusion_outcomes(z2, 1, 1) did not return a Vector{Int}"
+        fo isa Vector{Int},
+        "FusionRings.fusion_outcomes(z2, 1, 1) did not return a Vector{Int}",
       )
     end
 
@@ -81,14 +82,28 @@
       z3 = zn_fusion_ring(3)
       su2_2 = su2k_fusion_ring(2)
 
-      check_equal(FusionRings.fusion_outcomes(z2, 1, 1), [1], "FusionRings.fusion_outcomes(z2, 1, 1) was not [1]")
-
-      check_equal(FusionRings.fusion_outcomes(z2, 2, 2), [1], "FusionRings.fusion_outcomes(z2, 2, 2) was not [1]")
-
-      check_equal(FusionRings.fusion_outcomes(z3, 2, 2), [3], "FusionRings.fusion_outcomes(z3, 2, 2) was not [3]")
+      check_equal(
+        FusionRings.fusion_outcomes(z2, 1, 1),
+        [1],
+        "FusionRings.fusion_outcomes(z2, 1, 1) was not [1]",
+      )
 
       check_equal(
-        FusionRings.fusion_outcomes(su2_2, 2, 2), [1, 3], "FusionRings.fusion_outcomes(su2_2, 2, 2) was not [1,3]"
+        FusionRings.fusion_outcomes(z2, 2, 2),
+        [1],
+        "FusionRings.fusion_outcomes(z2, 2, 2) was not [1]",
+      )
+
+      check_equal(
+        FusionRings.fusion_outcomes(z3, 2, 2),
+        [3],
+        "FusionRings.fusion_outcomes(z3, 2, 2) was not [3]",
+      )
+
+      check_equal(
+        FusionRings.fusion_outcomes(su2_2, 2, 2),
+        [1, 3],
+        "FusionRings.fusion_outcomes(su2_2, 2, 2) was not [1,3]",
       )
     end
 
@@ -235,7 +250,7 @@
           check_mt_equal(
             actual,
             expected_tabs[j],
-            "permute did not match Anyonica permuted_tabs.json for case $idx, with ring with code: $code, and permutation nr $j: $p"
+            "permute did not match Anyonica permuted_tabs.json for case $idx, with ring with code: $code, and permutation nr $j: $p",
           )
         end
       end
@@ -252,9 +267,12 @@
       qd_perm = FusionRings.perm_vec_qd(z3)
       sd_perm = FusionRings.perm_vec_sd_conj(z3)
 
-      check_true(qd_perm isa Vector{Int}, "FusionRings.perm_vec_qd(z3) did not return a Vector{Int}")
+      check_true(
+        qd_perm isa Vector{Int}, "FusionRings.perm_vec_qd(z3) did not return a Vector{Int}"
+      )
       return check_true(
-        sd_perm isa Vector{Int}, "FusionRings.perm_vec_sd_conj(z3) did not return a Vector{Int}"
+        sd_perm isa Vector{Int},
+        "FusionRings.perm_vec_sd_conj(z3) did not return a Vector{Int}",
       )
     end
 
@@ -263,7 +281,9 @@
       z4 = zn_fusion_ring(4)
 
       check_equal(
-        FusionRings.perm_vec_qd(z3), [1, 2, 3], "FusionRings.perm_vec_qd(z3) was not the identity permutation"
+        FusionRings.perm_vec_qd(z3),
+        [1, 2, 3],
+        "FusionRings.perm_vec_qd(z3) was not the identity permutation",
       )
 
       check_equal(
@@ -433,18 +453,18 @@
 
           check_true(
             p !== nothing,
-            "which_permutation returned nothing for Anyonica permuted_tabs.json case ($idx,$j) with ring with code $code, and permutation $p"
+            "which_permutation returned nothing for Anyonica permuted_tabs.json case ($idx,$j) with ring with code $code, and permutation $p",
           )
 
           check_equal_tensor(
             FusionRings.permute_mult_tab(multiplication_table(r), p),
             multiplication_table(target),
-            "which_permutation returned an incorrect permutation for Anyonica permuted_tabs.json case ($idx,$j) with ring with code $code, and permutation $p"
+            "which_permutation returned an incorrect permutation for Anyonica permuted_tabs.json case ($idx,$j) with ring with code $code, and permutation $p",
           )
 
           check_true(
             is_equivalent_fusion_ring(r, target),
-            "is_equivalent_fusion_ring returned false for Anyonica permuted_tabs.json case ($idx,$j) with ring with code $code, and permutation $p"
+            "is_equivalent_fusion_ring returned false for Anyonica permuted_tabs.json case ($idx,$j) with ring with code $code, and permutation $p",
           )
         end
       end

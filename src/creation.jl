@@ -29,16 +29,19 @@ function group_fusion_ring(grp::Group)::FusionRing
 end
 
 function grpnames(v::Vector{String})
-    Dict{String,Union{Missing,Vector{String}}}(
-      "quantum_group_like" => missing ,
-      "group_like"         => v,
-      "physics"            => missing,
-      "miscellaneous"      => missing
-    )
+  return Dict{String, Union{Missing, Vector{String}}}(
+    "quantum_group_like" => missing,
+    "group_like"         => v,
+    "physics"            => missing,
+    "miscellaneous"      => missing,
+  )
 end
 
 function group_fusion_ring(
-  ct::Matrix{Int64}; names::Vector{String} = ["G"], texnames::Vector{String} = ["G"], checktable::Bool = true
+  ct::Matrix{Int64};
+  names::Vector{String} = ["G"],
+  texnames::Vector{String} = ["G"],
+  checktable::Bool = true,
 )::FusionRing
   if checktable
     _is_group_table(ct) ||
@@ -75,7 +78,7 @@ function zn_fusion_ring(n::Int)::FusionRing
     mt;
     names = grpnames(["ℤ" * subscript_integer(n), "Z_$n"]),
     texnames = grpnames(["\\mathbb{Z}_{$n}"]),
-    labels = string.(0:(n - 1))
+    labels = string.(0:(n - 1)),
   )
 end
 
@@ -94,9 +97,9 @@ function group_rep_fusion_ring(g)
 
   return fusion_ring(
     mt;
-    names = grpnames( ["Rep("*nms*")"] ),
-    texnames = grpnames( ["Rep("*texnms*")"] ),
-    labels = ["χ"*subscript_integer(i) for i in 1:r]
+    names = grpnames(["Rep("*nms*")"]),
+    texnames = grpnames(["Rep("*texnms*")"]),
+    labels = ["χ"*subscript_integer(i) for i in 1:r],
   )
 end
 
@@ -131,10 +134,10 @@ Rank is 2n. Objects are:
 - n+1..2n: "rho*g" sector (s X_g), indexed by g=1..n as n+g.
 """
 function HI_fusion_ring(g::Group)::FusionRing
-  ct    = cayley_table(g);
-  names = mscnames(  ["HI(" * describe(g) * ")"] )
-  texnames = mscnames( ["\\mathrm{HI}(" * tex_describe(g) * ")"] )
-  return HI_fusion_ring(ct; names = names,texnames = texnames, checktable = false)
+  ct = cayley_table(g);
+  names = mscnames(["HI(" * describe(g) * ")"])
+  texnames = mscnames(["\\mathrm{HI}(" * tex_describe(g) * ")"])
+  return HI_fusion_ring(ct; names = names, texnames = texnames, checktable = false)
 end
 
 function HI_fusion_ring(
@@ -222,7 +225,7 @@ Rank is n+1 (group elements + one extra object).
 function TY_fusion_ring(g::Group)::FusionRing
   names = mscnames(["TY(" * describe(g) * ")"])
   texnames = mscnames(["TY(" * tex_describe(g) * ")"])
-  return TY_fusion_ring(cayley_table(g), names = names, texnames = texnames)
+  return TY_fusion_ring(cayley_table(g); names = names, texnames = texnames)
 end
 
 function TY_fusion_ring(tab::AbstractMatrix{<:Integer}; names::Vector{String} = String[])
@@ -345,7 +348,7 @@ function psu2k_fusion_ring(k::Int)::FusionRing
     "["*string(numerator((i-1)//2))*"/"*string(denominator((i-1)//2))*"]" for i in 1:rk
   ]
 
-  nms = qgnames( ["PSU(2)" * subscript_integer(k), "PSU(2)_"*string(k)] )
+  nms = qgnames(["PSU(2)" * subscript_integer(k), "PSU(2)_"*string(k)])
 
   return fusion_ring(mt; names = nms, labels = elnames)
 end
@@ -355,11 +358,11 @@ function range_psu2k(i::Int, j::Int, k::Int)
 end
 
 function qgnames(v::Vector{String})
-  Dict{String,Union{Missing,Vector{String}}}(
+  return Dict{String, Union{Missing, Vector{String}}}(
     "quantum_group_like" => v,
     "group_like"         => missing,
     "physics"            => missing,
-    "miscellaneous"      => missing
+    "miscellaneous"      => missing,
   )
 end
 
@@ -375,7 +378,7 @@ function su2k_fusion_ring(k::Int)::FusionRing
       continue
     end
   end
-  nms = qgnames( ["SU(2)" * subscript_integer(k), "SU(2)_"*string(k)] )
+  nms = qgnames(["SU(2)" * subscript_integer(k), "SU(2)_"*string(k)])
   return fusion_ring(mt; names = nms, labels = string.(0:k))
 end
 
@@ -411,10 +414,8 @@ function son2_fusion_ring(N::Int)::FusionRing
   size(mt, 1) == length(labels) ||
     error("son2_fusion_ring: label length mismatch with mt rank")
 
-  nms = qgnames( ["SO($N)" * subscript_integer(2), "SO($N)_2","metaplectic(n)"] )
-  return fusion_ring(
-    mt; names = nms, labels = labels
-  )
+  nms = qgnames(["SO($N)" * subscript_integer(2), "SO($N)_2", "metaplectic(n)"])
+  return fusion_ring(mt; names = nms, labels = labels)
 end
 
 export metaplectic_fusion_ring

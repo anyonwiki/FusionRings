@@ -11,9 +11,15 @@
       s = FusionRings.subscript_integer(12)
       t = FusionRings.superscript_integer(12)
 
-      check_true(b isa AbstractString, "FusionRings.bold_integer(12) did not return a string")
-      check_true(s isa AbstractString, "FusionRings.subscript_integer(12) did not return a string")
-      check_true(t isa AbstractString, "FusionRings.superscript_integer(12) did not return a string")
+      check_true(
+        b isa AbstractString, "FusionRings.bold_integer(12) did not return a string"
+      )
+      check_true(
+        s isa AbstractString, "FusionRings.subscript_integer(12) did not return a string"
+      )
+      check_true(
+        t isa AbstractString, "FusionRings.superscript_integer(12) did not return a string"
+      )
 
       check_false(isempty(b), "bold_integer(12) returned an empty string")
       check_false(isempty(s), "FusionRings.subscript_integer(12) returned an empty string")
@@ -82,13 +88,16 @@
       c = FusionRings.element_to_string(2, "x")
 
       check_true(
-        a isa AbstractString, "FusionRings.element_to_string(0, \"x\") did not return a string"
+        a isa AbstractString,
+        "FusionRings.element_to_string(0, \"x\") did not return a string",
       )
       check_true(
-        b isa AbstractString, "FusionRings.element_to_string(1, \"x\") did not return a string"
+        b isa AbstractString,
+        "FusionRings.element_to_string(1, \"x\") did not return a string",
       )
       return check_true(
-        c isa AbstractString, "FusionRings.element_to_string(2, \"x\") did not return a string"
+        c isa AbstractString,
+        "FusionRings.element_to_string(2, \"x\") did not return a string",
       )
     end
 
@@ -99,7 +108,9 @@
         "FusionRings.element_to_string(0, \"x\") did not return the empty string",
       )
       check_equal(
-        FusionRings.element_to_string(1, "x"), "x", "FusionRings.element_to_string(1, \"x\") did not return \"x\""
+        FusionRings.element_to_string(1, "x"),
+        "x",
+        "FusionRings.element_to_string(1, \"x\") did not return \"x\"",
       )
       check_equal(
         FusionRings.element_to_string(2, "x"),
@@ -128,20 +139,28 @@
       z3 = zn_fusion_ring(3)
       s = FusionRings.row_to_string(z3, [0, 1, 0])
 
-      return check_true(s isa AbstractString, "FusionRings.row_to_string did not return a string")
+      return check_true(
+        s isa AbstractString, "FusionRings.row_to_string did not return a string"
+      )
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       z3 = zn_fusion_ring(3)
 
       check_equal(
-        FusionRings.row_to_string(z3, [1, 0, 0]), "0", "FusionRings.row_to_string(Z3, [1,0,0]) did not return \"0\""
+        FusionRings.row_to_string(z3, [1, 0, 0]),
+        "0",
+        "FusionRings.row_to_string(Z3, [1,0,0]) did not return \"0\"",
       )
       check_equal(
-        FusionRings.row_to_string(z3, [0, 1, 0]), "1", "FusionRings.row_to_string(Z3, [0,1,0]) did not return \"1\""
+        FusionRings.row_to_string(z3, [0, 1, 0]),
+        "1",
+        "FusionRings.row_to_string(Z3, [0,1,0]) did not return \"1\"",
       )
       check_equal(
-        FusionRings.row_to_string(z3, [0, 0, 1]), "2", "FusionRings.row_to_string(Z3, [0,0,1]) did not return \"2\""
+        FusionRings.row_to_string(z3, [0, 0, 1]),
+        "2",
+        "FusionRings.row_to_string(Z3, [0,0,1]) did not return \"2\"",
       )
       check_equal(
         FusionRings.row_to_string(z3, [1, 0, 1]),
@@ -170,8 +189,12 @@
       z2 = zn_fusion_ring(2)
       s = FusionRings.product_string(z2, 1, 1)
 
-      check_true(s isa AbstractString, "FusionRings.product_string(Z2, 1, 1) did not return a string")
-      return check_false(isempty(s), "FusionRings.product_string(Z2, 1, 1) returned an empty string")
+      check_true(
+        s isa AbstractString, "FusionRings.product_string(Z2, 1, 1) did not return a string"
+      )
+      return check_false(
+        isempty(s), "FusionRings.product_string(Z2, 1, 1) returned an empty string"
+      )
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
@@ -284,8 +307,7 @@
         startswith(shown_named, "FR("), "show(zn_fusion_ring(2)) did not begin with \"FR(\""
       )
       check_true(
-        occursin("ℤ₂", shown_named),
-        "show(zn_fusion_ring(2)) did not contain the ring name",
+        occursin("ℤ₂", shown_named), "show(zn_fusion_ring(2)) did not contain the ring name"
       )
       check_true(
         endswith(shown_named, ")"), "show(zn_fusion_ring(2)) did not end with \")\""
@@ -330,7 +352,9 @@
       f = FusionRings.fix_poly_string(" 3//4 * x^12 ")
 
       check_true(a isa AbstractString, "FusionRings.fix_fractions did not return a string")
-      check_true(b isa AbstractString, "FusionRings.FusionRings.fix_mult did not return a string")
+      check_true(
+        b isa AbstractString, "FusionRings.FusionRings.fix_mult did not return a string"
+      )
       check_true(c isa AbstractString, "FusionRings.fix_spaces did not return a string")
       check_true(d isa AbstractString, "FusionRings.fix_powers did not return a string")
       check_true(e isa AbstractString, "FusionRings.fix_cyclo did not return a string")
@@ -349,11 +373,19 @@
         "FusionRings.fix_fractions did not convert multiple rationals in one string",
       )
 
-      check_equal(FusionRings.fix_mult("2*x"), "2x", "FusionRings.fix_mult(\"2*x\") did not remove *")
-      check_equal(FusionRings.fix_mult("a*b*c"), "abc", "FusionRings.fix_mult(\"a*b*c\") did not remove all *")
+      check_equal(
+        FusionRings.fix_mult("2*x"), "2x", "FusionRings.fix_mult(\"2*x\") did not remove *"
+      )
+      check_equal(
+        FusionRings.fix_mult("a*b*c"),
+        "abc",
+        "FusionRings.fix_mult(\"a*b*c\") did not remove all *",
+      )
 
       check_equal(
-        FusionRings.fix_spaces("a b  c"), "abc", "FusionRings.fix_spaces(\"a b  c\") did not remove spaces"
+        FusionRings.fix_spaces("a b  c"),
+        "abc",
+        "FusionRings.fix_spaces(\"a b  c\") did not remove spaces",
       )
       check_equal(
         FusionRings.fix_spaces("   x   "),
@@ -411,7 +443,9 @@
       g1 = FusionRings.is_geometric_array([1, 2, 4, 8])
 
       check_true(fs isa Tuple, "factor_squares(12) did not return a tuple")
-      return check_true(g1 isa Bool, "FusionRings.is_geometric_array([1,2,4,8]) did not return a Bool")
+      return check_true(
+        g1 isa Bool, "FusionRings.is_geometric_array([1,2,4,8]) did not return a Bool"
+      )
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
@@ -421,24 +455,39 @@
       check_equal(factor_squares(18), (3, 2), "factor_squares(18) was not (3,2)")
       check_equal(factor_squares(16), (4, 1), "factor_squares(16) was not (4,1)")
 
-      check_true(FusionRings.is_geometric_array(Int[]), "FusionRings.is_geometric_array(Int[]) should be true")
-      check_true(FusionRings.is_geometric_array([1]), "FusionRings.is_geometric_array([1]) should be true")
-      check_false(FusionRings.is_geometric_array([2]), "FusionRings.is_geometric_array([2]) should be false")
       check_true(
-        FusionRings.is_geometric_array([1, 2, 4, 8]), "FusionRings.is_geometric_array([1,2,4,8]) should be true"
+        FusionRings.is_geometric_array(Int[]),
+        "FusionRings.is_geometric_array(Int[]) should be true",
       )
       check_true(
-        FusionRings.is_geometric_array([1, -1, 1, -1]), "FusionRings.is_geometric_array([1,-1,1,-1]) should be true"
+        FusionRings.is_geometric_array([1]),
+        "FusionRings.is_geometric_array([1]) should be true",
       )
       check_false(
-        FusionRings.is_geometric_array([1, 2, 5, 10]), "FusionRings.is_geometric_array([1,2,5,10]) should be false"
+        FusionRings.is_geometric_array([2]),
+        "FusionRings.is_geometric_array([2]) should be false",
+      )
+      check_true(
+        FusionRings.is_geometric_array([1, 2, 4, 8]),
+        "FusionRings.is_geometric_array([1,2,4,8]) should be true",
+      )
+      check_true(
+        FusionRings.is_geometric_array([1, -1, 1, -1]),
+        "FusionRings.is_geometric_array([1,-1,1,-1]) should be true",
+      )
+      check_false(
+        FusionRings.is_geometric_array([1, 2, 5, 10]),
+        "FusionRings.is_geometric_array([1,2,5,10]) should be false",
       )
 
       # is_power_sum: x^2 + x + 1 has coefficients [1,1,1]
       R, x = Oscar.polynomial_ring(QQ, "x")
-      check_true(FusionRings.is_power_sum(x^2 + x + 1), "is_power_sum(x^2 + x + 1) should be true")
+      check_true(
+        FusionRings.is_power_sum(x^2 + x + 1), "is_power_sum(x^2 + x + 1) should be true"
+      )
       return check_false(
-        FusionRings.is_power_sum(x^2 + 2*x + 1), "is_power_sum(x^2 + 2x + 1) should be false"
+        FusionRings.is_power_sum(x^2 + 2*x + 1),
+        "is_power_sum(x^2 + 2x + 1) should be false",
       )
     end
 

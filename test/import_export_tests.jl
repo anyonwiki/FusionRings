@@ -81,17 +81,17 @@
     maybe_testset("basic", "1. basic construction") do
       js_fc = Dict("formal_code" => [2, 1, 0, 7])
       js_mt = Dict("mult_tab" => [[[1, 0], [0, 1]], [[0, 1], [1, 0]]])
-      js_tpd = Dict("realizations" => Dict("TensorProduct" => missing ))
+      js_tpd = Dict("realizations" => Dict("TensorProduct" => missing))
 
       check_true(
         FusionRings.fcfromjs(js_fc) isa Vector,
         "FusionRings.fcfromjs did not return a Vector on a basic formal_code input",
       )
+
       check_true(
         FusionRings.mtfromjs(js_mt) isa Array{Int, 3},
         "FusionRings.mtfromjs did not return an Int 3-tensor on a basic mult_tab input",
       )
-
 
       check_true(
         FusionRings.rfromjs(js_tpd) isa Dict,
@@ -99,23 +99,27 @@
       )
     end
 
-
-
     maybe_testset("intermediate", "2. intermediate correctness") do
       js_fc1 = Dict("formal_code" => [2, 1, 0, 7])
       js_fc2 = Dict("anyonwiki_code" => [3, 1, 2, 9])
       js_fc3 = Dict("formal_code" => Any[])
 
       check_equal(
-        FusionRings.fcfromjs(js_fc1), [ 2, 1, 0, 7 ], "FusionRings.fcfromjs did not decode formal_code correctly"
+        FusionRings.fcfromjs(js_fc1),
+        [2, 1, 0, 7],
+        "FusionRings.fcfromjs did not decode formal_code correctly",
       )
+
       check_equal(
         FusionRings.fcfromjs(js_fc2),
-        [3,1,2,9],
+        [3, 1, 2, 9],
         "FusionRings.fcfromjs did not decode legacy anyonwiki_code correctly",
       )
+
       check_equal(
-        ismissing(FusionRings.fcfromjs(js_fc3)), true, "FusionRings.fcfromjs did not return missing on an empty code"
+        ismissing(FusionRings.fcfromjs(js_fc3)),
+        true,
+        "FusionRings.fcfromjs did not return missing on an empty code",
       )
 
       js_mt = Dict("mult_tab" => [[[1, 0], [0, 1]], [[0, 1], [1, 0]]])
@@ -131,16 +135,12 @@
         "FusionRings.mtfromjs did not reconstruct the expected Z2 multiplication table",
       )
 
-
-
       js_tpd1 = Dict("realizations" => Dict("tensor_product" => missing))
       check_equal(
         ismissing(FusionRings.rfromjs(js_tpd1)["tensor_product"]),
         true,
         "FusionRings.rfromjs did not return missing for missing decomposition list",
       )
-
-
 
       js_tpd2 = Dict("realizations" => Dict("tensor_product" => Vector{String}[]))
       check_equal(
@@ -149,24 +149,26 @@
         "FusionRings.rfromjs did not return missing for missing decomposition list",
       )
 
-
-
       js_tpd3 = Dict(
-        "realizations" => Dict("tensor_product" =>[["uuid1","uuid2"], ["uuid3"]] )
+        "realizations" => Dict("tensor_product" => [["uuid1", "uuid2"], ["uuid3"]])
       )
       check_equal(
         FusionRings.rfromjs(js_tpd3)["tensor_product"],
-        [["uuid1","uuid2"], ["uuid3"]],
+        [["uuid1", "uuid2"], ["uuid3"]],
         "FusionRings.tpdfromjs did not decode direct decomposition data correctly",
       )
 
-
-
       js_names = Dict("names" => FusionRings.mscnames(["A", "B"]))
       js_texnames = Dict("texnames" => FusionRings.mscnames(["A", "B"]))
-      check_equal(FusionRings.nfromjs(js_names)["miscellaneous"], ["A", "B"], "nfromjs did not decode names correctly")
+      check_equal(
+        FusionRings.nfromjs(js_names)["miscellaneous"],
+        ["A", "B"],
+        "nfromjs did not decode names correctly",
+      )
       return check_equal(
-        FusionRings.tnfromjs(js_texnames)["miscellaneous"], ["A", "B"], "tnfromjs did not decode texnames correctly"
+        FusionRings.tnfromjs(js_texnames)["miscellaneous"],
+        ["A", "B"],
+        "tnfromjs did not decode texnames correctly",
       )
     end
 
@@ -198,6 +200,7 @@
           code,
           "FusionRings.fcfromjs failed on formal_code for Anyonica properties case $idx",
         )
+
         check_equal(
           FusionRings.fcfromjs(Dict("anyonwiki_code" => code)),
           code,
@@ -217,13 +220,11 @@
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
-
       check_equal(
         ismissing(FusionRings.ctsfromjs(Dict("categorifications" => nothing))),
         true,
         "FusionRings.ctsfromjs did not return missing when categorifications was nothing",
       )
-
 
       # TODO: uncomment once categorifications are given by uuids
       #check_equal(
@@ -231,8 +232,7 @@
       #  [[1, 2, 3, 4], [5, 6, 7, 8]],
       #  "FusionRings.ctsfromjs did not decode categorification codes correctly",
       #)
-      end
-
+    end
   end
 
   # ============================================================
@@ -244,18 +244,23 @@
       r = zn_fusion_ring(2)
 
       check_true(
-        FusionRings.mttojs(r) isa Vector, "FusionRings.mttojs(zn_fusion_ring(2)) did not return a nested vector"
+        FusionRings.mttojs(r) isa Vector,
+        "FusionRings.mttojs(zn_fusion_ring(2)) did not return a nested vector",
       )
+
       check_true(
         FusionRings.fusion_ring_string(r) isa AbstractString,
         "FusionRings.fusion_ring_string(zn_fusion_ring(2)) did not return a string",
       )
+
       check_true(
         FusionRings.fusion_ring_file_name(r) isa AbstractString,
         "FusionRings.fusion_ring_file_name(zn_fusion_ring(2)) did not return a string",
       )
+
       return check_true(
-        FusionRings.ring_to_dict(r) isa Dict, "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not return a Dict"
+        FusionRings.ring_to_dict(r) isa Dict,
+        "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not return a Dict",
       )
     end
 
@@ -270,16 +275,26 @@
       )
 
       check_equal(
-        FusionRings.missing_to_nothing(missing), nothing, "missing_to_nothing(missing) was not nothing"
+        FusionRings.missing_to_nothing(missing),
+        nothing,
+        "missing_to_nothing(missing) was not nothing",
       )
-      check_equal(FusionRings.missing_to_nothing(5), 5, "missing_to_nothing(5) did not return 5")
+
+      check_equal(
+        FusionRings.missing_to_nothing(5), 5, "missing_to_nothing(5) did not return 5"
+      )
 
       check_equal(
         FusionRings.reim(1.5 + 2.0im),
         [1.5, 2.0],
         "FusionRings.reim(::ComplexF64) did not split real/imag parts correctly",
       )
-      check_equal(FusionRings.reim(3.0), [3.0, 0.0], "FusionRings.reim(::Float64) did not produce [x,0.0]")
+
+      check_equal(
+        FusionRings.reim(3.0),
+        [3.0, 0.0],
+        "FusionRings.reim(::Float64) did not produce [x,0.0]",
+      )
 
       mat = ComplexF64[1.0+0.0im 2.0-1.0im; 0.0+3.0im -1.5+0.5im]
       check_equal(
@@ -305,10 +320,12 @@
         haskey(d, "mult_tab"),
         "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"mult_tab\"",
       )
+
       check_true(
         haskey(d, "anyonwiki_code"),
         "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"anyonwiki_id\"",
       )
+
       return check_true(
         haskey(d, "frobenius_perron_dimension"),
         "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"frobenius_perron_dimension\"",
@@ -332,6 +349,7 @@
           haskey(d, "mult_tab"),
           "FusionRings.ring_to_dict output did not include mult_tab for Anyonica zn_tables.json case $idx",
         )
+
         check_equal_tensor(
           FusionRings.mtfromjs(d),
           multiplication_table(r),
@@ -372,11 +390,17 @@
           multiplication_table(r),
           "import_ring(export_ring(r)) did not preserve the multiplication table for r = zn_fusion_ring(2)",
         )
+
         check_equal(
-          rank(r2), rank(r), "import_ring(export_ring(r)) did not preserve the rank for r = zn_fusion_ring(2)"
+          rank(r2),
+          rank(r),
+          "import_ring(export_ring(r)) did not preserve the rank for r = zn_fusion_ring(2)",
         )
+
         return check_equal(
-          labels(r2), labels(r), "import_ring(export_ring(r)) did not preserve labels for r = zn_fusion_ring(2)"
+          labels(r2),
+          labels(r),
+          "import_ring(export_ring(r)) did not preserve labels for r = zn_fusion_ring(2)",
         )
       end
     end
@@ -423,7 +447,9 @@
       mktempdir() do dir
         file = joinpath(dir, "rings.json")
         FusionRings.export_rings(file, rs)
-        return check_true(isfile(file), "FusionRings.export_rings did not create the output file")
+        return check_true(
+          isfile(file), "FusionRings.export_rings did not create the output file"
+        )
       end
     end
 
@@ -431,7 +457,9 @@
       rs = [zn_fusion_ring(2), zn_fusion_ring(3)]
       d = FusionRings.rings_to_dict(rs)
 
-      check_true(haskey(d, "info"), "FusionRings.rings_to_dict output did not contain key \"info\"")
+      check_true(
+        haskey(d, "info"), "FusionRings.rings_to_dict output did not contain key \"info\""
+      )
 
       mktempdir() do dir
         file = joinpath(dir, "rings.json")

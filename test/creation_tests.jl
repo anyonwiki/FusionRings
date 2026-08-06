@@ -93,7 +93,9 @@
         labels(r), ["0", "1"], "fusion_ring did not preserve labels for a valid Z2 table"
       )
       check_equal(
-        names(r)["miscellaneous"], ["Z2"], "fusion_ring did not preserve names for a valid Z2 table"
+        names(r)["miscellaneous"],
+        ["Z2"],
+        "fusion_ring did not preserve names for a valid Z2 table",
       )
       check_true(
         is_commutative(r),
@@ -809,7 +811,7 @@
     =#
 
     D3_tab = [
-      1 2 3 4 5 6 
+      1 2 3 4 5 6
       2 3 1 6 4 5
       3 1 2 5 6 4
       4 5 6 1 2 3

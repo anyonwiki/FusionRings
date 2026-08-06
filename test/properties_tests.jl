@@ -14,13 +14,14 @@ using Oscar
         "multiplication_table(z3) did not return an Int 3-tensor",
       )
       check_true(rank(z3) isa Int, "rank(z3) did not return an Int")
-      check_true(names(z3) isa Dict{String, Union{Missing, Vector{String}}}, "names(z3) did not return a Vector{String}")
+      check_true(
+        names(z3) isa Dict{String, Union{Missing, Vector{String}}},
+        "names(z3) did not return a Vector{String}",
+      )
       check_true(
         labels(z3) isa Vector{String}, "labels(z3) did not return a Vector{String}"
       )
-      return check_true(
-        tex_names(z3) isa Dict, "tex_names(z3) did not return a Dict"
-      )
+      return check_true(tex_names(z3) isa Dict, "tex_names(z3) did not return a Dict")
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
@@ -28,7 +29,9 @@ using Oscar
 
       check_equal(rank(z3), 3, "rank(zn_fusion_ring(3)) was not 3")
       check_equal(labels(z3), ["0", "1", "2"], "labels(zn_fusion_ring(3)) were incorrect")
-      check_equal(names(z3)["group_like"], ["ℤ₃","Z_3"], "names(zn_fusion_ring(3)) were incorrect")
+      check_equal(
+        names(z3)["group_like"], ["ℤ₃", "Z_3"], "names(zn_fusion_ring(3)) were incorrect"
+      )
       return check_equal(
         size(multiplication_table(z3)),
         (3, 3, 3),
@@ -147,7 +150,9 @@ using Oscar
       z4 = zn_fusion_ring(4)
 
       check_equal(
-        string.(fpdims(z3)), ["{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}"], "fpdims(zn_fusion_ring(3)) were not all 1"
+        string.(fpdims(z3)),
+        ["{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}"],
+        "fpdims(zn_fusion_ring(3)) were not all 1",
       )
       check_equal(string(fpdim(z3)), "{a1: 3.00000}", "fpdim(zn_fusion_ring(3)) was not 3")
 
@@ -156,7 +161,9 @@ using Oscar
         ["{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}"],
         "fpdims(zn_fusion_ring(4)) were not all 1",
       )
-      return check_equal(string(fpdim(z4)), "{a1: 4.00000}", "fpdim(zn_fusion_ring(4)) was not 4")
+      return check_equal(
+        string(fpdim(z4)), "{a1: 4.00000}", "fpdim(zn_fusion_ring(4)) was not 4"
+      )
     end
 
     maybe_testset("reference", "3. reference / Anyonica parity") do
@@ -214,8 +221,8 @@ using Oscar
 
       check_true(g isa Bool, "is_group_ring(z3) did not return a Bool")
       check_true(c isa Bool, "is_commutative(z3) did not return a Bool")
-      check_true(cats isa Dict,
-        "categories_with_properties(z3) returned an unexpected type",
+      check_true(
+        cats isa Dict, "categories_with_properties(z3) returned an unexpected type"
       )
       return check_true(
         ic === missing || ic isa Bool, "is_categorifiable(z3) returned an unexpected type"
@@ -251,7 +258,9 @@ using Oscar
       b2 = is_sub_fusion_ring(z4, [1, 3])
       ss = sub_fusion_ring_subsets(z4)
 
-      check_true(b1 isa Bool, "FusionRings._internal_multiplication(z4, [1,3]) did not return a Bool")
+      check_true(
+        b1 isa Bool, "FusionRings._internal_multiplication(z4, [1,3]) did not return a Bool"
+      )
       check_true(b2 isa Bool, "is_sub_fusion_ring(z4, [1,3]) did not return a Bool")
       return check_true(
         ss isa Vector{Vector{Int}},
@@ -320,7 +329,8 @@ using Oscar
       inj = which_injection(zn_fusion_ring(2), z4)
 
       check_true(
-        cl isa Vector{Int}, "FusionRings._fusion_closure(z4, [3]) did not return a Vector{Int}"
+        cl isa Vector{Int},
+        "FusionRings._fusion_closure(z4, [3]) did not return a Vector{Int}",
       )
       check_true(
         sub isa FusionRing, "restrict_subring(z4, [1,3]) did not return a FusionRing"
@@ -340,7 +350,9 @@ using Oscar
       z2 = zn_fusion_ring(2)
 
       check_equal(
-        FusionRings._fusion_closure(z4, [3]), [1, 3], "FusionRings._fusion_closure(z4, [3]) was not [1,3]"
+        FusionRings._fusion_closure(z4, [3]),
+        [1, 3],
+        "FusionRings._fusion_closure(z4, [3]) was not [1,3]",
       )
       check_equal(
         FusionRings._fusion_closure(z4, [2]),
@@ -379,7 +391,6 @@ using Oscar
     end
   end
 
-
   # ============================================================
   # is_equivalent_fusion_ring / fusion_ring_automorphisms
   # ============================================================
@@ -387,7 +398,7 @@ using Oscar
   @testset "equivalences and automorphisms" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
-      pz3 = permute([1, 3, 2],z3)
+      pz3 = permute([1, 3, 2], z3)
 
       eq = is_equivalent_fusion_ring(z3, pz3)
       autos = fusion_ring_automorphisms(z3)
@@ -403,7 +414,7 @@ using Oscar
       z2 = zn_fusion_ring(2)
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
-      pz3 = permute([1, 3, 2],z3)
+      pz3 = permute([1, 3, 2], z3)
 
       check_true(
         is_equivalent_fusion_ring(z3, pz3),
@@ -518,7 +529,7 @@ using Oscar
         check_equal(
           fusion_rings_output,
           anyonica_output,
-          "adjoint fusion ring did not match Anyonica adjoint_fusion_ring.json for case $idx, with ring with code $code"
+          "adjoint fusion ring did not match Anyonica adjoint_fusion_ring.json for case $idx, with ring with code $code",
         )
       end
 
@@ -527,23 +538,18 @@ using Oscar
       for idx in oracle_case_indices("upper_central_series.json", data)
         code = data["Input"][idx]
         r = ring_from_anyonica_code(code)
-        fusion_rings_output =
-        unique(
-          map(
-            vec -> [ vec[1], anyonwiki_code(vec[2]) ],
-            upper_central_series(r)
-          )
-          )
+        fusion_rings_output = unique(
+          map(vec -> [vec[1], anyonwiki_code(vec[2])], upper_central_series(r))
+        )
 
-        anyonica_output= data["Output"][idx]
+        anyonica_output = data["Output"][idx]
 
         check_equal(
           fusion_rings_output,
           anyonica_output,
-          "upper central series did not match Anyonica upper_central_series.json for case $idx, with ring with code $code"
+          "upper central series did not match Anyonica upper_central_series.json for case $idx, with ring with code $code",
         )
       end
-
 
       data = load_anyonica_data("universal_grading.json")
 
@@ -551,14 +557,14 @@ using Oscar
         code = data["Input"][idx]
         r = ring_from_anyonica_code(code)
         ug = universal_grading(r)
-        fusion_rings_output = [ ug[1], anyonwiki_code(ug[2]) ]
+        fusion_rings_output = [ug[1], anyonwiki_code(ug[2])]
 
         anyonica_output = data["Output"][idx]
 
         check_equal(
           fusion_rings_output,
           anyonica_output,
-          "universal grading did not match Anyonica universal_grading.json for case $idx, with ring with code $code"
+          "universal grading did not match Anyonica universal_grading.json for case $idx, with ring with code $code",
         )
       end
     end
@@ -571,34 +577,27 @@ using Oscar
   @testset "all_gradings" begin
     maybe_testset("basic", "1. basic construction") do
       z6 = zn_fusion_ring(6)
-      D_3 = fawc(6,1,2,1)
+      D_3 = fawc(6, 1, 2, 1)
       trivial_ring = frl[1]
 
       ag1 = all_gradings(z6)
       ag2 = all_gradings(D_3)
       ag3 = all_gradings(trivial_ring)
 
-      check_true(
-        ag1 isa Vector,
-        "all_gradings(z6) did not return a vector",
-      )
+      check_true(ag1 isa Vector, "all_gradings(z6) did not return a vector")
 
-      check_true(
-        ag2 isa Vector,
-        "all_gradings(D_3) did not return a vector",
-      )
+      check_true(ag2 isa Vector, "all_gradings(D_3) did not return a vector")
       return check_true(
-        ag3 isa Vector,
-        "all_gradings(trivial_ring) did not return a vector",
+        ag3 isa Vector, "all_gradings(trivial_ring) did not return a vector"
       )
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       z6 = zn_fusion_ring(6)
-      D_3 = fawc(6,1,2,1)
+      D_3 = fawc(6, 1, 2, 1)
       trivial_ring = frl[1]
 
-      rings_to_codes(ag) = [ [ gr[1], anyonwiki_code(gr[2]) ] for gr in ag  ]
+      rings_to_codes(ag) = [[gr[1], anyonwiki_code(gr[2])] for gr in ag]
 
       ag1 = rings_to_codes(all_gradings(z6))
       ag2 = rings_to_codes(all_gradings(D_3))
@@ -607,47 +606,45 @@ using Oscar
       check_equal(
         ag1,
         [
-          [[1, 1, 1, 1, 1, 1], [1,1,0,1] ],
-          [[1, 2, 1, 2, 1, 2], [2,1,0,1] ],
-          [[1, 2, 3, 1, 2, 3], [3,1,2,1] ],
-          [[1, 3, 5, 2, 6, 4], [6,1,4,1] ]
-        ]
-        , """all_gradings(z6) did not return
-        [
-          [ [1, 1, 1, 1, 1, 1], FC(1,1,0,1) ],
-          [ [1, 2, 1, 2, 1, 2], FC(2,1,0,1) ],
-          [ [1, 2, 3, 1, 2, 3], FC(3,1,2,1) ],
-          [ [1, 3, 5, 2, 6, 4], FC(6,1,4,1) ]
-        ]
-        """
+          [[1, 1, 1, 1, 1, 1], [1, 1, 0, 1]],
+          [[1, 2, 1, 2, 1, 2], [2, 1, 0, 1]],
+          [[1, 2, 3, 1, 2, 3], [3, 1, 2, 1]],
+          [[1, 3, 5, 2, 6, 4], [6, 1, 4, 1]],
+        ],
+        """all_gradings(z6) did not return
+      [
+        [ [1, 1, 1, 1, 1, 1], FC(1,1,0,1) ],
+        [ [1, 2, 1, 2, 1, 2], FC(2,1,0,1) ],
+        [ [1, 2, 3, 1, 2, 3], FC(3,1,2,1) ],
+        [ [1, 3, 5, 2, 6, 4], FC(6,1,4,1) ]
+      ]
+      """,
       )
 
       check_equal(
         ag2,
         [
-          [[1, 1, 1, 1, 1, 1], [1,1,0,1] ],
-          [[1, 2, 2, 2, 1, 1], [2,1,0,1] ],
-          [[1, 2, 3, 4, 5, 6], [6,1,2,1] ]
-        ]
-        , """all_gradings(D_3) did not return
-        [
-          [[1, 1, 1, 1, 1, 1], FR(1,1,0,1)]
-          [[1, 2, 2, 2, 1, 1], FR(2,1,0,1)]
-          [[1, 2, 3, 4, 5, 6], FR(6,1,2,1)]
-        ]
-        """
+          [[1, 1, 1, 1, 1, 1], [1, 1, 0, 1]],
+          [[1, 2, 2, 2, 1, 1], [2, 1, 0, 1]],
+          [[1, 2, 3, 4, 5, 6], [6, 1, 2, 1]],
+        ],
+        """all_gradings(D_3) did not return
+      [
+        [[1, 1, 1, 1, 1, 1], FR(1,1,0,1)]
+        [[1, 2, 2, 2, 1, 1], FR(2,1,0,1)]
+        [[1, 2, 3, 4, 5, 6], FR(6,1,2,1)]
+      ]
+      """,
       )
 
       check_equal(
         ag3,
-        [
-          [[1], [1,1,0,1] ]
-        ]
-        , """all_gradings(triv_ring) did not return
-        [
-          [[1], FR(1,1,0,1)]
-        ]
-        """
+        [[[1], [1, 1, 0, 1]]],
+        """all_gradings(triv_ring) did not return
+      [
+        [[1], FR(1,1,0,1)]
+      ]
+      """,
       )
     end
   end
@@ -711,7 +708,9 @@ using Oscar
       z3 = zn_fusion_ring(3)
 
       check_equal(
-        string.(characters(z1)), ["{a1: 1.00000}"], "characters(zn_fusion_ring(1)) were not [1]"
+        string.(characters(z1)),
+        ["{a1: 1.00000}"],
+        "characters(zn_fusion_ring(1)) were not [1]",
       )
 
       check_equal(
@@ -748,5 +747,4 @@ using Oscar
       @test true
     end
   end
-
 end

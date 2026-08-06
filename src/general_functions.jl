@@ -86,16 +86,15 @@ A vector containing only non-equivalent elements from `l`
 
 """
 function filter_equivalents(is_equivalent::Function, l::AbstractVector)
-    result = eltype(l)[]
-    for e in l
-        # Add e only if it's not equivalent to any element already in result
-        if !any(x -> is_equivalent(e, x), result)
-            push!(result, e)
-        end
+  result = eltype(l)[]
+  for e in l
+    # Add e only if it's not equivalent to any element already in result
+    if !any(x -> is_equivalent(e, x), result)
+      push!(result, e)
     end
-    return result
+  end
+  return result
 end
-
 
 function intidmat(dim::Int64)::Matrix{Int}
   id = zeros(Int, dim, dim)

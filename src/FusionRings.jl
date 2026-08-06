@@ -51,10 +51,10 @@ This requires package data to be loaded (normally happens during `__init__`).
 """
 function from_anyonwiki_code(r::Integer, m::Integer, nnsd::Integer, i::Integer)
   _ensure_frd_initialized()
-  !haskey(frd,[r,m,nnsd]) && error("code not found in database")
-  !haskey(frd[[r,m,nnsd]],i) && error("code not found in database")
+  !haskey(frd, [r, m, nnsd]) && error("code not found in database")
+  !haskey(frd[[r, m, nnsd]], i) && error("code not found in database")
 
-  return frd[[r,m,nnsd]][i]
+  return frd[[r, m, nnsd]][i]
 end
 
 export from_uuid
@@ -62,14 +62,14 @@ export from_uuid
 function from_uuid(s::String)
   !haskey(uuid_dict, s) && error("uuid not found")
 
-  uuid_dict[s]
+  return uuid_dict[s]
 end
 
 function from_anyonwiki_code(v::AbstractVector{<:Integer})
   _ensure_frd_initialized()
   length(v) == 4 || error("anyonwiki_code expects a vector of 4 integers.")
   r, m, nnsd, i = Int.(collect(v))
-  return from_anyonwiki_code(r,m,nnsd,i)
+  return from_anyonwiki_code(r, m, nnsd, i)
 end
 
 const fawc = from_anyonwiki_code
@@ -86,9 +86,10 @@ function __init__()
   # IF FIRST TIME USING PACKAGE: split number data in separate files
   # these will be loaded on demand rather than all at the same time.
 
-  ids  = Oscar.load(joinpath(datadir, "qqb_ids.mrdi"))
+  ids = Oscar.load(joinpath(datadir, "qqb_ids.mrdi"))
   nf = length(ids)
-  if "split_number_data" ∉ fns || length(readdir(joinpath(datadir,"split_number_data"))) < nf
+  if "split_number_data" ∉ fns ||
+    length(readdir(joinpath(datadir, "split_number_data"))) < nf
     println("Dataset of algebraic numbers not yet optimized. Optimizing for future use.")
     # Create directory for numbers
     splitdatapath = joinpath(datadir, "split_number_data/")
@@ -123,7 +124,7 @@ function __init__()
 
   global frl = fusion_ring_list
 
-  global uuid_dict = Dict( uuid(r) => r for r in frl )
+  global uuid_dict = Dict(uuid(r) => r for r in frl)
 
   # for unknown rings, the rank, mult, and nnsd can
   # be determined quickly. We will group the known fusion rings by 
@@ -141,7 +142,7 @@ function __init__()
 
   global fusion_ring_dict = Dict(k => fourth_to_dict(v) for (k, v) in grouped_by_first3)
 
-  global frd = fusion_ring_dict
+  return global frd = fusion_ring_dict
 end
 
 end

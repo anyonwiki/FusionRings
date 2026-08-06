@@ -61,7 +61,7 @@ end
 export conjugation_matrix
 
 function conjugation_matrix(fr::FusionRing)
-  @views multiplication_table(fr)[:, :, 1]
+  multiplication_table(fr)[:, :, 1]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

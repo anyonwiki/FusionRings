@@ -465,7 +465,7 @@ using Oscar
   # adjoint_fusion_ring / upper_central_series / is_nilpotent / universal_grading
   # ============================================================
 
-  @testset "adjoint_fusion_ring / upper_central_series / is_nilpotent / universal_grading" begin
+  @testset "adjoint rings, UCS, nilpotency, and gradings" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
 
@@ -684,7 +684,7 @@ using Oscar
   # characters / numeric_characters / numeric FP helpers
   # ============================================================
 
-  @testset "characters / numeric_characters / numeric FP helpers" begin
+  @testset "characters and FPDims" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
 

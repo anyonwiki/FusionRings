@@ -818,22 +818,28 @@ function non_trivial_tensor_product_decompositions(fr::FusionRing;represent_by_k
 
   # since every fusion ring has an identity 1, every component
   # in the tensor product is a subring whose rank divides the rank of fr
-  subrings  = unique( [ d["fusion_ring"] for d in sub_fusion_rings(fr) ] )
+  subrings =
+    filter_equivalents(
+      is_equivalent_fusion_ring,
+      [ t[2] for t in sub_fusion_rings(fr) ]
+    )
+
+  #@info subrings
 
   length(subrings) == 0 && return Vector{Vector{FusionRing}}[]
 
   proposals = filter( ring -> rem(r,rank(ring)) == 0, subrings )
 
-  propsbyrank = group_by( rank, proposals )
-  pos_ranks = collect(keys(propsbyrank))
+  proposals_by_rank = group_by( rank, proposals )
+  posible_ranks   = collect(keys(proposals_by_rank))
 
-  pts = filter( p -> p ⊆ pos_ranks , multiplicative_partitions(r) )
+  pts = filter( p -> p ⊆ posible_ranks , multiplicative_partitions(r) )
 
   decomps = Vector{Vector{FusionRing}}()
 
   for p in pts
-    pos_sub_rings_per_rank = [ propsbyrank[rk] for rk in p ]
-    combinations = cartesian_choices(pos_sub_rings_per_rank)
+    posible_sub_rings_per_rank = [ proposals_by_rank[rk] for rk in p ]
+    combinations = cartesian_choices(posible_sub_rings_per_rank)
 
     for combination in combinations
       prod = tensor_product(combination...)
@@ -841,7 +847,7 @@ function non_trivial_tensor_product_decompositions(fr::FusionRing;represent_by_k
     end
   end
 
-  return decomps
+  return filter_equivalents( is_equivalent_decomposition, decomps )
 
 end
 

@@ -1288,16 +1288,20 @@ end
 
 export characters
 
-function characters(ring::FusionRing; use_numerics = true)
-  if !(ring.characters === missing)
+function characters(ring::FusionRing; use_numerics = true, force_compute=false)
+
+  if !ismissing(ring.characters) && !force_compute
     return from_qqb_id(ring.characters)
-  elseif !FusionRings.is_commutative(ring)
+  end
+
+  if !FusionRings.is_commutative(ring)
     error(
       "Calculation of characters for non-commutative fusion ring is not implemented yet."
     )
-  elseif rank(ring) == 1
-    return [qqbar(1)]
-  else
+  end
+
+  rank(ring) == 1 && return [qqbar(1);]
+
     mt   = multiplication_table(ring)
     r    = rank(ring)
     mats = [mt[i, :, :] for i in 1:r]
@@ -1316,7 +1320,6 @@ function characters(ring::FusionRing; use_numerics = true)
       chars = (normalize_first_col ∘ diagonalizing_matrix)(mats)
     end
     matrix(qqb, sort_mat(chars))
-  end
 end
 
 function numeric_diagonalizing_matrix(mats, tries::Int = 64, tol::Real = 1e-12)
@@ -1327,7 +1330,6 @@ function numeric_diagonalizing_matrix(mats, tries::Int = 64, tol::Real = 1e-12)
     for i in 1:r
       D = imat * mats[i] * mat
       @inbounds for j in 1:r
-        ;
         D[j, j] = 0.0;
       end #set diagonal el = 0
 
@@ -1349,7 +1351,7 @@ function numeric_diagonalizing_matrix(mats, tries::Int = 64, tol::Real = 1e-12)
 
     V = Matrix(eigen(M).vectors)    # symmetric not guaranteed; generic eigen
 
-    # need to take inv sicne Oscar's (and our) definition of diagonalizing matrix
+    # need to take inv since Oscar's (and our) definition of diagonalizing matrix
     # is inverse of that of LinearAlgebra package
     is_diagonalizing_matrix(V, mats) && return inv(V)
 
@@ -1494,9 +1496,11 @@ function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = 
     error(
       "Calculation of characters for non-commutative fusion ring is not implemented yet."
     )
-  elseif rank(ring) == 1
-    return [qqbar(1)]
-  else
+  end
+
+  rank(ring) == 1 && return [1.0;]
+
+
     mt   = multiplication_table(ring)
     r    = rank(ring)
     mats = [mt[i, :, :] for i in 1:r]

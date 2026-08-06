@@ -957,8 +957,19 @@ end
 export adjoint_fusion_ring
 
 function adjoint_fusion_ring(
-  ring::FusionRing; represent_by_known = true
+  ring::FusionRing; represent_by_known = true, force_compute = false
 )::Tuple{Vector{Int}, FusionRing}
+
+  ucs = ring.upper_central_series
+
+  if !ismissing(ucs) && !force_compute
+    if length(ucs) == 1
+      return ( ucs[1][1], from_uuid(ucs[1][2]) )
+    else
+      return ( ucs[2][1], from_uuid(ucs[2][2]) )
+    end
+  end
+
   d(i) = conjugate_element(ring, i)
 
   el_seen = falses(rank(ring))

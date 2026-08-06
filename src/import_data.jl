@@ -561,9 +561,9 @@ function tex_describe(gp::Group)
   s = replace(s, "Q8" => "\\mathbb{H}")
   s = replace(s, r"S\d+" => m -> "S_{$(m[2:end])}")
   s = replace(s, r"Q\d+" => m -> "Q_{$(m[2:end])}")
+  s = replace(s, "Z" => "\\mathbb{Z}")
   s = replace(s, r"C\d+" => m -> "\\mathbb{Z}_{$(m[2:end])}")
   s = replace(s, r"D\d+" => m -> "D_{$(m[2:end])}")
-  s = replace(s, "Z" => "\\mathbb{Z}")
   s = replace(s, "x" => "\\times")
   return s
 end

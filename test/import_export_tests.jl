@@ -81,43 +81,25 @@
     maybe_testset("basic", "1. basic construction") do
       js_fc = Dict("formal_code" => [2, 1, 0, 7])
       js_mt = Dict("mult_tab" => [[[1, 0], [0, 1]], [[0, 1], [1, 0]]])
-      js_bc = Dict("barcode" => "123456789")
-      js_tpd = Dict("tensor_product_decompositions" => Any[])
-      js_nch = Dict("numeric_characters" => [[[1.0, 0.0]]])
-      js_nfpds = Dict("numeric_frobenius_perron_dimensions" => [[1.0, 0.0], [2.0, 0.0]])
-      js_nfpd = Dict("numeric_frobenius_perron_dimension" => [3.0, 0.0])
+      js_tpd = Dict("realizations" => Dict("TensorProduct" => missing ))
 
       check_true(
-        FusionRings.fcfromjs(js_fc) isa String,
-        "FusionRings.fcfromjs did not return a string on a basic formal_code input",
+        FusionRings.fcfromjs(js_fc) isa Vector,
+        "FusionRings.fcfromjs did not return a Vector on a basic formal_code input",
       )
       check_true(
         FusionRings.mtfromjs(js_mt) isa Array{Int, 3},
         "FusionRings.mtfromjs did not return an Int 3-tensor on a basic mult_tab input",
       )
-      #= commenting out since we might want to use strings for barcodes
+
+
       check_true(
-        FusionRings.bcfromjs(js_bc) isa Oscar.ZZRingElem,
-        "FusionRings.bcfromjs did not return a ZZRingElem on a basic barcode input",
-      )
-      =#
-      check_true(
-        FusionRings.tpdfromjs(js_tpd) isa Vector,
-        "tpdfromjs did not return a vector on an empty decomposition input",
-      )
-      check_true(
-        FusionRings.nchfromjs(js_nch) isa Matrix{ComplexF64},
-        "FusionRings.nchfromjs did not return a ComplexF64 matrix on a basic input",
-      )
-      check_true(
-        FusionRings.nfpdsfromjs(js_nfpds) isa Vector{ComplexF64},
-        "FusionRings.nfpdsfromjs did not return a ComplexF64 vector on a basic input",
-      )
-      return check_true(
-        FusionRings.nfpdfromjs(js_nfpd) isa ComplexF64,
-        "FusionRings.nfpdfromjs did not return a ComplexF64 on a basic input",
+        FusionRings.rfromjs(js_tpd) isa Dict,
+        "realizations did not return a Dict on an empty decomposition input",
       )
     end
+
+
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       js_fc1 = Dict("formal_code" => [2, 1, 0, 7])
@@ -125,11 +107,11 @@
       js_fc3 = Dict("formal_code" => Any[])
 
       check_equal(
-        FusionRings.fcfromjs(js_fc1), "anyonwiki_fcrm_fr__2_1_0_7", "FusionRings.fcfromjs did not decode formal_code correctly"
+        FusionRings.fcfromjs(js_fc1), [ 2, 1, 0, 7 ], "FusionRings.fcfromjs did not decode formal_code correctly"
       )
       check_equal(
         FusionRings.fcfromjs(js_fc2),
-        "anyonwiki_fcrm_fr__3_1_2_9",
+        [3,1,2,9],
         "FusionRings.fcfromjs did not decode legacy anyonwiki_code correctly",
       )
       check_equal(
@@ -149,68 +131,42 @@
         "FusionRings.mtfromjs did not reconstruct the expected Z2 multiplication table",
       )
 
-      js_bc = Dict("barcode" => "123456789")
+
+
+      js_tpd1 = Dict("realizations" => Dict("tensor_product" => missing))
       check_equal(
-        string(FusionRings.FusionRings.bcfromjs(js_bc)),
-        "123456789",
-        "FusionRings.FusionRings.bcfromjs did not reconstruct the expected barcode value",
+        ismissing(FusionRings.rfromjs(js_tpd1)["tensor_product"]),
+        true,
+        "FusionRings.rfromjs did not return missing for missing decomposition list",
       )
 
-      js_tpd1 = Dict("tensor_product_decompositions" => Any[])
+
+
+      js_tpd2 = Dict("realizations" => Dict("tensor_product" => Vector{String}[]))
       check_equal(
-        FusionRings.tpdfromjs(js_tpd1),
-        Any[],
-        "FusionRings.tpdfromjs did not return [] for an empty decomposition list",
+        FusionRings.rfromjs(js_tpd2)["tensor_product"],
+        Vector{String}[],
+        "FusionRings.rfromjs did not return missing for missing decomposition list",
       )
 
-      js_tpd2 = Dict(
-        "tensor_product_decompositions" => [[[2, 1, 0, 1], [3, 1, 0, 1]], [[4, 1, 0, 1]]]
+
+
+      js_tpd3 = Dict(
+        "realizations" => Dict("tensor_product" =>[["uuid1","uuid2"], ["uuid3"]] )
       )
       check_equal(
-        FusionRings.tpdfromjs(js_tpd2),
-        [[[2, 1, 0, 1], [3, 1, 0, 1]], [[4, 1, 0, 1]]],
+        FusionRings.rfromjs(js_tpd3)["tensor_product"],
+        [["uuid1","uuid2"], ["uuid3"]],
         "FusionRings.tpdfromjs did not decode direct decomposition data correctly",
       )
 
-      js_nch1 = Dict("numeric_characters" => nothing)
-      check_equal(
-        ismissing(FusionRings.nchfromjs(js_nch1)),
-        true,
-        "FusionRings.nchfromjs did not return missing when numeric_characters was nothing",
-      )
 
-      js_nch2 = Dict(
-        "numeric_characters" => [[[1.0, 0.0], [0.0, 1.0]], [[0.0, -1.0], [2.0, 0.5]]]
-      )
-      expected_nch2 = ComplexF64[
-        1.0 + 0.0im 0.0 + 1.0im
-        0.0 - 1.0im 2.0 + 0.5im
-      ]
-      check_equal(
-        FusionRings.nchfromjs(js_nch2),
-        expected_nch2,
-        "FusionRings.nchfromjs did not decode a 2×2 complex matrix correctly",
-      )
 
-      js_nfpds = Dict("numeric_frobenius_perron_dimensions" => [[1.0, 0.0], [2.5, -1.0]])
-      check_equal(
-        FusionRings.nfpdsfromjs(js_nfpds),
-        ComplexF64[1.0 + 0.0im, 2.5 - 1.0im],
-        "FusionRings.nfpdsfromjs did not decode numeric FP dimensions correctly",
-      )
-
-      js_nfpd = Dict("numeric_frobenius_perron_dimension" => [3.0, -2.0])
-      check_equal(
-        FusionRings.nfpdfromjs(js_nfpd),
-        3.0 - 2.0im,
-        "FusionRings.nfpdfromjs did not decode numeric FP dimension correctly",
-      )
-
-      js_names = Dict("names" => ["A", "B"])
-      js_texnames = Dict("texnames" => ["A", "B"])
-      check_equal(FusionRings.nfromjs(js_names), ["A", "B"], "nfromjs did not decode names correctly")
+      js_names = Dict("names" => FusionRings.mscnames(["A", "B"]))
+      js_texnames = Dict("texnames" => FusionRings.mscnames(["A", "B"]))
+      check_equal(FusionRings.nfromjs(js_names)["miscellaneous"], ["A", "B"], "nfromjs did not decode names correctly")
       return check_equal(
-        FusionRings.tnfromjs(js_texnames), ["A", "B"], "tnfromjs did not decode texnames correctly"
+        FusionRings.tnfromjs(js_texnames)["miscellaneous"], ["A", "B"], "tnfromjs did not decode texnames correctly"
       )
     end
 
@@ -239,12 +195,12 @@
 
         check_equal(
           FusionRings.fcfromjs(Dict("formal_code" => code)),
-          FusionRings.formal_code_to_id(code),
+          code,
           "FusionRings.fcfromjs failed on formal_code for Anyonica properties case $idx",
         )
         check_equal(
           FusionRings.fcfromjs(Dict("anyonwiki_code" => code)),
-          FusionRings.formal_code_to_id(code),
+          code,
           "FusionRings.fcfromjs failed on anyonwiki_code for Anyonica properties case $idx",
         )
       end
@@ -257,67 +213,26 @@
 
   @testset "misc import-side helpers" begin
     maybe_testset("basic", "1. basic construction") do
-      return check_true(
-        FusionRings.vec_to_cflt([1.0, 2.0]) isa ComplexF64,
-        "FusionRings.vec_to_cflt([re,im]) did not return a ComplexF64",
-      )
+      nothing
     end
 
     maybe_testset("intermediate", "2. intermediate correctness") do
-      check_equal(
-        FusionRings.vec_to_cflt([1.0, 2.0]),
-        1.0 + 2.0im,
-        "FusionRings.vec_to_cflt([1.0,2.0]) did not decode correctly",
-      )
 
       check_equal(
         ismissing(FusionRings.ctsfromjs(Dict("categorifications" => nothing))),
         true,
         "FusionRings.ctsfromjs did not return missing when categorifications was nothing",
       )
-      check_equal(
-        FusionRings.ctsfromjs(Dict("categorifications" => Any[])),
-        Vector{Int64}[],
-        "FusionRings.ctsfromjs did not return an empty vector-of-vectors on empty input",
-      )
-      check_equal(
-        FusionRings.ctsfromjs(Dict("categorifications" => [[1, 2, 3, 4], [5, 6, 7, 8]])),
-        [[1, 2, 3, 4], [5, 6, 7, 8]],
-        "FusionRings.ctsfromjs did not decode categorification codes correctly",
-      )
 
-      check_equal(
-        FusionRings.ncrfromjs(Dict("non_cat_reasons" => Dict("Fusion" => "x"))),
-        Dict("Fusion" => "x"),
-        "FusionRings.ncrfromjs did not return explicit non_cat_reasons when present",
-      )
 
-      default_ncr = FusionRings.ncrfromjs(Dict())
-      check_true(
-        haskey(default_ncr, "Fusion"),
-        "FusionRings.ncrfromjs default dictionary did not contain key \"Fusion\"",
-      )
-      return check_true(
-        haskey(default_ncr, "Modular"),
-        "FusionRings.ncrfromjs default dictionary did not contain key \"Modular\"",
-      )
-    end
-
-    maybe_testset("reference", "3. reference / Anyonica parity") do
-      data = load_anyonica_data("fpdims.json")
-
-      for idx in oracle_case_indices("fpdims.json", data; max_cases = 8)
-        expected = numeric_vector_from_json(data["Output"][idx])
-        encoded = [[x, 0.0] for x in expected]
-        decoded = FusionRings.nfpdsfromjs(Dict("numeric_frobenius_perron_dimensions" => encoded))
-
-        check_equal(
-          decoded,
-          ComplexF64[x + 0.0im for x in expected],
-          "FusionRings.nfpdsfromjs failed to decode Anyonica-style FP dimensions case $idx",
-        )
+      # TODO: uncomment once categorifications are given by uuids
+      #check_equal(
+      #  FusionRings.ctsfromjs(Dict("categorifications" => [[1, 2, 3, 4], [5, 6, 7, 8]])),
+      #  [[1, 2, 3, 4], [5, 6, 7, 8]],
+      #  "FusionRings.ctsfromjs did not decode categorification codes correctly",
+      #)
       end
-    end
+
   end
 
   # ============================================================
@@ -391,7 +306,7 @@
         "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"mult_tab\"",
       )
       check_true(
-        haskey(d, "anyonwiki_id"),
+        haskey(d, "anyonwiki_code"),
         "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"anyonwiki_id\"",
       )
       return check_true(

@@ -93,7 +93,7 @@
         labels(r), ["0", "1"], "fusion_ring did not preserve labels for a valid Z2 table"
       )
       check_equal(
-        names(r), ["Z2"], "fusion_ring did not preserve names for a valid Z2 table"
+        names(r)["miscellaneous"], ["Z2"], "fusion_ring did not preserve names for a valid Z2 table"
       )
       check_true(
         is_commutative(r),

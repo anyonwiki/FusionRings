@@ -49,16 +49,17 @@ This requires package data to be loaded (normally happens during `__init__`).
 function from_anyonwiki_code(r::Integer, m::Integer, nnsd::Integer, i::Integer)
   _ensure_frd_initialized()
   !haskey(frd,[r,m,nnsd]) && error("code not found in database")
+  !haskey(frd[[r,m,nnsd]],i) && error("code not found in database")
 
-  proposals =  frd[Int[r, m, nnsd]]
+  return frd[[r,m,nnsd]][i]
+end
 
-  lastindex(ring) = parse( Int, last( split( (ring.anyonwiki_id)[20:end], "_" ) ) )
+export from_uuid
 
-  p = findfirst( r -> lastindex(r) == i, proposals )
+function from_uuid(s::String)
+  !haskey(uuid_dict, s) && error("uuid not found")
 
-  isnothing(p) && error("code not found in database")
-
-  return proposals[p]
+  uuid_dict[s]
 end
 
 function from_anyonwiki_code(v::AbstractVector{<:Integer})
@@ -115,29 +116,29 @@ function __init__()
   global qqb_dict = Dict{String, QQBarFieldElem}()
 
   # IMPORT FUSION RINGS
-  global fusion_ring_list =
-    import_rings(joinpath(datadir, "fusionrings.json"));
+  global fusion_ring_list = import_rings(joinpath(datadir, "fusionrings.json"));
 
   global frl = fusion_ring_list
 
-  # for unknown rings the rank, mult, and nnsd can
-  # be determined quickly. We will group the known fusion rings by 
-  # those properties
+  global uuid_dict = Dict( uuid(r) => r for r in frl )
 
+  # for unknown rings, the rank, mult, and nnsd can
+  # be determined quickly. We will group the known fusion rings by 
+  # those properties so its faster to identify unknown rings.
   grouped_by_first3 = Dict{Vector{Int64}, Vector{FusionRing}}()
   for ring in frl
-    key = [ ring.rank, ring.multiplicity, ring.numnonselfdual ]
+    key = (ring.anyonwiki_code)[1:3]
     if !haskey(grouped_by_first3, key)
       grouped_by_first3[key] = FusionRing[]
     end
     push!(grouped_by_first3[key], ring)
   end
 
-  fourth_to_dict(v::Vector{FusionRing}) = Dict(r.uuid => r for r in v)
+  fourth_to_dict(v::Vector{FusionRing}) = Dict((r.anyonwiki_code)[4] => r for r in v)
 
   global fusion_ring_dict = Dict(k => fourth_to_dict(v) for (k, v) in grouped_by_first3)
-  #Dict( anyonwiki_code(r) => r for r in frl )
-  return global frd = fusion_ring_dict
+
+  global frd = fusion_ring_dict
 end
 
 end

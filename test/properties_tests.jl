@@ -13,12 +13,12 @@
         "multiplication_table(z3) did not return an Int 3-tensor",
       )
       check_true(rank(z3) isa Int, "rank(z3) did not return an Int")
-      check_true(names(z3) isa Vector{String}, "names(z3) did not return a Vector{String}")
+      check_true(names(z3) isa Dict{String, Union{Missing, Vector{String}}}, "names(z3) did not return a Vector{String}")
       check_true(
         labels(z3) isa Vector{String}, "labels(z3) did not return a Vector{String}"
       )
       return check_true(
-        tex_names(z3) isa Vector{String}, "tex_names(z3) did not return a Vector{String}"
+        tex_names(z3) isa Dict, "tex_names(z3) did not return a Dict"
       )
     end
 
@@ -27,12 +27,7 @@
 
       check_equal(rank(z3), 3, "rank(zn_fusion_ring(3)) was not 3")
       check_equal(labels(z3), ["0", "1", "2"], "labels(zn_fusion_ring(3)) were incorrect")
-      check_equal(names(z3), ["ℤ₃"], "names(zn_fusion_ring(3)) were incorrect")
-      check_equal(
-        tex_names(z3),
-        String[],
-        "tex_names(zn_fusion_ring(3)) were not the expected empty vector",
-      )
+      check_equal(names(z3)["group_like"], ["ℤ₃","Z_3"], "names(zn_fusion_ring(3)) were incorrect")
       return check_equal(
         size(multiplication_table(z3)),
         (3, 3, 3),
@@ -218,8 +213,7 @@
 
       check_true(g isa Bool, "is_group_ring(z3) did not return a Bool")
       check_true(c isa Bool, "is_commutative(z3) did not return a Bool")
-      check_true(
-        cats === missing || cats isa Vector,
+      check_true(cats isa Dict,
         "categories_with_properties(z3) returned an unexpected type",
       )
       return check_true(
@@ -248,7 +242,7 @@
   # _internal_multiplication / is_sub_fusion_ring / subsets
   # ============================================================
 
-  @testset "_internal_multiplication / is_sub_fusion_ring / sub_fusion_ring_subsets" begin
+  @testset "sub fusion rings 1" begin
     maybe_testset("basic", "1. basic construction") do
       z4 = zn_fusion_ring(4)
 
@@ -315,7 +309,7 @@
   # FusionRings._fusion_closure / restrict_subring / FusionRings._internal_closed_subsets / which_injection
   # ============================================================
 
-  @testset "_fusion_closure / restrict_subring / _internal_closed_subsets / which_injection" begin
+  @testset "sub fusion rings 2" begin
     maybe_testset("basic", "1. basic construction") do
       z4 = zn_fusion_ring(4)
 
@@ -389,7 +383,7 @@
   # is_equivalent_fusion_ring / fusion_ring_automorphisms
   # ============================================================
 
-  @testset "is_equivalent_fusion_ring / fusion_ring_automorphisms" begin
+  @testset "equivalences and automorphisms" begin
     maybe_testset("basic", "1. basic construction") do
       z3 = zn_fusion_ring(3)
       pz3 = permute([1, 3, 2],z3)

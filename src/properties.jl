@@ -30,9 +30,10 @@ end
 export names
 export names
 
-function names(r::FusionRing)::Array{String, 1}
+function names(r::FusionRing)
   return r.names
 end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  tex_names                                      ┃
@@ -40,7 +41,7 @@ end
 
 export tex_names
 
-function tex_names(r::FusionRing)::Array{String, 1}
+function tex_names(r::FusionRing)
   return r.texnames
 end
 
@@ -142,6 +143,23 @@ export fpdims
 fpdims = frobenius_perron_dimensions
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_integral                                    ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_integral
+
+@doc raw"""
+    is_integral(fr::FusionRing)
+
+Returns true if `fr` is integral, i.e. fpdim(x) ∈ ℤ for all x ∈ `fr`, and false otherwise.
+
+"""
+function is_integral(fr::FusionRing)::Bool
+  return all( isinteger, fpdims(fr) )
+end
+
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                           frobenius_perron_dimension                            ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
@@ -164,13 +182,38 @@ export fpdim
 
 fpdim = frobenius_perron_dimension
 
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              is_weakly_integral                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_weakly_integral
+
+@doc raw"""
+    is_weakly_integral(fr::FusionRing)
+
+Returns true if `fr` is weakly integral, i.e. fpdim(fr) ∈ ℤ, and false otherwise.
+
+"""
+function is_weakly_integral(fr::FusionRing)::Bool
+  return isinteger(fpdim(fr))
+end
+
+
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  numeric_fpdims                                 ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export numeric_fpdims
 
-function numeric_fpdims(fr::FusionRing)
+function numeric_fpdims(fr::FusionRing; force_compute = false )
+  fpds = fr.frobenius_perron_dimensions
+
+  if !ismissing(fpds) && !force_compute
+    return ComplexF64.(from_qqb_id.(fpds))
+  end
+
   r = rank(fr)
   S = zeros(Float64, r, r)
   N = multiplication_table(fr)
@@ -308,15 +351,6 @@ function conjugate_pairs(fr::FusionRing)::Vector{Vector{Int}}
   return unique([us([a, d(a)]) for a in 1:rank(fr)])
 end
 
-#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                                  anyonwiki_id                                   ┃
-#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-export anyonwiki_id
-
-function anyonwiki_id(r::FusionRing)::Union{String,Missing}
-  return r.anyonwiki_id
-end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                 anyonwiki_code                                  ┃
@@ -325,13 +359,7 @@ end
 export anyonwiki_code
 
 function anyonwiki_code(r::FusionRing)::Union{Array{Int, 1}, Missing}
-  id = r.anyonwiki_id
-  ismissing(id) && return missing
-
-  c = parse.(Int64, split( id[20:end], "_" ) )
-  length(c) != 4 && error("anyonwiki code must have length 4")
-
-  c
+  return r.anyonwiki_code
 end
 
 
@@ -352,13 +380,93 @@ end
 export barcode
 export barcode
 
-function barcode(r::FusionRing)
-  return r.barcode
+function barcode(fr::FusionRing; force_compute = false)
+
+  #first we sort the elements of the ring. Selfdual elements appear before
+  #non-self dual ones and non-self dual ones are grouped in dual pairs.
+  #the self-dual ones are then sorted by increasing fpdim and the same
+  #for the pairs of dual elements
+  sr = sort(fr,by = "sd_conj" )
+  r  = rank(sr)
+
+  #we only allow permutations that preserve the order above
+  cp = conjugate_pairs(sr)
+
+  #some useful functions
+  fpd(i)     = fpdims(fr)[i]
+  addunit(v) = vcat( 1, v .+ 1 )
+
+  # first we set up possible permutations for self-dual elements
+  sd  = vcat( filter( p -> length(p) == 1, cp) )
+
+  S_sd =
+    if length(sd) == 1
+      [[]]
+    else
+      tovecsd(σ)   = Vector( σ, length(sd)-1 )
+      map( addunit ∘ tovecsd, _sorted_symmetries(fpd.(sd[2:end])) )
+    end
+
+  # now we set up possible permutations for non-selfdual elements
+  nsd = filter( p -> length(p) == 2, cp )
+
+  S_nsd = if isempty(nsd)
+    [[]]
+    else
+      vec = []
+
+      for i in 1:length(nsd)
+        d = fpd(nsd[i][1])
+        push!(vec, [i,d] )
+        push!(vec, [i,d] )
+      end
+
+    fixindices(v) = v .+ length(sd)
+    tovecnsd(σ)   = Vector( σ, r - length(sd) )
+    map( fixindices ∘ tovecnsd, _sorted_symmetries(vec) )
+  end
+
+  # don't expand. Do a loop :)
+  #
+  mt   = multiplication_table(sr)
+  mult = multiplicity(sr)
+  max  = mult_tab_code( mt, mult )
+  for σ_sd in S_sd, σ_nsd in S_nsd
+    perm = vcat( σ_sd, σ_nsd )
+    mtc = mult_tab_code( mt[perm,perm,perm], mult )
+    mtc > max && (max = mtc)
+  end
+
+  return max
 end
 
-function mult_tab_code(mat::Array{Int, 2}, mult::Int)::Int
-  return error("mult_tab_code not implemented yet")
+function mult_tab_code(mt::Array{Int64, 3}, mult::Int)
+  strl = String[]
+  r = size(mt,1)
+  for a in 1:r, b in 1:r, c in 1:r
+    push!(strl, string(mt[a,b,c]) )
+  end
+  p = ZZ( parse( BigInt, join(strl), base = mult+1 ) )
+
 end
+
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_simple                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_simple
+
+@doc raw"""
+    is_simple(fr::FusionRing)
+
+Returns true if `fr` has no non-trivial sub fusion rings and false otherwise.
+"""
+
+function is_simple(fr::FusionRing)::Bool
+  return isempty(sub_fusion_rings(fr))
+end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                               sub_fusion_rings                                  ┃
@@ -366,21 +474,20 @@ end
 
 export sub_fusion_rings
 
-function sub_fusion_rings(r::FusionRing)
-  dictvec = r.sub_fusion_rings
-  if dictvec !== missing
-    [
-      Dict("injection" => dict["injection"], "fusion_ring" => fawc(dict["anyonwiki_code"]))
-      for dict in dictvec
-    ]
-  else
+function sub_fusion_rings(r::FusionRing; force_compute = false, represent_by_known = true)
+  sfr = r.sub_fusion_rings
+  if !ismissing(sfr) && !force_compute
+    return [ (t[1], from_uuid(t[2]) ) for t in sfr ]
+  end
+
     subsets = sub_fusion_ring_subsets(r)
     mt = multiplication_table(r)
+  rbk = represent_by_known ? replace_by_known : identity
+
     [
-      Dict("injection" => s, "fusion_ring" => replace_by_known(fusion_ring(mt[s, s, s])))
+    ( s, rbk(fusion_ring(mt[s, s, s])))
       for s in subsets
     ]
-  end
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -463,6 +570,25 @@ function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
          check_inverse(mt) &&
          check_associativity(mt)
 end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  realizations                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export realizations
+
+function realizations(fr::FusionRing;force_compute = false)::Dict{String,Any}
+  rlztns = fr.realizations
+
+  vals = collect(values(rlztns))
+
+  if any( ismissing, vals) || any(isnothing, vals) || force_compute
+    return Dict{String,Any}("tensor_product" => decompositions(fr,kind="tensor_product",force_compute=force_compute))
+  end
+
+  return Dict{String,Any}("tensor_product" => [ [ from_uuid(r) for r in decomp ] for decomp in rlztns["tensor_product"] ] )
+end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                            is_equivalent_fusion_ring                            ┃
@@ -637,25 +763,47 @@ function fusion_ring_automorphisms(fr::FusionRing)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               automorphisms_group                               ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export automorphism_group
+"""
+    automorphism_group(fr) -> Vector{Vector{Int}}
+
+Return all permutations `p` whose action on the indices leave the structure constants invariant.
+"""
+#TODO: write test: should match data in test/testdata/properties
+
+function automorphism_group(fr::FusionRing; force_compute = false )::PermGroup
+  ag = fr.automorphism_group
+  if ismissing(ag) || force_compute
+    return permutation_group( rank(fr), perm.(fusion_ring_automorphisms(fr)) )
+  else
+    return ag
+  end
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                  decompositions                                 ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export decompositions
 
-function decompositions(fr::FusionRing, product = "TensorProduct")#::Vector{ Vector{FusionRing} }
-  product == "TensorProduct" ||
-    error("Only tensor product decompositions are defined at the moment.")
+function decompositions(fr::FusionRing; kind = "tensor_product", force_compute = false, represent_by_known = true)#::Vector{ Vector{FusionRing} }
+  kind == "tensor_product" || error("Only tensor product decompositions are defined at the moment.")
 
-  tpd = fr.tensor_product_decompositions
-  if tpd !== missing
-    [[awc(code) for code in decomp] for decomp in tpd]
+  tpd = (fr.realizations)["tensor_product"]
+  if ismissing(tpd) || isnothing(tpd) || force_compute
+    return non_trivial_tensor_product_decompositions(fr,
+                                                     represent_by_known = represent_by_known
+                                                     )
   else
-    tensor_product_decompositions(fr)
+    [[from_uuid(id) for id in decomp] for decomp in tpd]
   end
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                           tensor_product_decompositions                         ┃
+#┃                     non_trivial_tensor_product_decompositions                   ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 export non_trivial_tensor_product_decompositions
 
@@ -664,7 +812,7 @@ export non_trivial_tensor_product_decompositions
 
 Return non-trivial decompositions of `r` as tensor products of fusion rings.
 """
-function non_trivial_tensor_product_decompositions(fr::FusionRing)::Vector{Vector{FusionRing}}
+function non_trivial_tensor_product_decompositions(fr::FusionRing;represent_by_known = true)::Vector{Vector{FusionRing}}
   r = rank(fr)
 
   # since every fusion ring has an identity 1, every component
@@ -836,16 +984,32 @@ end
 
 export upper_central_series
 
-function upper_central_series(fr::FusionRing)
+function upper_central_series(fr::FusionRing; force_compute = false, represent_by_known = true )::Vector{Tuple{Vector{Int64},FusionRing}}
+  ucs = fr.upper_central_series
+
+  if !ismissing(ucs) && !force_compute
+    return [ ( t[1], from_uuid(t[2]) ) for t in ucs  ]
+  end
+
+
   chain = Tuple{Vector{Int}, FusionRing}[]
-  push!(chain, (collect(1:rank(fr)), fr))
+
+  rbk = represent_by_known ? replace_by_known : identity
+
+  push!(chain, (collect(1:rank(fr)), rbk(fr)))
+
+  adjfr(fr) = adjoint_fusion_ring(
+    fr,
+    force_compute = force_compute,
+    represent_by_known = represent_by_known
+  )
   while true
-    S, adj = adjoint_fusion_ring(last(chain)[2])
-    last(chain)[2] === adj && break
+    S, adj = adjfr(last(chain)[2])
+    rank(last(chain)[2]) === rank(adj) && break
     push!(chain, (S, adj))
     length(S) == 1 && break
   end
-  return chain
+  return unique(chain)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -856,7 +1020,7 @@ export is_nilpotent
 
 function is_nilpotent(r::FusionRing)::Bool
   chain = upper_central_series(r)
-  last_set, last_ring = last(chain)
+  last_set, _ = last(chain)
   return length(last_set) == 1
 end
 
@@ -994,17 +1158,17 @@ is  universal grading,  every grading  obtained from U/N,
 where N is a normal subgroup of U.
 """
 
-function all_gradings(fr::FusionRing; force_compute = false)
+function all_gradings(fr::FusionRing; force_compute = false)::Vector{Tuple{Vector{Int64},FusionRing}}
   #TODO: uncomment line once FusionRing has field all_gradings
   #!force_compute && !ismissing(fr.all_gradings) && return fr.all_gradings
 
-  rank(fr) == 1 && return [ [1], fawc(1,1,0,1) ]
+  rank(fr) == 1 && return Tuple{Vector{Int64},FusionRing}[ ( [1], fawc(1,1,0,1) ) ]
 
   grvec, ug = universal_grading(fr)
 
   UG, ϕ = to_group_with_emb(ug)
 
-  gradings = Vector{Vector{Any}}()
+  gradings = Vector{Tuple{Vector{Int64},FusionRing}}()
 
   for N in normal_subgroups(UG)
     UGoverN, π = quo(UG,N)
@@ -1015,14 +1179,15 @@ function all_gradings(fr::FusionRing; force_compute = false)
 
     grading_UGoverN = UGoverNeltoInt.(π.([ UGel[ ϕ[gr] ] for gr in grvec ]))
 
-    #fr_UGoverN might have different mult table from built-in ring
+    #fr_UGoverN might have different mult table from built-in ring but we prefer to
+    #use the built in rings so we need to permute the elements of the grading
     code = anyonwiki_code(fr_UGoverN)
     σ    = first( which_permutation( fr_UGoverN, fawc(code) ) )
 
     g = [ invperm(σ)[gr] for gr in grading_UGoverN ]
     f = permute( σ, fr_UGoverN )
 
-    push!( gradings, [ g, f ] )
+    push!( gradings, ( g, f ) )
   end
 
   sort!(gradings; by = g -> rank(g[2]))
@@ -1239,11 +1404,32 @@ end
 
 export formal_codegrees
 
-function formal_codegrees(fr::FusionRing)::Vector{QQBarFieldElem}
-  chars = characters(fr)
-  d = conjugate_element(fr)
+function formal_codegrees(fr::FusionRing; usecharacters = true, force_compute = false )::Vector{QQBarFieldElem}
+  fcd = fr.formal_codegrees
+  !ismissing(fcd) && !force_compute && return from_qqb_id.(fcd)
 
-  return sum(chars[i, :]' * chars[d(i), :] for i in 1:r)
+  d = conjugate_element(fr)
+  r = rank(fr)
+
+  if is_commutative(fr) && usecharacters
+    chars = characters(fr)
+    φ(i) = j -> chars[i,j]
+
+    return sort( [ sum( φ(i)(j) * φ(i)(d(j)) for j in 1:r ) for i in 1:r ], by = z -> abs(z) )
+  else
+    mat(i) = matrix(ZZ,multiplication_table(fr)[i,:,:])
+    m   = sum( mat(d(i)) * mat(i) for i in 1:r  )
+    es  = eigenspaces( QQBar, m )
+    fcs = QQBarFieldElem[]
+
+    for k in collect(keys(es))
+      for i in 1:nrows(es[k])
+        push!(fcs,k)
+      end
+    end
+    return sort( fcs, by = z -> abs(z) )
+
+  end
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1252,22 +1438,26 @@ end
 
 export numeric_characters
 """
-    numeric_characters(R::FusionRing; tries::Int=64, tol=1e-12) -> (C, V)
+    numeric_characters(R::FusionRing; tries::Int=64, tol=1e-12)::Matrix{ComplexF64}
 
-#Return the **character table** `C::Matrix{ComplexF64}` of a **commutative** fusion ring `R`.
+Returns the **character table** `C::Matrix{ComplexF64}` of a **commutative** fusion ring `R`.
+If force_compute = false and symbolic characters are available, the numeric characters are obtained by converting the symbolic ones to ComplexF64 elements. Otherwise the characters are computed using numeric diagonalization.
 
+
+Throws if no common eigenbasis is found after `tries` attempts.
+"""
 #Algorithm:
 #1. Form a random real combination `M = ∑_k c_k N_k`.
 #2. Eigen-decompose `M = V Λ V⁻¹`.
 #3. Verify that every `V⁻¹ N_i V` is (numerically) diagonal. If not, retry.
 #Normalize and sort V
+function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = false)
+  nc = ring.characters
+  if !ismissing(nc) && !force_compute
+    return ComplexF64.(characters(ring))
+  end
 
-Throws if no common eigenbasis is found after `tries` attempts.
-"""
-function numeric_characters(ring, tries::Int = 64, tol = 1e-12)
-  if !(ring.numeric_characters === missing)
-    return ring.numeric_characters
-  elseif !FusionRings.is_commutative(ring)
+  if !is_commutative(ring)
     error(
       "Calculation of characters for non-commutative fusion ring is not implemented yet."
     )
@@ -1280,7 +1470,6 @@ function numeric_characters(ring, tries::Int = 64, tol = 1e-12)
     V    = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
 
     sortslices(V; dims = 1, by = num_char_sort_crit)
-  end
 end
 
 # Numeric sort criterion for characters
@@ -1337,10 +1526,11 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                is_categorifiable                                ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
 export is_categorifiable
 
 function is_categorifiable(fr::FusionRing)
-  return fr.categorifiable
+  return categories_with_properties(fr)["Fusion"][1]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

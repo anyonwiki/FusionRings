@@ -21,14 +21,24 @@ group_fusion_ring(ct::Matrix{Int{64}};name=G)::FusionRing returns the group fusi
 """
 
 function group_fusion_ring(grp::Group)::FusionRing
-  ct = cayley_table(grp)
-  nm = describe(grp)
+  ct  = cayley_table(grp)
+  nm  = describe(grp)
+  tnm = tex_describe(grp)
 
-  return group_fusion_ring(ct; names = [nm], checktable = false)
+  return group_fusion_ring(ct; names = [nm], texnames = [tnm], checktable = false)
+end
+
+function grpnames(v::Vector{String})
+    Dict{String,Union{Missing,Vector{String}}}(
+      "quantum_group_like" => missing ,
+      "group_like"         => v,
+      "physics"            => missing,
+      "miscellaneous"      => missing
+    )
 end
 
 function group_fusion_ring(
-  ct::Matrix{Int64}; names::Vector{String} = ["G"], checktable::Bool = true
+  ct::Matrix{Int64}; names::Vector{String} = ["G"], texnames::Vector{String} = ["G"], checktable::Bool = true
 )::FusionRing
   if checktable
     _is_group_table(ct) ||
@@ -43,7 +53,8 @@ function group_fusion_ring(
   return fusion_ring(
     mt;
     labels = [bold_integer(i) for i in 1:r],
-    names = names,
+    names = grpnames(names),
+    texnames = grpnames(texnames),
     frobenius_perron_dimension = qqb_id(QQBar(r)),
     frobenius_perron_dimensions = fill(qqb_id(QQBar(1)), r),
   )
@@ -60,7 +71,12 @@ function zn_fusion_ring(n::Int)::FusionRing
     mt[i + 1, j + 1, k + 1] = 1
   end
 
-  return fusion_ring(mt; names = ["ℤ" * subscript_integer(n)], labels = string.(0:(n - 1)))
+  return fusion_ring(
+    mt;
+    names = grpnames(["ℤ" * subscript_integer(n), "Z_$n"]),
+    texnames = grpnames(["\\mathbb{Z}_{$n}"]),
+    labels = string.(0:(n - 1))
+  )
 end
 
 function group_rep_fusion_ring(g)
@@ -72,10 +88,15 @@ function group_rep_fusion_ring(g)
 
   mt = [toint64(((χ(a) .* χ(b)) * invm)[c]) for a in 1:r, b in 1:r, c in 1:r]
 
+  #TODO: transform description
   nms = describe(g)
+  texnms = tex_describe(g)
 
   return fusion_ring(
-    mt; names = ["Rep("*nms*")"], labels = ["χ"*subscript_integer(i) for i in 1:r]
+    mt;
+    names = grpnames( ["Rep("*nms*")"] ),
+    texnames = grpnames( ["Rep("*texnms*")"] ),
+    labels = ["χ"*subscript_integer(i) for i in 1:r]
   )
 end
 
@@ -111,9 +132,9 @@ Rank is 2n. Objects are:
 """
 function HI_fusion_ring(g::Group)::FusionRing
   ct    = cayley_table(g);
-  names = ["HI(" * describe(g) * ")"]
-
-  return HI_fusion_ring(ct; names = names, checktable = false)
+  names = mscnames(  ["HI(" * describe(g) * ")"] )
+  texnames = mscnames( ["\\mathrm{HI}(" * tex_describe(g) * ")"] )
+  return HI_fusion_ring(ct; names = names,texnames = texnames, checktable = false)
 end
 
 function HI_fusion_ring(
@@ -199,13 +220,15 @@ Rank is n+1 (group elements + one extra object).
 """
 
 function TY_fusion_ring(g::Group)::FusionRing
-  return TY_fusion_ring(cayley_table(g))
+  names = mscnames(["TY(" * describe(g) * ")"])
+  texnames = mscnames(["TY(" * tex_describe(g) * ")"])
+  return TY_fusion_ring(cayley_table(g), names = names, texnames = texnames)
 end
 
 function TY_fusion_ring(tab::AbstractMatrix{<:Integer}; names::Vector{String} = String[])
   _is_group_table(tab) || throw(
     ArgumentError(
-      "FusionRingTY: tab must be a group multiplication table (identity=1, associative, latin square).",
+      "TY_fusion_ring: tab must be a finite group multiplication table (identity=1, associative, latin square).",
     ),
   )
   n = size(tab, 1)
@@ -243,7 +266,7 @@ function TY_fusion_ring(tab::AbstractMatrix{<:Integer}; names::Vector{String} = 
   labels = [string(i) for i in 1:n]
   push!(labels, "m")
 
-  default_names = isempty(names) ? String[] : names
+  default_names = isempty(names) ? _nonames : mscnames(names)
   return fusion_ring(mt; names = default_names, labels = labels)
 end
 
@@ -322,11 +345,22 @@ function psu2k_fusion_ring(k::Int)::FusionRing
     "["*string(numerator((i-1)//2))*"/"*string(denominator((i-1)//2))*"]" for i in 1:rk
   ]
 
-  return fusion_ring(mt; names = ["PSU(2)" * subscript_integer(k)], labels = elnames)
+  nms = qgnames( ["PSU(2)" * subscript_integer(k), "PSU(2)_"*string(k)] )
+
+  return fusion_ring(mt; names = nms, labels = elnames)
 end
 
 function range_psu2k(i::Int, j::Int, k::Int)
   return abs(i - j):2:min(i + j, 2k - i - j)
+end
+
+function qgnames(v::Vector{String})
+  Dict{String,Union{Missing,Vector{String}}}(
+    "quantum_group_like" => v,
+    "group_like"         => missing,
+    "physics"            => missing,
+    "miscellaneous"      => missing
+  )
 end
 
 # TODO: add missing information
@@ -341,7 +375,8 @@ function su2k_fusion_ring(k::Int)::FusionRing
       continue
     end
   end
-  return fusion_ring(mt; names = ["SU(2)" * subscript_integer(k)], labels = string.(0:k))
+  nms = qgnames( ["SU(2)" * subscript_integer(k), "SU(2)_"*string(k)] )
+  return fusion_ring(mt; names = nms, labels = string.(0:k))
 end
 
 # SO(2)_n fusion rings 
@@ -376,8 +411,9 @@ function son2_fusion_ring(N::Int)::FusionRing
   size(mt, 1) == length(labels) ||
     error("son2_fusion_ring: label length mismatch with mt rank")
 
+  nms = qgnames( ["SO($N)" * subscript_integer(2), "SO($N)_2","metaplectic(n)"] )
   return fusion_ring(
-    mt; names = ["SO($N)"*subscript_integer(2), "Metaplectic($N)"], labels = labels
+    mt; names = nms, labels = labels
   )
 end
 

@@ -118,44 +118,73 @@ end
 #TODO: implement permute for permutations from OSCAR
 export permute
 
-"""permute(perm,r) – return a new `FusionRing` with all data
-    permuted by `perm`.  `perm[1]` **must** equal 1 to keep the vacuum first."""
-function permute(perm::Vector{Int}, r::FusionRing)::FusionRing
+"""permute(perm::Vector{Int},r::FusionRing)::FusionRing – return a new `FusionRing` with all data
+    permuted by `perm`.
+   `perm[1]` **must** equal 1 to keep the vacuum first.
+"""
+
+function permute(σ::Vector{Int}, r::FusionRing)::FusionRing
   n = rank(r)
-  n == length(perm) || throw(ArgumentError("perm length ≠ rank"))
-  sort(perm) == collect(1:n) || throw(ArgumentError("perm must be a true permutation"))
-  perm[1] == 1 || throw(ArgumentError("vacuum must stay at index 1"))
+  n == length(σ) || throw(ArgumentError("perm length ≠ rank"))
+  sort(σ) == collect(1:n) || throw(ArgumentError("perm must be a true permutation"))
+  σ[1] == 1 || throw(ArgumentError("vacuum must stay at index 1"))
 
   # Core table
-  pmt = permute_mult_tab(multiplication_table(r), perm)
+  mt  = multiplication_table(r)
+  pmt = permute_mult_tab(multiplication_table(r), σ)
 
-  pr = @set r.multiplication_table = pmt
-
+  pmt == mt && return r
 
   permute_vector(p,v) = [ p[v[i]] for i in 1:size(v,1) ]
-  permute_sub_fus_ring(d) =
-    Dict(
-      "injection"   => permute_vector(invperm(perm),d["injection"]),
-      "anyonwiki_code" => d["anyonwiki_code"]
-    )
 
   # Data that needs re‑ordering (guard against `missing`)
+  ch = r.characters
+  if !ismissing(ch)
+    ch = ch[:,σ]
+  end
+
+  iσ = invperm(σ)
+  permute_sub_fus_ring(t) = ( permute_vector(iσ,t[1]), t[2] )
+
   sr = r.sub_fusion_rings
   if !ismissing(sr)
-    pr = @set pr.sub_fusion_rings = permute_sub_fus_ring.(sr)
+    sr = permute_sub_fus_ring.(sr)
   end
 
   fpd = r.frobenius_perron_dimensions
   if !ismissing(fpd)
-    pr = @set pr.frobenius_perron_dimensions = fpd[perm]
+    fpd = fpd[σ]
   end
 
-  ch = r.characters
-  if !ismissing(ch)
-    pr = @set pr.characters = ch[:,perm]
+  ag = r.all_gradings
+  if !ismissing(fpd)
+    ag = [ ( g[1][σ], g[2] ) for g in ag ]
   end
 
-  return pr
+  aut = r.automorphism_group
+  if !ismissing(ag)
+    aut = conjugate_group(aut,perm(iσ))
+  end
+
+  ucs = r.upper_central_series
+  if !ismissing(ucs)
+    ucs =
+      vcat(
+        [ (collect(1:rank(r)), uuid(r) ) ],
+        [ ( permute_vector(iσ,ucs[i][1]), ucs[i][2] ) for i in 2:length(ucs) ]
+      )
+  end
+
+  return change_properties( r,
+                            Dict(
+                              :multiplication_table        => pmt,
+                              :sub_fusion_rings            => sr,
+                              :frobenius_perron_dimensions => fpd,
+                              :upper_central_series        => ucs,
+                              :all_gradings                => ag,
+                              :automorphism_group          => aut
+                            )
+                          )
 end
 
 """
@@ -242,10 +271,10 @@ function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
   # Assemble element names
   elnames = [string(e1, "⊗", e2) for e1 in labels(r1) for e2 in labels(r2)]
 
-  names_tp = if (isempty(names(r1)) || isempty(names(r2)))
-    String[]
+  names_tp = if ismissing(name(r1)) || ismissing(name(r2))
+    _nonames
   else
-    [string(names(r1)[1], "⊗", names(r2)[1])]
+    tpnames(names(r1), names(r2))
   end
 
   fpdims_new = try
@@ -257,6 +286,48 @@ function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
   return fusion_ring(
     mt; names = names_tp, labels = elnames, frobenius_perron_dimensions = fpdims_new
   )
+end
+
+function tpnames(nms1,nms2)
+  d = Dict{String,Union{Missing,Vector{String}}}()
+  keys1 = keys(nms1)
+  keys2 = keys(nms2)
+  sort(collect(keys1)) != sort( collect(keys2) ) && error("The naming keys of the fusion rings do not match")
+
+  for k in keys1
+    nk1 = nms1[k]
+    nk2 = nms2[k]
+    if !ismissing(nk1) && !ismissing(nk2)
+      d[k] = [ n1 * "⊗" * n2 for n1 in nk1 for n2 in nk2 ]
+    else
+      d[k] = missing
+    end
+  end
+
+  # add products of names of different conventions to miscellaneous
+
+  for k1 in keys1, k2 in keys2
+    # we already covered k1 === k2
+    k1 === k2 && continue
+
+    nk1 = nms1[k1]
+    nk2 = nms2[k2]
+    im1 = ismissing(nk1)
+    im2 = ismissing(nk2)
+    if !im1 && !im2
+      if ismissing(d["miscellaneous"])
+        d["miscellaneous"] = String[]
+      end
+
+      for n1 in nk1, n2 in nk2
+        push!( d["miscellaneous"], n1 * "⊗" * n2 )
+      end
+
+    end
+  end
+
+  return d
+
 end
 
 function tensor_product(rings::Vector{FusionRing})::FusionRing

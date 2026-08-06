@@ -1,43 +1,44 @@
 export FusionRing
 
-# TODO:
-# * add upper central series
-# * make non_cat_reason a list with reasons for each prop
-#   so
-#   [
-#     [ non_pivotal, reason_np ],
-#     [ non_unitary, reason_nu ],
-#     ...
-#   ]
-# * grading groups
-# * taggs : [ "nilpotent", "groupring", "neargroup", "quantumgroup", ... ]
-
 struct FusionRing
   multiplication_table::Array{Int, 3}
-  rank::Int64
-  multiplicity::Int64
-  numnonselfdual::Int64
-  names::Array{String, 1}
-  texnames::Array{String, 1}
-  labels::Array{String, 1}
-  barcode
-  anyonwiki_id::Union{Missing,String}
-  characters
-  sub_fusion_rings
-  frobenius_perron_dimension
-  frobenius_perron_dimensions
-  tensor_product_decompositions
-  numeric_characters
-  numeric_frobenius_perron_dimension
-  numeric_frobenius_perron_dimensions
-  has_categories_with_props
-  categorifiable
-  categorifications
-  references
-  software
-  comments
-  non_cat_reasons
+
   uuid::Union{Missing,String}
+
+  anyonwiki_code::Union{Missing,Vector{Int64}}
+
+  names::Dict{String,Union{Missing,Vector{String}}}
+
+  texnames::Dict{String,Union{Missing,Vector{String}}}
+
+  labels::Array{String, 1}
+
+  characters::Union{Missing,Matrix{String}}
+
+  sub_fusion_rings::Union{Missing,Vector{Tuple{Vector{Int64},String}}}
+
+  frobenius_perron_dimension::Union{Missing,String}
+
+  frobenius_perron_dimensions::Union{Missing,Vector{String}}
+
+  formal_codegrees::Union{Missing,Vector{String}}
+
+  has_categories_with_props::Dict{String,Vector{Any}}
+
+  categorifications::Union{Missing,Vector{String}}
+
+  references::Union{Missing,Dict{String,Vector{String}}}
+
+  software::Union{Missing,Dict{String,Vector{String}}}
+
+  all_gradings::Union{Missing,Vector{Tuple{Vector{Int64},String}}}
+
+  upper_central_series::Union{Missing,Vector{Tuple{Vector{Int64},String}}}
+
+  realizations::Union{Missing,Dict{String,Any}}
+
+  automorphism_group::Union{Missing, PermGroup}
+
 end
 
 export fusion_ring
@@ -81,29 +82,30 @@ function check_labels(mt, names)
   return length(names) == size(mt, 1)
 end
 
+function is_valid_uuid(s::String)
+    return !isnothing(tryparse(UUID, s))
+end
+
 function fusion_ring(
   mt::Array{Int,3};
-  labels                              = [],
-  names                               = [],
-  texnames                            = [],
-  barcode                             = missing,
-  anyonwiki_id                        = missing,
+  uuid                                = missing,
+  anyonwiki_code                      = missing,
+  names                               = missing,
+  texnames                            = missing,
+  labels                              = missing,
   characters                          = missing,
   sub_fusion_rings                    = missing,
   frobenius_perron_dimension          = missing,
   frobenius_perron_dimensions         = missing,
-  tensor_product_decompositions       = missing,
-  numeric_characters                  = missing,
-  numeric_frobenius_perron_dimension  = missing,
-  numeric_frobenius_perron_dimensions = missing,
+  formal_codegrees                    = missing,
   has_categories_with_props           = missing,
-  categorifiable                      = missing,
   categorifications                   = missing,
   references                          = missing,
   software                            = missing,
-  comments                            = missing,
-  non_cat_reasons                     = missing,
-  uuid                                = missing,
+  all_gradings                        = missing,
+  upper_central_series                = missing,
+  realizations                        = missing,
+  automorphism_group                  = missing,
   skip_check                          = false,
 )
   if !skip_check
@@ -113,12 +115,18 @@ function fusion_ring(
     check_unit(mt) || error("First basis element must act as unit object")
     check_inverse(mt) || error("Each simple object must have a unique inverse")
     check_associativity(mt) || error("Structure constants violate associativity")
-    (labels == [] || check_labels(mt, labels)) || error("labels length ≠ rank")
+    if labels !== [] && !ismissing(labels) && !check_labels(mt, labels)
+      error("labels length ≠ rank")
+    end
   end
 
-  labels == [] && (labels = String[bold_integer(i) for i in 1:size(mt, 1)])
+  #@info (mt::Array{Int,3},  uuid, anyonwiki_code, names, texnames, labels, characters, sub_fusion_rings, frobenius_perron_dimension, frobenius_perron_dimensions, formal_codegrees, has_categories_with_props           ,  categorifications                   ,  references                          ,  software                            ,  all_gradings                        ,  upper_central_series,  realizations, automorphism_group)
+
+  ( ismissing(labels) || labels == [] ) && (labels = String[bold_integer(i) for i in 1:size(mt, 1)])
 
   id = ismissing(uuid) ? string(UUIDs.uuid1()) : uuid
+
+  !is_valid_uuid(id) && error("UUID string is invalid")
 
   r   = size(mt,1)
   sd  = count(x -> x == 1, diag(mt[:,:,1]))
@@ -138,31 +146,129 @@ function fusion_ring(
       frobenius_perron_dimensions
     end
 
+  fcds =
+    if formal_codegrees isa Vector{Oscar.QQBarFieldElem}
+      qqb_id.(formal_codegrees)
+    else
+      formal_codegrees
+    end
+
+  # characters can be encoded in a variety of different ways
+  mtspceqqb = AbstractAlgebra.Generic.MatSpaceElem{Nemo.QQBarFieldElem}
+
+  chars =
+    if characters isa mtspceqqb || characters isa Matrix{QQBarFieldElem}
+      [ qqb_id(characters[i,j]) for i in 1:r, j in 1:r ]
+    elseif characters isa Vector{Vector{String}}
+      [ characters[i][j] for i in 1:r, j in 1:r  ]
+    elseif characters isa Vector{Vector{Any}}
+      String[ characters[i][j] for i in 1:r, j in 1:r  ]
+    else
+      characters
+    end
+
+
+  function convert_nms(x)
+    ismissing(x) && return missing
+    isnothing(x) && return missing
+    x isa Vector{String} && return x
+    all( el -> el isa String, x ) && return string.(x)
+
+    error("Values of names dictionary should be nothing, missing or a list of Strings")
+  end
+
+
+  nms = if ismissing(names)
+    _nonames
+  elseif names isa Vector
+    mscnames(string.(names))
+  else
+    Dict( k => convert_nms(v) for (k,v) in names )
+  end
+
+  texnms = if ismissing(texnames)
+    _nonames
+  elseif texnames isa Vector
+    mscnames(string.(names))
+  else
+    Dict( k => convert_nms(v) for (k,v) in texnames )
+  end
+
+  # LEGACY compatibility
+  hcwp = if has_categories_with_props isa Vector
+    vec = has_categories_with_props
+    Dict{String,Vector{Any}}( row[1] => [ row[2],row[3][1],row[3][2]] for row in vec )
+  elseif ismissing(has_categories_with_props)
+    Dict(
+      "Fusion"    => [missing, "", "Unknown to AnyonWiki"],
+      "Pivotal"   => [missing, "", "Unknown to AnyonWiki"],
+      "Unitary"   => [missing, "", "Unknown to AnyonWiki"],
+      "Spherical" => [missing, "", "Unknown to AnyonWiki"],
+      "Braided"   => [missing, "", "Unknown to AnyonWiki"],
+      "Ribbon"    => [missing, "", "Unknown to AnyonWiki"],
+      "Modular"   => [missing, "", "Unknown to AnyonWiki"]
+    )
+  else
+    has_categories_with_props
+  end
+
+  #TODO: let references be paper of FusionRings if missing.
+  refs = if references isa Vector
+    Dict{String,Vector{String}}(
+      "All" => references
+    )
+  else
+    references
+  end
+
+  #TODO: let software be current version of FusionRings if missing.
+  sftw = if software isa Vector
+    Dict{String,Vector{String}}(
+      "All" => software
+    )
+  else
+    software
+  end
+
+  ag = if all_gradings isa Vector{Tuple{Vector{Int64},FusionRing}}
+    [ ( t[1], t[2].uuid ) for t in all_gradings ]
+  else
+    all_gradings
+  end
+
+  ucs = if upper_central_series isa Vector{Tuple{Vector{Int64},FusionRing}}
+    [ ( t[1], t[2].uuid ) for t in upper_central_series ]
+  else
+    upper_central_series
+  end
+
+  sfr = if sub_fusion_rings isa Vector{Tuple{Vector{Int64},FusionRing}}
+    [ ( t[1], t[2].uuid ) for t in sub_fusion_rings ]
+  else
+    sub_fusion_rings
+  end
+
+  rlztns = ismissing(realizations) ? Dict{String,Any}( "tensor_product" => missing ) : realizations
+
   return FusionRing(
     mt,
-    r,
-    maximum(mt),
-    nsd,
-    names,
-    texnames,
+    id,
+    anyonwiki_code,
+    nms,
+    texnms,
     labels,
-    barcode,
-    anyonwiki_id,
-    characters,
-    sub_fusion_rings,
+    chars,
+    sfr,
     fpd,
     fpds,
-    tensor_product_decompositions,
-    numeric_characters,
-    numeric_frobenius_perron_dimension,
-    numeric_frobenius_perron_dimensions,
-    has_categories_with_props,
-    categorifiable,
+    fcds,
+    hcwp,
     categorifications,
-    references,
-    software,
-    comments,
-    non_cat_reasons,
-    id,
+    refs,
+    sftw,
+    ag,
+    ucs,
+    rlztns,
+    automorphism_group
   )
 end

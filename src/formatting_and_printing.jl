@@ -53,18 +53,68 @@ sup_digits_dict = Dict(
   8 => "⁸",
   9 => "⁹",
 )
+
 # Formatting of fusion rings
+# Names are grouped per category. The user can change the order of importance preference of which
+# category is used to display the names of all rings
+
+global _naming_priority_order = [ "quantum_group_like", "group_like", "physics", "miscellaneous" ]
+global _naming_allow_exceptions
+global _naming_exceptions = Dict(
+  [ 2, 1, 0, 2 ] => "Fibonacci",
+  [ 3, 1, 0, 1 ] => "Ising"
+)
+
+export set_naming_priority!
+
+function set_naming_priority!(v::Vector{String})
+  v ⊈ _naming_priority_order && error("The priorities given for naming should be a subset of [ \"quantum_group\", \"group_like\", \"physics\", \"miscellaneous\" ] ")
+  np = v
+  for s in _naming_priority_order
+    s ∉ np && push!(np,s)
+  end
+  global _naming_priority_order = np
+end
+
+export set_naming_exceptions!
+
+function set_naming_exceptions!(b::Bool)
+  _naming_allow_exceptions = b
+end
+
+function set_naming_exceptions(d::Dict{Vector{Int64},String})
+  !all( c -> length(c) == 4, collect( keys(d)) ) && error("The keys of the dictionary of naming exceptions should be anyonwiki_codes, i.e. integer vectors of lenght 4.")
+
+  global _naming_exceptions = d
+end
+
+function name(fr::FusionRing)
+  c = anyonwiki_code(fr)
+  haskey(_naming_exceptions,c) && return _naming_exceptions[c]
+
+  nms = names(fr)
+
+  for k in _naming_priority_order
+    l = nms[k]
+    !ismissing(l) && !isempty(l) && return first(l)
+  end
+
+  return missing
+end
+
 function Base.show(io::IO, ring::FusionRing)
   p(str) = print(io, str);
-  if ring.names != []
-    p("FR(" * names(ring)[1] * ")")
-  elseif !ismissing(ring.anyonwiki_id)
-    c = join( split( (ring.anyonwiki_id)[20:end], "_" ),",")
-    p("FR(" * c * ")")
-  else
-    props = map(string, comap([rank, multiplicity, nnsd], ring))
-    p("FR(" * join(props, ", ") * ", ? )")
+  n = name(ring)
+
+  !ismissing(n) && return p("FR(" * n * ")")
+
+  if !ismissing(ring.anyonwiki_code)
+    return p("FR(" * join( string.(ring.anyonwiki_code) , ", " ) * ")")
   end
+
+  props = string.(comap([rank, multiplicity, nnsd], ring))
+
+  return p("FR(" * join(props, ", ") * ", ? )")
 end
 
 export print_multiplication_table

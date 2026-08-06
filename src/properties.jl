@@ -230,7 +230,13 @@ end
 
 export numeric_fpdim
 
-function numeric_fpdim(fr::FusionRing)
+function numeric_fpdim(fr::FusionRing; force_compute = false )
+  fpd = fr.frobenius_perron_dimension
+
+  if !ismissing(fpd) && !force_compute
+    return ComplexF64(from_qqb_id(fpd))
+  end
+
   return sum(x->x*x, numeric_fpdims(fr))
 end
 

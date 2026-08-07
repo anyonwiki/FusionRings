@@ -1,3 +1,2 @@
 *.json filter=lfs diff=lfs merge=lfs -text
 *.mrdi filter=lfs diff=lfs merge=lfs -text
-* !text !filter !merge !diff

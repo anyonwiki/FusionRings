@@ -1,3 +1,16 @@
-* !text !filter !merge !diff
+*.toml filter=lfs diff=lfs merge=lfs -text
+*.yml filter=lfs diff=lfs merge=lfs -text
+*.gitignore filter=lfs diff=lfs merge=lfs -text
+*.bib filter=lfs diff=lfs merge=lfs -text
+/LICENSE filter=lfs diff=lfs merge=lfs -text
+*.md filter=lfs diff=lfs merge=lfs -text
+*.jl filter=lfs diff=lfs merge=lfs -text
+*.ipynb filter=lfs diff=lfs merge=lfs -text
 *.json filter=lfs diff=lfs merge=lfs -text
+/src/data/gradings filter=lfs diff=lfs merge=lfs -text
 *.mrdi filter=lfs diff=lfs merge=lfs -text
+*.wl filter=lfs diff=lfs merge=lfs -text
+/test/testdata/test_fusion_ring_codes filter=lfs diff=lfs merge=lfs -text
+*.wdx filter=lfs diff=lfs merge=lfs -text
+*.txt filter=lfs diff=lfs merge=lfs -text.mrdi filter=lfs diff=lfs merge=lfs -text
+* !text !filter !merge !diff

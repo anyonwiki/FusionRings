@@ -1,0 +1,1638 @@
+
+#function change_fusion_ring_property(r::FusionRing, dict)
+
+#end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                            multiplication_table                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export multiplication_table
+
+function multiplication_table(r::FusionRing)::Array{Int, 3}
+  return r.multiplication_table
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    rank                                         ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export rank
+
+function rank(r::FusionRing)::Int
+  return size(multiplication_table(r), 1)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    names                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export names
+
+function names(r::FusionRing)
+  return r.names
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  tex_names                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export tex_names
+
+function tex_names(r::FusionRing)
+  return r.texnames
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    labels                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export labels
+
+function labels(r::FusionRing)::Array{String, 1}
+  return r.labels
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               conjugation_matrix                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export conjugation_matrix
+
+function conjugation_matrix(fr::FusionRing)
+  return multiplication_table(fr)[:, :, 1]
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  multiplicity                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#TODO: write test: multiplicity(r) = anyonwiki_code(r)[2]
+
+export multiplicity
+
+function multiplicity(r::FusionRing)::Int
+  return maximum(multiplication_table(r))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                      mult                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export mult
+
+mult = multiplicity
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           nonzero_structure_constants                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+#TODO: write test: check whether number of nonzero struct const is same as for data in
+# folder test/testdata/properties/
+
+export nonzero_structure_constants
+
+function nonzero_structure_constants(r::FusionRing)::Vector{Tuple{Int64, Int64, Int64}}
+  mt = multiplication_table(r)
+  return Tuple.(findall(x -> x > 0, mt))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                      nzsc                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export nzsc
+
+nzsc = nonzero_structure_constants
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                      nzsc                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export nnzsc
+
+function nnzsc(r::FusionRing)
+  return size(nonzero_structure_constants(r), 1)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           frobenius_perron_dimensions                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export frobenius_perron_dimensions
+
+function frobenius_perron_dimensions(
+  r::FusionRing; force_compute = false
+)::Vector{QQBarFieldElem}
+  stored_dims = r.frobenius_perron_dimensions
+  if ismissing(stored_dims) || force_compute
+    mt = multiplication_table(r)
+    multmats = [matrix(ZZ, mt[i, :, :]) for i in 1:rank(r)]
+    return [first(eigenvalues(QQBar, A)) for A in multmats]
+  else
+    return from_qqb_id(stored_dims)
+  end
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     fpdims                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export fpdims
+
+fpdims = frobenius_perron_dimensions
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_integral                                    ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_integral
+
+@doc raw"""
+    is_integral(fr::FusionRing)
+
+Returns true if `fr` is integral, i.e. fpdim(x) ∈ ℤ for all x ∈ `fr`, and false otherwise.
+
+"""
+function is_integral(fr::FusionRing)::Bool
+  return all(isinteger, fpdims(fr))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           frobenius_perron_dimension                            ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export frobenius_perron_dimension
+
+function frobenius_perron_dimension(r::FusionRing, force_compute = false)::QQBarFieldElem
+  stored_dim = r.frobenius_perron_dimension
+  if ismissing(stored_dim) || force_compute
+    return sum(fpdims(r) .^ 2)
+  else
+    return from_qqb_id(stored_dim)
+  end
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     fpdim                                       ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export fpdim
+
+fpdim = frobenius_perron_dimension
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              is_weakly_integral                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_weakly_integral
+
+@doc raw"""
+    is_weakly_integral(fr::FusionRing)
+
+Returns true if `fr` is weakly integral, i.e. fpdim(fr) ∈ ℤ, and false otherwise.
+
+"""
+function is_weakly_integral(fr::FusionRing)::Bool
+  return isinteger(fpdim(fr))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  numeric_fpdims                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export numeric_fpdims
+
+function numeric_fpdims(fr::FusionRing; force_compute = false)
+  fpds = fr.frobenius_perron_dimensions
+
+  if !ismissing(fpds) && !force_compute
+    return ComplexF64.(from_qqb_id.(fpds))
+  end
+
+  r = rank(fr)
+  S = zeros(Float64, r, r)
+  N = multiplication_table(fr)
+  for a in 1:r
+    @views S .+= N[a, :, :]
+  end
+  vals, vecs = eigen(S)
+  idx = argmax(vals)
+  v = abs.(vecs[:, idx])
+  return v ./ v[1]
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                   numeric_fpdim                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export numeric_fpdim
+
+function numeric_fpdim(fr::FusionRing; force_compute = false)
+  fpd = fr.frobenius_perron_dimension
+
+  if !ismissing(fpd) && !force_compute
+    return ComplexF64(from_qqb_id(fpd))
+  end
+
+  return sum(x->x*x, numeric_fpdims(fr))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                           num_self_dual_non_self_dual                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export num_self_dual_non_self_dual
+
+function num_self_dual_non_self_dual(r::FusionRing)::Array{Int, 1}
+  sd  = count(x -> x == 1, diag(conjugation_matrix(r)))
+  nsd = rank(r) - sd
+  return Int[sd, nsd]
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     nsdnsd                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export nsdnsd
+
+nsdnsd = num_self_dual_non_self_dual
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  num_self_dual                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export num_self_dual
+
+function num_self_dual(r::FusionRing)::Int
+  return first(nsdnsd(r))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                      nsd                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export nsd
+
+nsd = num_self_dual
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                num_non_self_dual                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+#TODO: write test: num_non_self_dual(ring) == anyonwiki_code(ring)[3]
+export num_non_self_dual
+
+function num_non_self_dual(r::FusionRing)::Int
+  return last(nsdnsd(r))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     nnsd                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export nnsd
+export nnsd
+
+nnsd = num_non_self_dual
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_group_ring                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_group_ring
+
+function is_group_ring(r::FusionRing)::Bool
+  return sum(multiplication_table(r)) == rank(r)^2
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                   cayley_table                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export cayley_table
+
+function cayley_table(fr::FusionRing)
+  !is_group_ring(fr) && message("Ring must be group ring")
+
+  mt = multiplication_table(fr)
+  r  = rank(fr)
+  return [findfirst(==(1), mt[a, b, :]) for a in 1:r, b in 1:r]
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                conjugate_element                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export conjugate_element
+
+function conjugate_element(r::FusionRing)
+  return a -> conjugate_element(r, a)
+end
+
+"""
+    conjugate_element(fr, a) -> Int
+
+Return the integer index of the dual (conjugate) simple object of `a`.
+Accepts an integer index, a `String`, or a `Symbol`.
+"""
+function conjugate_element(fr::FusionRing, a::Int64)::Int64
+  C = conjugation_matrix(fr)
+  return findfirst(==(1), C[a, :])
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                 conjugate_pairs                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export conjugate_pairs
+
+function conjugate_pairs(fr::FusionRing)::Vector{Vector{Int}}
+  d  = conjugate_element(fr);
+  us = unique ∘ sort
+  return unique([us([a, d(a)]) for a in 1:rank(fr)])
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                 anyonwiki_code                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export anyonwiki_code
+
+function anyonwiki_code(r::FusionRing)::Union{Array{Int, 1}, Missing}
+  return r.anyonwiki_code
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                     uuid                                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export uuid
+
+function uuid(r::FusionRing)::Union{Missing, String}
+  return r.uuid
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    barcode                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export barcode
+
+function barcode(fr::FusionRing; force_compute = false)
+
+  #first we sort the elements of the ring. Selfdual elements appear before
+  #non-self dual ones and non-self dual ones are grouped in dual pairs.
+  #the self-dual ones are then sorted by increasing fpdim and the same
+  #for the pairs of dual elements
+  sr = sort(fr; by = "sd_conj")
+  r  = rank(sr)
+
+  #we only allow permutations that preserve the order above
+  cp = conjugate_pairs(sr)
+
+  #some useful functions
+  fpd(i)     = fpdims(fr)[i]
+  addunit(v) = vcat(1, v .+ 1)
+
+  # first we set up possible permutations for self-dual elements
+  sd = vcat(filter(p -> length(p) == 1, cp))
+
+  S_sd = if length(sd) == 1
+    [[]]
+  else
+    function tovecsd(σ)
+      return Vector(σ, length(sd)-1)
+    end
+    map(addunit ∘ tovecsd, _sorted_symmetries(fpd.(sd[2:end])))
+  end
+
+  # now we set up possible permutations for non-selfdual elements
+  nsd = filter(p -> length(p) == 2, cp)
+
+  S_nsd = if isempty(nsd)
+    [[]]
+  else
+    vec = []
+
+    for i in 1:length(nsd)
+      d = fpd(nsd[i][1])
+      push!(vec, [i, d])
+      push!(vec, [i, d])
+    end
+
+    fixindices(v) = v .+ length(sd)
+    tovecnsd(σ)   = Vector(σ, r - length(sd))
+    map(fixindices ∘ tovecnsd, _sorted_symmetries(vec))
+  end
+
+  # don't expand. Do a loop :)
+  #
+  mt   = multiplication_table(sr)
+  mult = multiplicity(sr)
+  max  = mult_tab_code(mt, mult)
+  for σ_sd in S_sd, σ_nsd in S_nsd
+    perm = vcat(σ_sd, σ_nsd)
+    mtc = mult_tab_code(mt[perm, perm, perm], mult)
+    mtc > max && (max = mtc)
+  end
+
+  return max
+end
+
+function mult_tab_code(mt::Array{Int64, 3}, mult::Int)
+  strl = String[]
+  r = size(mt, 1)
+  for a in 1:r, b in 1:r, c in 1:r
+    push!(strl, string(mt[a, b, c]))
+  end
+  return p = ZZ(parse(BigInt, join(strl); base = mult+1))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_simple                                      ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_simple
+
+@doc raw"""
+    is_simple(fr::FusionRing)
+
+Returns true if `fr` has no non-trivial sub fusion rings and false otherwise.
+"""
+
+function is_simple(fr::FusionRing)::Bool
+  return isempty(sub_fusion_rings(fr))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               sub_fusion_rings                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export sub_fusion_rings
+
+function sub_fusion_rings(r::FusionRing; force_compute = false, represent_by_known = true)
+  sfr = r.sub_fusion_rings
+  if !ismissing(sfr) && !force_compute
+    return [(t[1], from_uuid(t[2])) for t in sfr]
+  end
+
+  subsets = sub_fusion_ring_subsets(r)
+  mt = multiplication_table(r)
+  rbk = represent_by_known ? replace_by_known : identity
+
+  return [(s, rbk(fusion_ring(mt[s, s, s]))) for s in subsets]
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                             sub_fusion_ring_subsets                             ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export sub_fusion_ring_subsets
+
+"""
+    sub_fusion_ring_subsets(fr::FusionRing) -> Vector{Vector{Int}}
+
+Enumerate all **proper, nontrivial** fusion-closed subsets of elements containing
+the unit (index 1), returned as **index vectors**.
+"""
+
+function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
+  r = rank(fr)
+  r <= 2 && return Vector{Int}[]
+
+  result = Vector{Int}[]
+
+  # group elements by conjugacy since if a is part of subring a* also has to be
+  pairs = conjugate_pairs(fr)[2:end]
+  np    = size(pairs, 1)
+
+  # flatten conjugate_pairs back to 1D vector
+  function flatten(l::Vector{Vector{Int}})
+    res = Int[]
+    for vec in l, el in vec
+      push!(res, el)
+    end
+    return res
+  end
+
+  for k in 1:(np - 1), subset in combinations(pairs, k)
+    S = vcat([1], flatten(collect(subset)))
+    if is_sub_fusion_ring(fr, S)
+      push!(result, S)
+    end
+  end
+  return result
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              is_sub_fusion_ring                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_sub_fusion_ring
+
+#TODO: write test that checks whether all fusion rings obained via sub_fusion_rings are fusion rings
+#TODO: write test: pick some rings that are not sub fusion rings and check whether this is recognized
+
+"""
+    is_sub_fusion_ring(fr, S) -> Bool
+
+Return `true` iff `S` is a fusion-closed subset of simples containing the unit.
+
+`S` may be a vector of indices (`Int`/`Integer`) or a vector of labels
+(`String`/`Symbol`).
+"""
+function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
+  # any subring must contain unit
+  isempty(S) && return false
+  1 ∉ S && return false
+
+  # indices in S must lie in range 1, ...,  r
+  r = rank(fr)
+  !all(i -> 1 <= i <= r, S) && return false
+
+  # multiplication must be internal
+  for a in S, b in S
+    fusion_outcomes(fr, a, b) ⊈ S && return false
+  end
+
+  mt = multiplication_table(fr)[S, S, S]
+
+  return check_struct_const(mt) &&
+         check_mt_dims(mt) &&
+         check_unit(mt) &&
+         check_inverse(mt) &&
+         check_associativity(mt)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  realizations                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export realizations
+
+function realizations(fr::FusionRing; force_compute = false)::Dict{String, Any}
+  rlztns = fr.realizations
+
+  vals = collect(values(rlztns))
+
+  if any(ismissing, vals) || any(isnothing, vals) || force_compute
+    return Dict{String, Any}(
+      "tensor_product" =>
+        decompositions(fr; kind = "tensor_product", force_compute = force_compute),
+    )
+  end
+
+  return Dict{String, Any}(
+    "tensor_product" =>
+      [[from_uuid(r) for r in decomp] for decomp in rlztns["tensor_product"]],
+  )
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                            is_equivalent_fusion_ring                            ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_equivalent_fusion_ring
+
+function is_equivalent_fusion_ring(ring1::FusionRing, ring2::FusionRing)::Bool
+  return which_permutation(ring1, ring2) !== nothing
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                which_permutation                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#TODO: write test: permute ring using a vector and check whether which_permutation(..., all=true)
+# containts this vector
+
+export which_permutation
+
+"""
+    which_permutation(fr1, fr2, all=false, short_circuit=true)::Union{Nothing,Vector{Int64}}
+
+    Returns a list with a permutation such that `permute( perm, fr1 ) == fr2` or nothing if none exist.
+    If all=true, returns all permutations such that `permute( perm, fr1 ) == fr2` or nothing if none exist.
+    If short_circuit=false, doesn't compute invariants to determine whether rings are
+    not equivalent. This saves time if it is known a priori that the rings have to be equivalent.
+"""
+function which_permutation(
+  fr1::FusionRing, fr2::FusionRing; all = false, short_circuit = true
+)::Union{Nothing, Vector{Vector{Int64}}}
+  r = rank(fr1)
+
+  # if ranks are different we can't compare so necessary to short_circuit
+  # since computation of number selfdual & non-selfdual elements is as
+  # fast and gives stronger invariant, we use that one instead
+  nsdnsd(fr1) != nsdnsd(fr2) && return nothing
+
+  r == 1 && return [[1]]
+
+  # check whether rings have same multiplicity
+  short_circuit && mult(fr1) != mult(fr2) && return nothing
+
+  # rings must have same fpdims
+  fpd1 = fpdims(fr1)
+  fpd2 = fpdims(fr2)
+
+  short_circuit && sort(fpd1) ≠ sort(fpd2) && return nothing
+
+  # check whether number of fusion outcomes per multiplicity
+  # is the same for each element of fr1 and fr2
+  m1 = multiplication_table(fr1)
+  m2 = multiplication_table(fr2)
+
+  grp1 = diag_channel_count(m1)
+  grp2 = diag_channel_count(m2)
+
+  short_circuit && sort(grp1) ≠ sort(grp2) && return nothing
+
+  # construct invariants for all elements of both rings
+  # these are triples of their fusion outcome count, fpdims
+  # and being self-conjugate or not
+  # we remove the first element since it needs to be fixed
+
+  sc1 = is_self_conjugate(fr1).(collect(1:r))
+  sc2 = is_self_conjugate(fr2).(collect(1:r))
+
+  inv1 = collect(zip(grp1, fpd1, sc1))[2:end]
+  inv2 = collect(zip(grp2, fpd2, sc2))[2:end]
+
+  # for some operations the unit needs to be added again
+  addunit(perm_vec) = vcat(1, perm_vec .+ 1)
+
+  #sort invA and invB such that equal elements are next to each other.
+  σ1 = sortperm(inv1)
+  σ2 = sortperm(inv2)
+
+  #permute the mult tabs so their invariants are sorted
+  uσ1 = addunit(σ1)
+  uσ2 = addunit(σ2)
+  sm1 = m1[uσ1, uσ1, uσ1]
+  sm2 = m2[uσ2, uσ2, uσ2]
+
+  sorted_inv1 = inv1[σ1]
+
+  S, _ = symmetries(sorted_inv1; sorted = true)
+
+  if !all  # only need first permutation
+    for σ in S
+      p = addunit(Vector(σ, r-1))
+      if sm1[p, p, p] == sm2
+        iuσ2 = invperm(uσ2)
+        return [uσ1[p[iuσ2]]]
+      end
+    end
+  else # want all permutations
+    allperms = Vector{Int}[]
+
+    for σ in S
+      p = addunit(Vector(σ, r-1))
+      if sm1[p, p, p] == sm2
+        iuσ2 = invperm(uσ2)
+        push!(allperms, uσ1[p[iuσ2]])
+      end
+    end
+
+    return allperms
+  end
+end
+
+# returns the symmetry group S of the vector v together with
+# the permutation σv that sorts v. The symmetries are thus of the form
+# inverseperm(σv) ∘ g ∘ σv. If sorted=true it is assumed that v is sorted
+
+function symmetries(v; sorted = false)::Tuple{PermGroup, PermGroupElem}
+  is_empty(v) && return nothing
+
+  n = size(v, 1)
+
+  tocycles(v) = perm(symmetric_group(n), v)
+
+  n == 1 && return (symmetric_group(1), tocycles([1]))
+
+  if sorted
+    return (_sorted_symmetries(v), tocycles(1:n))
+  else
+    σv = sortperm(v)
+    vs = v[σv]
+    return (_sorted_symmetries(vs), tocycles(σv))
+  end
+end
+
+function _sorted_symmetries(v)::PermGroup
+  return inner_direct_product(symmetric_group.(tally(v)[2]))
+end
+
+function diag_channel_count(N::Array{Int, 3})::Vector{Tuple{Vector{Int}, Vector{Int}}}
+  return [tally(N[i, i, :]; sort = true) for i in 1:size(N, 1)]
+end
+
+function is_self_conjugate(fr)
+  return x -> (x == conjugate_element(fr, x))
+end
+
+# Apply permutation P on all three indices: A'[i,j,k] = A[P[i],P[j],P[k]]
+# TODO: we already have permute_mult_tab. Isn't this the same? If so remove the code below
+# in favor of permute_mult_tab
+function _permute_multtab(A::Array{Int, 3}, P::Vector{Int})::Array{Int, 3}
+  r = size(A, 1)
+  B = similar(A)
+  @inbounds for i in 1:r, j in 1:r, k in 1:r
+    B[i, j, k] = A[P[i], P[j], P[k]]
+  end
+  return B
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                            fusion_ring_automorphisms                            ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export fusion_ring_automorphisms
+"""
+    fusion_ring_automorphisms(fr) -> Vector{Vector{Int}}
+
+Return all permutations `p` whose action on the indices leave the structure constants invariant.
+"""
+#TODO: write test: should match data in test/testdata/properties
+
+function fusion_ring_automorphisms(fr::FusionRing)
+  return which_permutation(fr, fr; all = true)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               automorphisms_group                               ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export automorphism_group
+"""
+    automorphism_group(fr) -> Vector{Vector{Int}}
+
+Return all permutations `p` whose action on the indices leave the structure constants invariant.
+"""
+#TODO: write test: should match data in test/testdata/properties
+
+function automorphism_group(fr::FusionRing; force_compute = false)::PermGroup
+  ag = fr.automorphism_group
+  if ismissing(ag) || force_compute
+    return permutation_group(rank(fr), perm.(fusion_ring_automorphisms(fr)))
+  else
+    return ag
+  end
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  decompositions                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export decompositions
+
+function decompositions(
+  fr::FusionRing; kind = "tensor_product", force_compute = false, represent_by_known = true
+)#::Vector{ Vector{FusionRing} }
+  kind == "tensor_product" ||
+    error("Only tensor product decompositions are defined at the moment.")
+
+  tpd = (fr.realizations)["tensor_product"]
+  if ismissing(tpd) || isnothing(tpd) || force_compute
+    return non_trivial_tensor_product_decompositions(
+      fr; represent_by_known = represent_by_known
+    )
+  else
+    [[from_uuid(id) for id in decomp] for decomp in tpd]
+  end
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                     non_trivial_tensor_product_decompositions                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export non_trivial_tensor_product_decompositions
+
+"""
+    tensor_product_decompositions(r::FusionRing)
+
+Return non-trivial decompositions of `r` as tensor products of fusion rings.
+"""
+function non_trivial_tensor_product_decompositions(
+  fr::FusionRing; represent_by_known = true
+)::Vector{Vector{FusionRing}}
+  r = rank(fr)
+
+  # since every fusion ring has an identity 1, every component
+  # in the tensor product is a subring whose rank divides the rank of fr
+  subrings = filter_equivalents(
+    is_equivalent_fusion_ring, [t[2] for t in sub_fusion_rings(fr)]
+  )
+
+  #@info subrings
+
+  length(subrings) == 0 && return Vector{Vector{FusionRing}}[]
+
+  proposals = filter(ring -> rem(r, rank(ring)) == 0, subrings)
+
+  proposals_by_rank = group_by(rank, proposals)
+  posible_ranks = collect(keys(proposals_by_rank))
+
+  pts = filter(p -> p ⊆ posible_ranks, multiplicative_partitions(r))
+
+  decomps = Vector{Vector{FusionRing}}()
+
+  for p in pts
+    posible_sub_rings_per_rank = [proposals_by_rank[rk] for rk in p]
+    combinations = cartesian_choices(posible_sub_rings_per_rank)
+
+    for combination in combinations
+      prod = tensor_product(combination...)
+      is_equivalent_fusion_ring(prod, fr) && push!(decomps, combination)
+    end
+  end
+
+  return filter_equivalents(is_equivalent_decomposition, decomps)
+end
+
+"""_multiplicative_partitions(n)
+    Returns all unordered multiplicative decompositions of n into factors     >= 2.
+
+       ex:
+          _multiplicative_partitions(12)
+       includes:
+           [2, 6], [3, 4], [2, 2, 3], [12]
+
+       use this because if rank(R) = 12, then possible tensor-factor ranks
+      could be 2 and 6, or 3 and 4, or 2, 2, and 3.
+
+"""
+function multiplicative_partitions(n::Int; minfactor::Int = 2)
+  n == 1 && return [Int[]]
+
+  out = Vector{Vector{Int}}()
+
+  function go(rem::Int, start::Int, acc::Vector{Int})
+    if rem == 1
+      push!(out, copy(acc))
+      return nothing
+    end
+
+    for d in start:rem
+      rem % d ≠ 0 && continue
+
+      push!(acc, d)
+      go(rem ÷ d, d, acc)
+      pop!(acc)
+    end
+  end
+
+  go(n, minfactor, Int[])
+  return out
+end
+
+"""
+    cartesian_choices(lists)
+
+Given a vector of candidate lists, returns all ways to choose one element
+from each list.
+
+# Example
+
+If
+
+    [[A1, A2], [B1, B2, B3]]
+
+ passed in,  produces
+
+    [A1, B1], [A1, B2], [A1, B3],
+    [A2, B1], [A2, B2], [A2, B3]
+
+ use this when  know  possible ranks of the factors and want to
+try all known fusion rings with those ranks.
+"""
+function cartesian_choices(lists::Vector{Vector{FusionRing}})
+  isempty(lists) && return Vector{Vector{FusionRing}}()
+
+  out = Vector{Vector{FusionRing}}()
+  cur = Vector{FusionRing}(undef, length(lists))
+
+  function go(i::Int)
+    if i > length(lists)
+      push!(out, copy(cur))
+      return nothing
+    end
+
+    for x in lists[i]
+      cur[i] = x
+      go(i + 1)
+    end
+  end
+
+  go(1)
+  return out
+end
+
+function is_equivalent_decomposition(d1, d2)
+  length(d1) ≠ length(d2) && return false
+
+  r_m_nnsd_nnzsc(ring::FusionRing) =
+    (rank(ring), multiplicity(ring), nnsd(ring), nnzsc(ring))
+
+  sort(r_m_nnsd_nnzsc.(d1)) ≠ sort(r_m_nnsd_nnzsc.(d1)) && return false
+
+  # check if uuids exist and if so compare these
+  uuids1 = uuid.(d1)
+  uuids2 = uuid.(d2)
+  if !any(ismissing, uuids1) && !any(ismissing, uuids2)
+    return sort(uuids1) == sort(uuids2)
+  end
+
+  # if standard tests fail we have to do it the hard way
+  return length(filter_equivalents(is_equivalent_fusion_ring, vcat(d1, d2))) == length(d1)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                adjoint_fusion_ring                              ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export adjoint_fusion_ring
+
+function adjoint_fusion_ring(
+  ring::FusionRing; represent_by_known = true, force_compute = false
+)::Tuple{Vector{Int}, FusionRing}
+  ucs = ring.upper_central_series
+
+  if !ismissing(ucs) && !force_compute
+    if length(ucs) == 1
+      return (ucs[1][1], from_uuid(ucs[1][2]))
+    else
+      return (ucs[2][1], from_uuid(ucs[2][2]))
+    end
+  end
+
+  d(i) = conjugate_element(ring, i)
+
+  el_seen = falses(rank(ring))
+  for (i, j, c) in nzsc(ring)
+    if j == d(i)
+      el_seen[c] = true
+    end
+  end
+  el = findall(el_seen)
+
+  generatedEl = _fusion_closure(ring, el)
+
+  rbk = represent_by_known ? replace_by_known : identity
+
+  if length(generatedEl) == rank(ring)
+    return (generatedEl, rbk(ring))
+  else
+    sr = restrict_subring(ring, generatedEl; check_closed = true)
+    return (generatedEl, rbk(sr))
+  end
+end
+
+# closure of a subset of elements of a fusion ring under fusion
+function _fusion_closure(fr::FusionRing, S0::Vector{Int})::Vector{Int}
+  r = rank(fr)
+  seen = falses(r)
+  @inbounds for s in S0
+    seen[s] = true
+  end
+  changed = true
+  while changed
+    changed = false
+    current = findall(seen)
+    @inbounds for a in current, b in current
+      for c in fusion_outcomes(fr, a, b)
+        if !seen[c]
+          seen[c] = true
+          changed = true
+        end
+      end
+    end
+  end
+  return findall(seen)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               upper_central_series                              ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export upper_central_series
+
+function upper_central_series(
+  fr::FusionRing; force_compute = false, represent_by_known = true
+)::Vector{Tuple{Vector{Int64}, FusionRing}}
+  ucs = fr.upper_central_series
+
+  if !ismissing(ucs) && !force_compute
+    return [(t[1], from_uuid(t[2])) for t in ucs]
+  end
+
+  chain = Tuple{Vector{Int}, FusionRing}[]
+
+  rbk = represent_by_known ? replace_by_known : identity
+
+  push!(chain, (collect(1:rank(fr)), rbk(fr)))
+
+  adjfr(fr) = adjoint_fusion_ring(
+    fr; force_compute = force_compute, represent_by_known = represent_by_known
+  )
+  while true
+    S, adj = adjfr(last(chain)[2])
+    rank(last(chain)[2]) === rank(adj) && break
+    push!(chain, (S, adj))
+    length(S) == 1 && break
+  end
+  return unique(chain)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_nilpotent                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_nilpotent
+
+function is_nilpotent(r::FusionRing)::Bool
+  chain = upper_central_series(r)
+  last_set, _ = last(chain)
+  return length(last_set) == 1
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  adjoint_irreps                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export adjoint_irreps
+
+"""
+    adjoint_irreps(ring::FusionRing) -> Vector{Vector{Int}}
+
+Return the partition of the simple objects of `ring` into subsets invariant
+under left and right action of the adjoint subring.
+
+- compute  adjoint subring `(subEl, subRing) = adjoint_fusion_ring(ring)`
+- for each simple `e`, take  fixed-point closure of `{e}` under:
+      X -> Action[(ring, adjoint), X] ∪ Action[X, (ring, adjoint)]
+- remove duplicates
+
+More simply, let (S,A) be adjoint subring of R where S is set of simple indices in that subring
+For subset X of simples def:
+    Left action: S*X = \$⋃_{a∈S, x∈X} Sup(a⊗x)
+    Right action: X*S = \$⋃_{x∈X, a∈S} Sup(x⊗a)
+    combined : \$\\theta(X) = S*X ∪ X*S\$
+So for each simple e I start w/ {e} and apply that until stabilizes:
+    X₀ = {e}
+    X₁ = θ(X₀)
+    X₂ = θ(X₁)
+    ...
+    Xₙ = θ(Xₙ₋₁) until Xₙ == Xₙ₋₁
+    Then obv remove duplicates at the end
+
+Note: the code is slightly different than that in anyonica but ive highlighted/commented the parts that match
+"""
+function adjoint_irreps(fr::FusionRing)::Vector{Vector{Int}}
+  adj_el, adj_ring = adjoint_fusion_ring(fr)
+
+  r = rank(fr)
+
+  # Functions that return all elements obtained by acting with adj_ring on some elements
+  # Left action
+  function left_action(elements::Vector{Int})::Vector{Int}
+    seen = falses(r)
+    @inbounds for a in adj_el, b in elements
+      for c in fusion_outcomes(fr, a, b)
+        seen[c] = true
+      end
+    end
+    return findall(seen)
+  end
+
+  # Right action
+  function right_action(elements::Vector{Int})::Vector{Int}
+    seen = falses(r)
+    @inbounds for b in elements, a in adj_el
+      for c in fusion_outcomes(fr, b, a)
+        seen[c] = true
+      end
+    end
+    return findall(seen)
+  end
+
+  # Combined action
+  function combined_action(elements::Vector{Int})::Vector{Int}
+    return sort!(unique!(vcat(left_action(elements), right_action(elements))))
+  end
+
+  # FixedPoint[CombinedAction[pair], [e]]
+  function closure(seed::Int)::Vector{Int}
+    cur = [seed]
+    while true
+      nxt = combined_action(cur)
+      nxt == cur && return cur
+      cur = nxt
+    end
+  end
+
+  return unique(closure.(collect(1:r)))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                universal_grading                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export universal_grading
+
+function universal_grading(fr::FusionRing)
+  irreps = adjoint_irreps(fr)
+  n = size(irreps, 1)
+
+  grading = Pair{Int, Int}[]
+  @inbounds for a in 1:n
+    for x in irreps[a]
+      push!(grading, x => a)
+    end
+  end
+  sort!(grading; by = p -> first(p))
+  grading = [grading[i][2] for i in 1:length(grading)]
+
+  function _cond(l1::Vector{Int}, l2::Vector{Int}, l3::Vector{Int})::Bool
+    @inbounds for i in l1, j in l2
+      for c in fusion_outcomes(fr, i, j)
+        c ∉ l3 && return false
+      end
+    end
+    return true
+  end
+
+  mt = zeros(Int, n, n, n)
+  @inbounds for a in 1:n, b in 1:n, c in 1:n
+    mt[a, b, c] = _cond(irreps[a], irreps[b], irreps[c]) ? 1 : 0
+  end
+
+  groupRing = fusion_ring(mt)
+  return grading, replace_by_known(groupRing)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                   all_gradings                                  ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+export all_gradings
+
+"""
+    all_gradings(fr::FusionRing)
+
+Return all gradings of fr
+
+Every grading  obtained from  universal grading by quotienting
+universal grading group by a normal subgroup.
+
+    C = ⨁_{g ∈ U} C_g
+
+is  universal grading,  every grading  obtained from U/N,
+where N is a normal subgroup of U.
+"""
+
+function all_gradings(
+  fr::FusionRing; force_compute = false
+)::Vector{Tuple{Vector{Int64}, FusionRing}}
+  #TODO: uncomment line once FusionRing has field all_gradings
+  #!force_compute && !ismissing(fr.all_gradings) && return fr.all_gradings
+
+  rank(fr) == 1 && return Tuple{Vector{Int64}, FusionRing}[([1], fawc(1, 1, 0, 1))]
+
+  grvec, ug = universal_grading(fr)
+
+  UG, ϕ = to_group_with_emb(ug)
+
+  gradings = Vector{Tuple{Vector{Int64}, FusionRing}}()
+
+  for N in normal_subgroups(UG)
+    UGoverN, π = quo(UG, N)
+    fr_UGoverN = replace_by_known(group_fusion_ring(UGoverN))
+    UGel = collect(UG)
+
+    UGoverNeltoInt(el) = findfirst(==(el), collect(UGoverN))
+
+    grading_UGoverN = UGoverNeltoInt.(π.([UGel[ϕ[gr]] for gr in grvec]))
+
+    #fr_UGoverN might have different mult table from built-in ring but we prefer to
+    #use the built in rings so we need to permute the elements of the grading
+    code = anyonwiki_code(fr_UGoverN)
+    σ    = first(which_permutation(fr_UGoverN, fawc(code)))
+
+    g = [invperm(σ)[gr] for gr in grading_UGoverN]
+    f = permute(σ, fr_UGoverN)
+
+    push!(gradings, (g, f))
+  end
+
+  sort!(gradings; by = g -> rank(g[2]))
+
+  return gradings
+end
+
+# to_group_with_emb(fr::FusionRing) returns an oscar group G and a vector
+# v such that the v[i]'th element of collect(G) corresponds to the
+# i'th element of fr
+function to_group_with_emb(fr::FusionRing)::Tuple{Group, Vector}
+  G = to_group(fr)
+
+  ct  = cayley_table(G)
+  frG = group_fusion_ring(ct)
+  vec = first(which_permutation(frG, fr))
+
+  return G, vec
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    commutator                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export commutator
+
+""" commutator(fr, sub) -> (els, subring)
+
+Centralizer-style commutator of subring `sub = (S, RS)` inside `fr`:
+return all simples `i` with `FusionOutcomes(i ⊗ i*) ⊆ S`
+"""
+
+function commutator(fr::FusionRing, sub::Tuple{Vector{Int}, FusionRing})
+  is_commutative(fr) || error("commutator: ring must be commutative")
+
+  subEls, _ = sub
+  Sset = Set(subEls)
+
+  in_sub(i::Int)::Bool = begin
+    di = conjugate_element(fr, i)
+    outs = fusion_outcomes(fr, i, di)
+    all(in(Sset), outs)
+  end
+
+  els0 = [i for i in 1:rank(fr) if in_sub(i)]
+  isempty(els0) && (els0 = [1])
+
+  els = _fusion_closure(fr, els0)
+  return els, restrict_subring(fr, els; check_closed = true)
+end
+
+function commutator(fr::FusionRing)
+  return commutator(fr, (collect(1:rank(fr)), fr))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                    characters                                   ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export characters
+
+function characters(ring::FusionRing; use_numerics = true, force_compute = false)
+  if !ismissing(ring.characters) && !force_compute
+    return from_qqb_id(ring.characters)
+  end
+
+  if !FusionRings.is_commutative(ring)
+    error(
+      "Calculation of characters for non-commutative fusion ring is not implemented yet."
+    )
+  end
+
+  rank(ring) == 1 && return [qqbar(1);]
+
+  mt   = multiplication_table(ring)
+  r    = rank(ring)
+  mats = [mt[i, :, :] for i in 1:r]
+  qqb  = algebraic_closure(QQ)
+
+  sort_mat(mat) = sortslices(mat; dims = 1, by = char_sort_crit)
+
+  if use_numerics
+    # find numeric diagonalizing matrix
+    V = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
+    # find symbolic evals
+    evals = union(vcat([eigenvalues(matrix(qqb, m)) for m in mats] ...))
+    # identify evals in V, sort mat, and convert to matrix of qqb's
+    chars = replace_by_known(evals).(V)
+  else
+    chars = (normalize_first_col ∘ diagonalizing_matrix)(mats)
+  end
+  return matrix(qqb, sort_mat(chars))
+end
+
+function numeric_diagonalizing_matrix(mats, tries::Int = 64, tol::Real = 1e-12)
+  r = length(mats)
+
+  function is_diagonalizing_matrix(mat, mats)
+    imat = inv(mat)
+    for i in 1:r
+      D = imat * mats[i] * mat
+      @inbounds for j in 1:r
+        D[j, j] = 0.0;
+      end #set diagonal el = 0
+
+      if norm(D) > tol # D should be 0 mat now
+        return false
+      else
+        continue
+      end
+    end
+    return true
+  end
+
+  for i in 1:tries
+    coeffs = rand(Float64, r)
+    M = zeros(Float64, r, r)
+    @inbounds for k in 1:r
+      M .+= coeffs[k] .* mats[k]
+    end
+
+    V = Matrix(eigen(M).vectors)    # symmetric not guaranteed; generic eigen
+
+    # need to take inv since Oscar's (and our) definition of diagonalizing matrix
+    # is inverse of that of LinearAlgebra package
+    is_diagonalizing_matrix(V, mats) && return inv(V)
+
+    continue
+  end
+
+  return error(
+    "No diagonalizing matrix found in " *
+    string(tries) *
+    " tries. Try setting tries to a higher value or set a different seed for random generator.",
+  )
+end
+
+function diagonalizing_matrix(mats)
+  qqbmats = [matrix(algebraic_closure(QQ), m) for m in mats]
+
+  function is_diagonalizing_matrix(mat, mats)
+    invmat = inv(mat)
+    for m in mats
+      !is_diagonal(mat * m * invmat) && return false
+    end
+    return true
+  end
+
+  proposed_mat = qqbmats[1]
+
+  r = first(size(first(mats)))
+
+  diagq = false;
+  upi = 4;
+  upj = 4
+
+  while !diagq
+    upi += 1
+    upj += 1
+
+    # Take random linear rational combination of matrices in mats
+    rvec = rand(unique([i//j for i in 1:upi, j in 1:upj]), r)
+    sgnvec = rand([-1 1], r)
+    combinedmat = sgnvec[1] * rvec[1] * qqbmats[1]
+    for i in 1:r
+      combinedmat += sgnvec[i] * rvec[i] * qqbmats[i]
+    end
+
+    # Find diagonalizing matrix
+    proposed_mat = reduce(vcat, (collect ∘ values ∘ eigenspaces)(combinedmat))
+
+    # Check whether it works
+    diagq = is_diagonalizing_matrix(proposed_mat, qqbmats)
+  end
+
+  return proposed_mat
+end
+
+# Sort criterion for characters
+function char_sort_crit(v)
+  RR = ArbField(64);
+  CC = AcbField(64);
+  conv(x) = convert(Float64, x)
+  # Abs values of elements of v
+  absval(vec) = conv.(RR.(abs2.(vec)))
+  # Angles of elements of v
+  angl(vec) = conv.(real.(log.(CC.(vec)) ./ CC(2 * pi * im)))
+
+  return (- Int(all(isreal.(v))), angl(v), absval(v))
+end
+
+function normalize_first_col(mat)
+  m, n = size(mat)
+  return [mat[i, j] / mat[i, 1] for i in 1:m, j in 1:n]
+end
+
+function is_diagonalizing_matrix(mat, ring::FusionRing)
+  mt   = FusionRings.multiplication_table(ring)
+  r    = FusionRings.rank(ring)
+  mats = [matrix(qqb, mt[i, :, :]) for i in 1:r]
+  mat  = matrix(qqb, mat)
+
+  return all(is_diagonal(mat * m * inv(mat)) for m in mats)
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                formal_codegrees                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export formal_codegrees
+
+function formal_codegrees(
+  fr::FusionRing; usecharacters = true, force_compute = false
+)::Vector{QQBarFieldElem}
+  fcd = fr.formal_codegrees
+  !ismissing(fcd) && !force_compute && return from_qqb_id.(fcd)
+
+  d = conjugate_element(fr)
+  r = rank(fr)
+
+  if is_commutative(fr) && usecharacters
+    chars = characters(fr)
+    φ(i) = j -> chars[i, j]
+
+    return sort([sum(φ(i)(j) * φ(i)(d(j)) for j in 1:r) for i in 1:r]; by = z -> abs(z))
+  else
+    mat(i) = matrix(ZZ, multiplication_table(fr)[i, :, :])
+    m = sum(mat(d(i)) * mat(i) for i in 1:r)
+    es = eigenspaces(QQBar, m)
+    fcs = QQBarFieldElem[]
+
+    for k in collect(keys(es))
+      for i in 1:nrows(es[k])
+        push!(fcs, k)
+      end
+    end
+    return sort(fcs; by = z -> abs(z))
+  end
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               numeric_characters                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export numeric_characters
+"""
+    numeric_characters(R::FusionRing; tries::Int=64, tol=1e-12)::Matrix{ComplexF64}
+
+Returns the **character table** `C::Matrix{ComplexF64}` of a **commutative** fusion ring `R`.
+If force_compute = false and symbolic characters are available, the numeric characters are obtained by converting the symbolic ones to ComplexF64 elements. Otherwise the characters are computed using numeric diagonalization.
+
+
+Throws if no common eigenbasis is found after `tries` attempts.
+"""
+#Algorithm:
+#1. Form a random real combination `M = ∑_k c_k N_k`.
+#2. Eigen-decompose `M = V Λ V⁻¹`.
+#3. Verify that every `V⁻¹ N_i V` is (numerically) diagonal. If not, retry.
+#Normalize and sort V
+function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = false)
+  nc = ring.characters
+  if !ismissing(nc) && !force_compute
+    return ComplexF64.(characters(ring))
+  end
+
+  if !is_commutative(ring)
+    error(
+      "Calculation of characters for non-commutative fusion ring is not implemented yet."
+    )
+  end
+
+  rank(ring) == 1 && return [1.0;]
+
+  mt   = multiplication_table(ring)
+  r    = rank(ring)
+  mats = [mt[i, :, :] for i in 1:r]
+  V    = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
+
+  return sortslices(V; dims = 1, by = num_char_sort_crit)
+end
+
+# Numeric sort criterion for characters
+function num_char_sort_crit(v)
+  # for normalizing demands
+  norm(vec) = sqrt(sum(abs2.(vec)))
+  # Check whether all elements are real
+  are_real(vec) = (Int ∘ all)(abs(imag(x)) < 1e-14 for x in vec ./ norm(vec))
+  # Abs values of elements of v
+  absval(vec) = abs2.(vec)
+  # Angles of elements of v
+  angl(vec) = angle.(vec)
+
+  return (- are_real(v), angl(v), absval(v))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                  is_commutative                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_commutative
+
+function is_commutative(fr::FusionRing)
+  N = multiplication_table(fr)
+  r = rank(fr)
+  for a in 1:r, b in 1:r, c in 1:r
+    N[a, b, c] == N[b, a, c] || return false
+  end
+  return true
+end
+
+"""
+  #conjugate_element(fr, a) -> Int
+
+  #Return the integer index of the dual (conjugate) simple object of `a`.
+  #Accepts an integer index, a `String`, or a `Symbol`.
+
+#Rationale: internal computations (e.g. composing with other index-based
+#operations) are simpler when the result is an index rather than a label.
+#Use `conjugate_label` if you need the string form.
+"""
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                            categories_with_properties                           ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export categories_with_properties
+
+function categories_with_properties(fr::FusionRing)
+  return fr.has_categories_with_props
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                is_categorifiable                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export is_categorifiable
+
+function is_categorifiable(fr::FusionRing)
+  return categories_with_properties(fr)["Fusion"][1]
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                 which_injection                                 ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export which_injection
+"""
+    #which_injection(subring, ring) -> Dict{Int,Int} or nothing
+
+#Find an injection of `subring` into `ring` by:
+#1) enumerating fusion-closed subsets `S ⊂ ring` of size rank(subring) containing 1,
+#2) comparing multiplication tables up to permutation.
+"""
+
+function which_injection(subring::FusionRing, ring::FusionRing)
+  rs = rank(subring)
+  rr = rank(ring)
+  rs > rr && return nothing
+
+  Nbig = multiplication_table(ring)
+  Nsub = multiplication_table(subring)
+
+  for S in _internal_closed_subsets(ring, rs)
+    Nres = Nbig[S, S, S]
+    perm = first(which_permutation(fusion_ring(Nsub), fusion_ring(Nres)))
+
+    perm === nothing && continue
+
+    inj = Dict{Int, Int}()
+    @inbounds for i in 1:rs
+      inj[i] = S[perm[i]]
+    end
+    return inj
+  end
+  return nothing
+end
+
+#Added: from updates/commutator
+# -  compute the invariant:
+#       k(i) = |{ c : N[i,i,c] > 0 }|
+# - We partition indices by this invariant.
+# - Groups are sorted deterministically (increasing k, then index).
+
+"""
+    _internal_closed_subsets(fr, k) -> Vector{Vector{Int}}
+
+Return all fusion-closed subsets of size `k` containing the unit `1`,
+generated as `S = [1; T]` where `T` ranges over (k-1)-subsets of `2:r`.
+"""
+function _internal_closed_subsets(fr::FusionRing, k::Int)::Vector{Vector{Int}}
+  r = rank(fr)
+  (k <= 0 || k > r) && return Vector{Vector{Int}}()
+
+  if k == 1
+    return _internal_multiplication(fr, [1]) ? [[1]] : Vector{Vector{Int}}()
+  end
+
+  candidates = Vector{Vector{Int}}()
+  for T in combinations(collect(2:r), k - 1)
+    S = vcat(1, collect(T))
+    _internal_multiplication(fr, S) && push!(candidates, S)
+  end
+  return candidates
+end
+
+# checks whether multiplication of elements in S is internal in fusion ring fr
+function _internal_multiplication(fr::FusionRing, S::Vector{Int})::Bool
+  Sset = Set(S)
+  @inbounds for i in S, j in S
+    for c in fusion_outcomes(fr, i, j)
+      c in Sset || return false
+    end
+  end
+  return true
+end

@@ -1,0 +1,13 @@
+# Some extra tests that need to be implemented
+
+## creation.jl
+* Test that each constructor produces ring with same mult tab as in Anyonica.
+  Input and desired output can be found in testdata/creation
+
+## operations.jl 
+* Test that permutations have the same effect as those in Anyonica.
+  Input and desired output can be found in testdata/operations
+* Test that a permutation actually permutes all data
+
+## properties.jl
+* test whether sub_fusion_rings works

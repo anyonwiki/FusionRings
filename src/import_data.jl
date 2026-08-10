@@ -290,30 +290,94 @@ end
 # TODO: it should be possible to add type to output but I get the following error when importing FR^{2,10,0}_{1}:
 # MethodError: Cannot `convert` an object of type Vector{Dict{String, Array}} to an object of type Dict{String, Array}
 # The error is not reproducible when using the REPL
-function npsrfromjs(js)#::Vector{Dict{String, Array}}
-  try
-    npsr = js["numeric_projective_SL2Z_reps"]
-    if npsr == Any[]
-      return Dict{String, Array}[]
-    else
-      dicts = Dict{String, Array}[]
-      for rep in eachindex(npsr)
-        sm = npsr[rep]["SMatrix"];
-        tf = npsr[rep]["TwistFactors"];
-        r  = size(sm, 1);
-        push!(
-          dicts,
-          Dict(
-            "S_matrix"      => [vec_to_cflt(sm[i][j]) for i in 1:r, j in 1:r],
-            "twist_factors" => [[vec_to_cflt(tf[i][j]) for j in 1:r] for i in 1:length(tf)],
-          ),
-        )
-      end
-      return dicts
-    end
-  catch e
+function npsrfromjs(js)
+  haskey(js, "numeric_projective_SL2Z_reps") ||
     return missing
+
+  stored_representations =
+    js["numeric_projective_SL2Z_reps"]
+
+  stored_representations === nothing &&
+    return missing
+
+  stored_representations isa AbstractVector ||
+    throw(
+      ArgumentError(
+        "numeric_projective_SL2Z_reps must be an array or null",
+      ),
+    )
+
+  isempty(stored_representations) &&
+    return Dict{String,Array}[]
+
+  representations = Dict{String,Array}[]
+
+  for (index, stored_rep) in
+      enumerate(stored_representations)
+
+    stored_rep isa AbstractDict ||
+      throw(
+        ArgumentError(
+          "numeric projective representation $index " *
+          "must be a JSON object",
+        ),
+      )
+
+    haskey(stored_rep, "SMatrix") ||
+      throw(
+        ArgumentError(
+          "numeric projective representation $index " *
+          "has no SMatrix",
+        ),
+      )
+
+    haskey(stored_rep, "TwistFactors") ||
+      throw(
+        ArgumentError(
+          "numeric projective representation $index " *
+          "has no TwistFactors",
+        ),
+      )
+
+    stored_s = stored_rep["SMatrix"]
+    stored_twists = stored_rep["TwistFactors"]
+
+    r = length(stored_s)
+
+    all(
+      row ->
+        row isa AbstractVector &&
+        length(row) == r,
+      stored_s,
+    ) || throw(
+      ArgumentError(
+        "SMatrix in representation $index must be square",
+      ),
+    )
+
+    s_matrix = [
+      vec_to_cflt(stored_s[i][j])
+      for i in 1:r, j in 1:r
+    ]
+
+    twist_factors = [
+      [
+        vec_to_cflt(stored_twists[i][j])
+        for j in eachindex(stored_twists[i])
+      ]
+      for i in eachindex(stored_twists)
+    ]
+
+    push!(
+      representations,
+      Dict(
+        "S_matrix" => s_matrix,
+        "twist_factors" => twist_factors,
+      ),
+    )
   end
+
+  return representations
 end
 
 #TODO: fixed behaviour 

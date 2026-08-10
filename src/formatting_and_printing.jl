@@ -228,7 +228,6 @@ function tex_reps(x::QQBarFieldElem; try_cyclo = false)
     return Dict(
       "rational"  => rat,
       "radical"   => rat,
-      "power_sum" => rat,
       "cyclo"     => rat,
       "general"   => general_tex_rep(x),
     )
@@ -246,7 +245,6 @@ function tex_reps(x::QQBarFieldElem; try_cyclo = false)
   return Dict(
     "rational"  => rational_tex_rep(x),
     "radical"   => radicals_tex_rep(x),
-    "power_sum" => ps,
     "cyclo"     => cyc,
     "general"   => general_tex_rep(x),
   )

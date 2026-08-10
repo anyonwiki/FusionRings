@@ -129,16 +129,28 @@ end
 #
 export dn_criterion
 
-function dn_criterion(fr::FusionRing)::Bool
-  !is_commutative(fr) && return false
+"""
+    dn_criterion(fr; force_compute=false)
 
-  fcds = formal_codegrees(fr)
+Return `true` if at least one formal codegree fails the D-number
+condition, thereby obstructing categorification.
+"""
+function dn_criterion(
+  fr::FusionRing;
+  force_compute::Bool = false,
+)::Bool
+  is_commutative(fr) ||
+    return false
 
-  for z in fcds
-    !is_d_number(z) && return true
-  end
+  codegrees = formal_codegrees(
+    fr;
+    force_compute = force_compute,
+  )
 
-  return false
+  return any(
+    codegree -> !is_d_number(codegree),
+    codegrees,
+  )
 end
 
 

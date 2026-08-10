@@ -295,8 +295,8 @@ function cyclo_tex_rep(x::QQBarFieldElem)
     if QQBar( ζ(deg)^j ) == emb2(cgen)
       ϕ = hom(L,QQab,ζ(deg)^j)
       return (fix_cyclo ∘ fix_poly_string ∘ string ∘  ϕ)(cyclo_el)
+    end
   end
-end
   error("Couldn't find embedding from cyclotomics into algebraic_closure(QQ)")
 end
 
@@ -380,10 +380,10 @@ function is_geometric_array(a::Vector{T}) where {T}
 
   a[1] ≠ 1 && return false
 
-    gen = a[2]
-    for i in 2:(length(a) - 1)
+  gen = a[2]
+  for i in 2:(length(a) - 1)
     gen^i != a[i + 1] && return false
-      end
+  end
 
-    return true
+  return true
 end

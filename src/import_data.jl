@@ -381,7 +381,7 @@ end
 export import_rings
 
 function import_rings(filename::String; skip_check = false)
-  jsdict = JSON.parsefile(filename);
+  jsdict = JSON.parsefile(filename,Dict{String,Any});
 
   frlist = FusionRing[]
 

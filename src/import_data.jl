@@ -411,12 +411,33 @@ function fpdfromjs(js)
   return String(value)
 end
 
+#TODO: fixed behaviour now works and catches exceptions
 function fpdsfromjs(js)
-  try
-    js["frobenius_perron_dimensions"]
-  catch e
-    missing
-  end
+  haskey(js, "frobenius_perron_dimensions") ||
+    return missing
+
+  values = js["frobenius_perron_dimensions"]
+
+  values === nothing &&
+    return missing
+
+  values isa AbstractVector ||
+    throw(
+      ArgumentError(
+        "frobenius_perron_dimensions must be " *
+        "an array of QQBar identifier strings or null",
+      ),
+    )
+
+  all(value -> value isa AbstractString, values) ||
+    throw(
+      ArgumentError(
+        "every stored FP dimension must be " *
+        "a QQBar identifier string",
+      ),
+    )
+
+  return String.(values)
 end
 
 #fix: relies on julia missing , not dict with values

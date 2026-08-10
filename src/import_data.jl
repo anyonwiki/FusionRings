@@ -389,13 +389,26 @@ function psrfromjs(js)
   end
 end
 
-# import fpdim. Might fail
+
+#TODO: fixed behaviour 
 function fpdfromjs(js)
-  try
-    js["frobenius_perron_dimension"]
-  catch e
-    missing
-  end
+  haskey(js, "frobenius_perron_dimension") ||
+    return missing
+
+  value = js["frobenius_perron_dimension"]
+
+  value === nothing &&
+    return missing
+
+  value isa AbstractString ||
+    throw(
+      ArgumentError(
+        "frobenius_perron_dimension must be " *
+        "a QQBar identifier string or null",
+      ),
+    )
+
+  return String(value)
 end
 
 function fpdsfromjs(js)

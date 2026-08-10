@@ -316,13 +316,24 @@ function npsrfromjs(js)#::Vector{Dict{String, Array}}
   end
 end
 
-# import names. Might fail
-function nfromjs(js)
-  try
-    Vector{String}(js["names"])
-  catch e
-    String[]
-  end
+#TODO: fixed behaviour 
+function nfromjs(js)::Vector{String}
+  haskey(js, "names") ||
+    return String[]
+
+  stored_names = js["names"]
+
+  stored_names === nothing &&
+    return String[]
+
+  stored_names isa AbstractVector ||
+    throw(
+      ArgumentError(
+        "names must be an array or null",
+      ),
+    )
+
+  return String.(stored_names)
 end
 
 # import texnames. Might fail

@@ -297,25 +297,49 @@ end
 #
 #  ];
 #
-function crit1(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+
+
+#TODO: fixed - previously only accepted vector{Int} and had undefined helpers
+function _crit1_sums(i, d, mt)
+  length(i) == 6 || throw(ArgumentError("crit1 requires six indices"))
   r = size(mt, 1)
-  return sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
-         sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
-         sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k in 1:r) == 1
+
+  return (
+    sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k in 1:r),
+    sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k in 1:r),
+    sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k in 1:r),
+  )
 end
 
-function crit2(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
-  r = size(mt, 1)
-  return sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
-         sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
-         sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k in 1:r) == 1
+function _crit1_has_one(i, d, mt)::Bool
+  return any(==(1), _crit1_sums(i, d, mt))
 end
 
-function crit3(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+function _crit2_sums(i, d, mt)
+  length(i) == 6 || throw(ArgumentError("crit2 requires six indices"))
   r = size(mt, 1)
+
+  return (
+    sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k in 1:r),
+    sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k in 1:r),
+    sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k in 1:r),
+  )
+end
+
+function _crit2_has_one(i, d, mt)::Bool
+  return any(==(1), _crit2_sums(i, d, mt))
+end
+
+function _crit3_sum(i, d, mt)::Int
+  length(i) == 6 || throw(ArgumentError("crit3 requires six indices"))
+  r = size(mt, 1)
+
   return sum(
-    mt[i[1], i[4], k] * mt[d[i[2]], i[5], k] * mt[i[3], d[i[6]], k] for k in 1:r
-  ) == 0
+    mt[i[1], i[4], k] *
+    mt[d[i[2]], i[5], k] *
+    mt[i[3], d[i[6]], k]
+    for k in 1:r
+  )
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

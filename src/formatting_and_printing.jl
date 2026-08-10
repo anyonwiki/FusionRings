@@ -362,7 +362,7 @@ function power_sum_tex_rep(x::QQBarFieldElem)
     gen = (collect(coefficients(mp)))[2]
     n = degree(mp)
     a = x*gen
-    i = findfirst(j -> QQb(ζ(n+1)^j) == a, 1:n)
+    i = findfirst(j -> QQb(ζ(n+1)^j) == a, 0:n)
     factorstring = gen == 1 ? "" : string(1//gen)
     return string(factorstring, "\\zeta_{", n+1, "}^{", i, "}")
   else
@@ -375,18 +375,15 @@ function is_power_sum(poly::QQPolyRingElem)
 end
 
 function is_geometric_array(a::Vector{T}) where {T}
-  if length(a) == 0
-    return true
-  elseif length(a) == 1
-    return a[1] == 1
-  else
+  length(a) == 0 && return true
+  length(a) == 1 && return (a[1] == 1)
+
+  a[1] ≠ 1 && return false
+
     gen = a[2]
     for i in 2:(length(a) - 1)
-      if gen^i != a[i + 1]
-        return false
+    gen^i != a[i + 1] && return false
       end
-      continue
-    end
+
     return true
-  end
 end

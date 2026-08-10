@@ -40,7 +40,7 @@ Return true when `z` is an algebraic integer.
  QQBar el is  algebraic integer exactly when  monic
 minimal polynomial over QQ has integer coefficients.
 """
-function _is_algebraic_integer(
+function is_algebraic_integer(
   z::QQBarFieldElem,
 )::Bool
   polynomial_ring_qq, _ =
@@ -62,15 +62,34 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
+#TODO: fixed , added force compute, fixed behaviour
+"""
+    pdc_criterion(fr; force_compute=false)
 
-function pdc_criterion(fr::FusionRing)::Bool
-  !is_commutative(fr) && return false
+Return `true` when the pivotal Drinfeld-center criterion obstructs
+categorification.
 
-  r = rank(fr)
-  fcds = formal_codegrees(fr)
+`true` - criterion found an obstruction, not 
+ ring passed the criterion.
+"""
+function pdc_criterion(
+  fr::FusionRing;
+  force_compute::Bool = false,
+)::Bool
+  is_commutative(fr) ||
+    return false
 
-  for j in 1:r
-    ratios = [fcds[j]/fcds[i] for i in 1:r]
+  codegrees = formal_codegrees(
+    fr;
+    force_compute = force_compute,
+  )
+
+  for candidate in codegrees
+    ratios = [
+      candidate / codegree
+      for codegree in codegrees
+    ]
+
     if all(is_algebraic_integer, ratios)
       return false
     end

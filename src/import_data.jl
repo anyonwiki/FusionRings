@@ -182,13 +182,43 @@ function nchfromjs(js)::Union{Missing, Matrix{ComplexF64}}
 end
 
 # characters
+#TODO: Fixed - distinguishes between absent/null data -> missing, malformed char data -> argerror
 function chfromjs(js)
-  try
-    vecs = js["characters"]
-    string.(mapreduce(permutedims, vcat, vecs))
-  catch e
+  haskey(js, "characters") ||
     return missing
-  end
+
+  stored_characters = js["characters"]
+
+  stored_characters === nothing &&
+    return missing
+
+  stored_characters isa AbstractVector ||
+    throw(
+      ArgumentError(
+        "characters must be an array or null",
+      ),
+    )
+
+  r = length(stored_characters)
+
+  r == 0 &&
+    return Matrix{String}(undef, 0, 0)
+
+  all(
+    row ->
+      row isa AbstractVector &&
+      length(row) == r,
+    stored_characters,
+  ) || throw(
+    ArgumentError(
+      "characters must be a square array",
+    ),
+  )
+
+  return [
+    string(stored_characters[i][j])
+    for i in 1:r, j in 1:r
+  ]
 end
 
 # fpdims

@@ -553,9 +553,12 @@ function import_ring(filename::String)
     has_categories_with_props = ctpfromjs(js),
     categorifiable            = cfromjs(js),
     categorifications          = ctsfromjs(js),
-    references        = js["references"],
-    software          = js["software"],
-    comments          = js["comments"],
+    #TODO: fixed - made optional metadata geniunely optional
+    #if does not work replace String[] w/ missing
+    references = get(js, "references", String[]),
+    software = get(js, "software", String[]),
+    comments = get(js, "comments", String[]),
+    
     non_cat_reasons   = ncrfromjs(js),
   )
 end

@@ -281,14 +281,23 @@ function fix_poly_string(str::String)::String
 end
 
 function cyclo_tex_rep(x::QQBarFieldElem)
-  cx, emb = to_composite_field(x)
-  if !is_abelian(parent(cx))
-    return ""
-  else
-    el = to_cyclotomic_field(cx, emb)[1]
+  a, emb = to_composite_field(x)
 
-    (fix_cyclo ∘ fix_poly_string ∘ string ∘ QQab)(el)
+  !is_abelian(parent(a)) && return ""
+
+  cyclo_el, emb2, deg = to_cyclotomic_field(a, emb)
+  # the generator of the cyclotomic field might not be the canonical
+  # one, i.e. ζ_n might not be e^{2πi/n} so we need to find out
+  # for which j, ζ_n = e^{2πi*j/n}
+  L    = parent(cyclo_el)
+  cgen = gen(L)
+  for j in 1:deg
+    if QQBar( ζ(deg)^j ) == emb2(cgen)
+      ϕ = hom(L,QQab,ζ(deg)^j)
+      return (fix_cyclo ∘ fix_poly_string ∘ string ∘  ϕ)(cyclo_el)
   end
+end
+  error("Couldn't find embedding from cyclotomics into algebraic_closure(QQ)")
 end
 
 function radicals_tex_rep(x::QQBarFieldElem)

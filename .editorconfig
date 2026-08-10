@@ -1,0 +1,12 @@
+# EditorConfig is awesome: https://editorconfig.org
+
+# 4 space indentation
+[*.py]
+indent_style = space
+indent_size = 4
+
+# all the rest: good ol' 2 spaces :)
+
+[*.{jl,wl,m,json}]
+indent_style = space
+indent_size  = 2

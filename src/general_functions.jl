@@ -1,145 +1,272 @@
+#=
+# binsplit( v::Array{T}, f ) takes an array and a boolean function and
+# returns a tuple (trues,falses) such that f(x) === true for all x in trues
+# and f(x) = false for all x in falses
+=#
 
-function is_constant_array( arr; equalfunc = === ) 
+function binsplit(f, v::Array{T}) where {T}
+  trues  = T[]
+  falses = T[]
+
+  for el in v
+    if f(el) === true
+      push!(trues, el)
+    else
+      push!(falses, el)
+    end
+  end
+
+  return (trues, falses)
+end
+
+#=
+# complement( u, s1, s2,..., sn ) returns all elements in u that are not in any
+# of the lists s1, ... , sn
+#
+=#
+
+function complement(u::Vector{T}, s::Vector{T}...) where {T}
+  res = T[]
+
+  function inany(x::T, tuple_of_lists)
+    for l in tuple_of_lists
+      x in l && return true
+    end
+    return false
+  end
+
+  for x in u
+    !inany(x, s) && push!(res, x)
+  end
+
+  return res
+end
+
+#= counts the number of times an element apears in a vector and 
+ returns a couple of vectors (els, counts) where els = unique 
+ elements of v and counts = number of times they apear in v.
+ If sort = false the elements in els are ordered by their first encounter 
+ in the original original vector 
+=#
+function tally(v::AbstractVector; sort = false, sort_fun = identity)
+  els = unique(v)
+
+  counter(el) = count(==(el), v)
+
+  counts = counter.(els)
+
+  !sort && return (els, counts)
+
+  s = sortperm(els; by = sort_fun)
+
+  return (els[s], counts[s])
+end
+
+function is_constant_array(arr; equalfunc = ===)
   if isempty(arr)
-    return true 
+    return true
   end
   first = arr[1]
-  return all( equalfunc( element, first ) for element in arr )
+  return all(equalfunc(element, first) for element in arr)
+end
+
+"""
+    filter_equivalents(is_equivalent::Function, l::AbstractVector)
+
+Remove elements from `l` so that no two remaining elements are considered
+equivalent according to the function `is_equivalent`.
+Keeps the first occurrence of each equivalence class.
+
+# Arguments
+- `is_equivalent::Function`: A binary function defining the equivalence relation
+- `l::AbstractVector`: The input collection
+
+# Returns
+A vector containing only non-equivalent elements from `l`
+
+"""
+function filter_equivalents(is_equivalent::Function, l::AbstractVector)
+  result = eltype(l)[]
+  for e in l
+    # Add e only if it's not equivalent to any element already in result
+    if !any(x -> is_equivalent(e, x), result)
+      push!(result, e)
+    end
+  end
+  return result
 end
 
 function intidmat(dim::Int64)::Matrix{Int}
-    id = zeros( Int, dim, dim )
-    for i ∈ 1:dim 
-        id[i,i] = 1
-    end
-    id
+  id = zeros(Int, dim, dim)
+  for i in 1:dim
+    id[i, i] = 1
+  end
+  return id
 end
 
 # comap applies each function in an array to a single argument
-function comap( arr, arg )
-  [ f(arg) for f in arr ]
+function comap(arr, arg)
+  return [f(arg) for f in arr]
+end
+
+# For more info on working with number fields, see Hecke/src/Map/Numfield.jl
+
+function Base.adjoint(z::QQBarFieldElem)
+  return adj(z)
 end
 
 export to_composite_field
 
 function to_composite_field(
-    x::QQBarFieldElem;
-    simplify_field = false, 
-    canonical_simplification = true
-    )
-    arr, emb = to_composite_field(
-        [x];
-        simplify_field,
-        canonical_simplification
-    )
-    ( arr[1], emb )
+  x::QQBarFieldElem; simplify_field = false, canonical_simplification = true
+)
+  arr, emb = to_composite_field([x]; simplify_field, canonical_simplification)
+  return (arr[1], emb)
 end
 
-function to_composite_field( 
-    arr::Array{QQBarFieldElem}; 
-    simplify_field = false, 
-    canonical_simplification = true
-    )
+function to_composite_field(
+  arr::Array{QQBarFieldElem}; simplify_field = false, canonical_simplification = true
+)
+  K, f = number_field(QQ, unique(arr))
 
-    K, f = number_field( QQ, unique( arr ) )
-
-    if simplify_field 
-        L, g = simplify( K; canonical = canonical_simplification )
-        to_field_elem  = x -> preimage( g, preimage( f, x ) )
-        fg = hom( L, algebraic_closure(QQ), (f ∘ g ∘ gen)(L) )
-        return ( to_field_elem.(arr), fg )
-    else 
-        to_field_elem = x -> preimage( f, x )
-        return ( to_field_elem.(arr), f )
-    end
+  if simplify_field
+    L, g = simplify(K; canonical = canonical_simplification)
+    to_field_elem = x -> preimage(g, preimage(f, x))
+    fg = hom(L, algebraic_closure(QQ), (f ∘ g ∘ gen)(L))
+    return (to_field_elem.(arr), fg)
+  else
+    to_field_elem = x -> preimage(f, x)
+    return (to_field_elem.(arr), f)
+  end
 end
 
 export to_cyclotomic_field
 
-
 function to_cyclotomic_field(
-    x::QQBarFieldElem;
-    simplify_field = false, 
-    canonical_simplification = true
-    )
-    cfx, emb =
-        to_composite_field(
-            x;
-            simplify_field,
-            canonical_simplification
-        )
+  x::QQBarFieldElem; simplify_field = false, canonical_simplification = true
+)
+  cfx, emb = to_composite_field(x; simplify_field, canonical_simplification)
 
-    to_cyclotomic_field( cfx, emb )
+  return to_cyclotomic_field(cfx, emb)
 end
 
-function to_cyclotomic_field( x::AbsSimpleNumFieldElem, emb )
-    arr, emb, deg = to_cyclotomic_field( [x], emb )
+function to_cyclotomic_field(x::AbsSimpleNumFieldElem, emb)
+  arr, emb, deg = to_cyclotomic_field([x], emb)
 
-    ( arr[1], emb, deg )
+  return (arr[1], emb, deg)
 end
 
-function to_cyclotomic_field( arr::Array{AbsSimpleNumFieldElem}, emb ) 
-	length(arr) === 0 && return (arr, emb)
-	
-	# Check parrent field of all fields are equal
-	is_constant_array( parent.(arr) ) || error("Elements of array should belong to same field")
+function to_cyclotomic_field(arr::Array{AbsSimpleNumFieldElem}, emb)
+  length(arr) === 0 && return (arr, emb)
 
-	qqb = algebraic_closure(QQ)
-	K   = parent( arr[1] )
-	C   = ray_class_field(K) 
-	deg = (Int ∘ minimum ∘ first ∘ conductor)(C)
-	L,  = cyclotomic_field(deg)
+  # Check parrent field of all fields are equal
+  is_constant_array(parent.(arr)) || error("Elements of array should belong to same field")
 
-	gen_K_as_cyclo = first( roots( L, defining_polynomial(K) ) )
-	to_cyclo       = hom( K, L, gen_K_as_cyclo )
+  qqb = algebraic_closure(QQ)
+  K   = parent(arr[1])
+  C   = ray_class_field(K)
+  deg = (Int ∘ minimum ∘ first ∘ conductor)(C)
+  L,  = cyclotomic_field(deg)
 
-    rts = roots( qqb, defining_polynomial(L) )
-	for j in 1:deg
-		emb_cyclo = hom( L, qqb, rts[j] )
+  gen_K_as_cyclo = first(roots(L, defining_polynomial(K)))
+  to_cyclo       = hom(K, L, gen_K_as_cyclo)
 
-		if emb_cyclo(gen_K_as_cyclo) == emb( gen(K) ) 	
-			return ( to_cyclo.(arr), emb_cyclo, deg )
-		else
-			continue
-		end
-	end
+  rts = roots(qqb, defining_polynomial(L))
+  for j in 1:deg
+    emb_cyclo = hom(L, qqb, rts[j])
 
-	error("Couldn't find embedding from cyclotomics into algebraic_closure(QQ)")
+    if emb_cyclo(gen_K_as_cyclo) == emb(gen(K))
+      return (to_cyclo.(arr), emb_cyclo, deg)
+    else
+      continue
+    end
+  end
+
+  return error("Couldn't find embedding from cyclotomics into algebraic_closure(QQ)")
 end
 
 # Returns element of v who's value equals x
 # Super inneficient implementation at the moment since
 # we just loop over the list v
-function replace_by_known( v; tol=1e-10 )
-    function (x)
-        CC = AcbField(64);
-    	conv(z) = convert(ComplexF64,z)
-        for y in v
-            abs(conv(x) - conv(CC(y))) < tol && return y
-        end
-        error("No matching value found")
+function replace_by_known(v; tol = 1e-10)
+  function (x)
+    CC = AcbField(64);
+    conv(z) = convert(ComplexF64, z)
+    for y in v
+      abs(conv(x) - conv(CC(y))) < tol && return y
     end
+    return error("No matching value found")
+  end
 end
-
 
 export riffle
 
 function riffle(v::Vector{T}, w::Vector{T}) where {T}
-    result = T[]
-    for i in 1:max(length(v), length(w))
-        if i <= length(v)
-            push!(result, v[i])
-        end
-        if i <= length(w)
-            push!(result, w[i])
-        end
+  result = T[]
+  for i in 1:max(length(v), length(w))
+    if i <= length(v)
+      push!(result, v[i])
     end
-    return result
+    if i <= length(w)
+      push!(result, w[i])
+    end
+  end
+  return result
 end
 
+# riffle two strings together a la Mathematica
 export stringriffle
 
-function stringriffle( v::Vector{String}, w::Vector{String} )
-    l = riffle( v, w )
-    string( l ... )
+function stringriffle(v::Vector{String}, w::Vector{String})
+  l = riffle(v, w)
+  return string(l ...)
+end
+
+# returns dictionary with keys equal to f(l) for l in lis
+# and values equal to all l ∈ lis that map to the key
+
+function group_by(f, lis)
+  isempty(lis) && return Dict()
+
+  result = Dict{Any, Vector{eltype(lis)}}()
+  for item in lis
+    key = f(item)
+    if !haskey(result, key)
+      result[key] = eltype(lis)[]
+    end
+    push!(result[key], item)
+  end
+  return result
+end
+
+# group elements together in vectors by their value under
+# f while keeping their relative order within the subgroups,
+# i.e. if a came before b in lis and a and b belong
+# to the same group then a will come before b in their group
+
+function gather_by(f, lis)
+  isempty(lis) && return Vector{eltype(lis)}[]
+
+  # Use vector of tuples to preserve order:
+  # (key, ind_of_first_occurrence)
+  keys_in_order = Tuple{Any, Int}[]
+  groups = Dict{Any, Vector{eltype(lis)}}()
+
+  for (index, el) in enumerate(lis)
+    key = f(el)
+    # if key is new
+    if !haskey(groups, key)
+      # create collection for key
+      groups[key] = eltype(lis)[]
+      # store index of key to
+      push!(keys_in_order, (key, index))
+    end
+    # push element to group whose values evaluate to f(el)
+    push!(groups[key], el)
+  end
+
+  # Sort keys_in_order by index
+  sort!(keys_in_order; by = x -> x[2])
+
+  return [groups[key] for (key, _) in keys_in_order]
 end

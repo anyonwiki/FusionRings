@@ -1,67 +1,61 @@
-# ========================================================================
-#   COMMUTATIVE SCHUR PRODUCT CRITERION
-# ========================================================================
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                     commutative schur product criterion                         ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 # TODO: check whether s is correct
-
+#Todo
 # csp_criterion( fusion_ring ) returns true if fusion_ring does not have a unitary categorification due to the commutative schur product criterion
 
-# Compat helpers (ported from Mathematica naming)
-ISREAL(x) = isreal(x)
-lesserthan(x, y) = x < y
+function csp_criterion(ring::FusionRing)
+  is_commutative(ring) || return false
 
-function csp_criterion( ring::FusionRing )
-    is_commutative( ring ) || error("Commutative Schur Product Criterion only applies to commutative fusion rings")
+  chars = characters(ring)
+  r = rank(ring)
 
-    chars = characters( ring )
-    r = rank( ring )
-
-    for j1 in 1:r, j2 in 1:r, j3 in 1:r
-        s = sum( chars[ i, j1 ] * chars[ i, j2 ] * chars[ i, j3 ] / chars[ i, 1 ] for i in 1:r )
-        if ISREAL( s ) && lesserthan( s, 0 )
-            return true
-        else 
-            continue
-        end
+  for j1 in 1:r, j2 in 1:r, j3 in 1:r
+    s = sum(chars[i, j1] * chars[i, j2] * chars[i, j3] / chars[i, 1] for i in 1:r)
+    if is_real(s) && s < 0
+      return true
+    else
+      continue
     end
+  end
 
-    return false
+  return false
 end
 
-
-# ========================================================================
-#   PIVOTAL DRINFELD CENTER CRITERION
-# ========================================================================
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                       pivotal drinfeld center criterion                         ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
-function pdc_criterion( r::FusionRing )
-#
-# PDCCriterion[ ring_FusionRing?CommutativeQ ] :=
-#   Module[{chars,c},
-#     chars =
-#       FusionRingCharacters[ring];
-#     c =
-#       #.ConjugateTranspose[#]& /@ chars;
-#
-#     Catch[
-#       Do[
-#         If[
-#           And @@ Flatten @ AlgebraicIntegerQ[ c[[j]] / c ],
-#           Throw[ False ]
-#         ],
-#         { j, Length[c] }
-#       ];
-#       True
-#     ]
-#
-#   ];
+
+function pdc_criterion(fr::FusionRing)::Bool
+  !is_commutative(fr) && return false
+
+  r = rank(fr)
+  fcds = formal_codegrees(fr)
+
+  for j in 1:r
+    ratios = [fcds[j]/fcds[i] for i in 1:r]
+    if all(is_algebraic_integer, ratios)
+      return false
+    end
+  end
+
+  return true
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                    pseudo-unitary drinfeld center criterion                     ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-
-#  ========================================================================
-#    PSEUDO-UNITARY DRINFELD CENTER CRITERION
-#  ========================================================================
+#function pudc_criterion(fr::FusionRing)
+#  !is_commutative(fr) && return false
+#
+#  chars = characters(fr)
+#
+#end
 #  Returns True if ring has no complex pseudo-unitary categorification
 #
 #
@@ -74,62 +68,60 @@ end
 #  ];
 #
 #
-#(*========================================================================
-#    D-NUMBER CRITERION
-#  ========================================================================
-#  The function returns true if the fusion ring cannot be categorified.
-#*)
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                               D-number criterion                                ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+# Source:https://arxiv.org/pdf/0810.3242
 #
-#PackageExport["DNCriterion"]
+# The function returns true if the fusion ring has no complex categorification
 #
-#DNCriterion[ ring_FusionRing?CommutativeQ ] :=
-#  Module[{ chars, c, DNumberQ, n },
-#    chars = FusionRingCharacters[ring];
-#    c = RootReduce[ #.ConjugateTranspose[#]& /@ chars ];
-#
-#    DNumberQ[ x_ ] :=
-#      Module[{ p, a, y },
-#        If[ !AlgebraicIntegerQ[x], Return[ True ] ];
-#
-#        p =
-#          MinimalPolynomial[x][y];
-#
-#        a =
-#          ( Rest @ MonomialList[p] /. y -> 1 );
-#
-#        n =
-#          Exponent[ p, y ];
-#
-#        And @@
-#        Table[
-#          Mod[ a[[i]]^n, a[[-1]]^i ] == 0,
-#          { i, Length[a] }
-#        ]
-#      ];
-#
-#    Not[ And @@ ( DNumberQ /@ c ) ]
-#
-#  ];
-#
-#(*========================================================================
-#    EXTENDED CYCLOTOMIC CRITERION
-#  ========================================================================
+export dn_criterion
+
+function dn_criterion(fr::FusionRing)::Bool
+  !is_commutative(fr) && return false
+
+  fcds = formal_codegrees(fr)
+
+  for z in fcds
+    !is_d_number(z) && return true
+  end
+
+  return false
+end
+
+function is_d_number(z::QQBarFieldElem)::Bool
+  R, _ = polynomial_ring(QQ, :x)
+  mp   = minpoly(R, z)
+  n    = degree(mp)
+
+  an  = constant_coefficient(mp)
+  cfs = collect(coefficients(mp))[2:(end - 1)]
+
+  is_empty(cfs) && return true
+
+  divint(i) = is_integer((an^i) / (cfs[i]^n))
+
+  return all(divint, 1:(n - 1))
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                          extended cyclotomic criterion                          ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 #  The function returns True if the fusion ring cannot be categorified.
 #
 #
 #
 #
-#*)
 #
 #
 #
 #
-#(*========================================================================
-#    LAGRANGE CRITERION
-#  ========================================================================
+#
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                                Lagrange criterion                               ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 #  The function returns False if the fusion ring cannot be categorified.
 #
-#*)
 #
 #PackageExport["LCriterion"]
 #
@@ -145,11 +137,10 @@ end
 #  ];
 #
 #
-#(*========================================================================
-#    ZERO SPECTRUM CRITERION
-#  ========================================================================
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              zero spectrum criterion                            ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 #  The function returns True if the fusion ring cannot be categorified.
-#*)
 #
 #PackageExport["ZSCriterion"]
 #
@@ -207,30 +198,30 @@ end
 #
 #  ];
 #
-function crit1( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum( mt[ i[5], i[4], k ] * mt[ i[3], d[ i[1] ], k ] for  k in 1:r ) == 1 ||
-    sum( mt[ i[2], d[ i[4] ], k ] * mt[ i[3], d[ i[6] ], k ] for k in 1:r ) == 1 ||
-    sum( mt[ d[ i[5] ], i[2], k ] * mt[ i[6], d[ i[1] ], k ] for k in 1:r ) == 1
+function crit1(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+  r = size(mt, 1)
+  return sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
+         sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
+         sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k in 1:r) == 1
 end
 
-function crit2( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum( mt[ i[2], i[4], k ] * mt[ i[3], d[ i[6] ], k ] for  k in 1:r ) == 1 ||
-    sum( mt[ i[5], d[ i[4] ], k ] * mt[ i[3], d[ i[1] ], k ] for k in 1:r ) == 1 ||
-    sum( mt[ d[ i[2] ], i[5], k ] * mt[ i[1], d[ i[6] ], k ] for k in 1:r ) == 1
+function crit2(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+  r = size(mt, 1)
+  return sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
+         sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
+         sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k in 1:r) == 1
 end
 
-function crit3( i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64,3} )::Bool
-    r = size( mt, 1 )
-    sum(
-        mt[ i[1], i[4], k ] *
-        mt[ d[ i[2] ], i[5], k ] *
-        mt[ i[3], d[ i[6] ], k ]
-        for k in 1:r
-    ) == 0
+function crit3(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+  r = size(mt, 1)
+  return sum(
+    mt[i[1], i[4], k] * mt[d[i[2]], i[5], k] * mt[i[3], d[i[6]], k] for k in 1:r
+  ) == 0
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              one spectrum criterion                             ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 #PackageExport["OSCriterion"]
 #
 #OSCriterion::usage =
@@ -291,3 +282,132 @@ end
 #    ]
 #
 #  ];
+
+#TODO: to me: take a look at and see if warrants replacement: 
+"""
+    zsc_criterion(ring)
+
+Return `true` if the Zero Spectrum Criterion rules out categorifiability.
+
+This is a direct Julia port of the Mathematica `ZSCriterion` logic, but with
+explicit Boolean helpers.
+"""
+function zsc_criterion(ring::FusionRing)::Bool
+  mt = _mult_table(ring)
+  r = size(mt, 1)
+
+  d = _dual_indices_from_mt(mt)
+  nonzero = _nonzero_structure_constants(mt)
+
+  for i2 in 1:r, i1 in 1:r, i3 in 1:r
+    mt[i2, i1, i3] == 1 || continue
+
+    for ind1 in nonzero
+      # Mathematica pattern: {i4_, i1, i6_}
+      ind1[2] == i1 || continue
+
+      i4 = ind1[1]
+      i6 = ind1[3]
+
+      for ind2 in nonzero
+        # Mathematica pattern: {i5_, i4, i2}
+        ind2[2] == i4 || continue
+        ind2[3] == i2 || continue
+
+        i5 = ind2[1]
+
+        mt[i5, i6, i3] != 0 || continue
+        _crit1_has_one((i1, i2, i3, i4, i5, i6), d, mt) || continue
+
+        for ind3 in nonzero
+          # Mathematica pattern: {i7_, i9_, i1}
+          ind3[3] == i1 || continue
+
+          i7 = ind3[1]
+          i9 = ind3[2]
+
+          for ind4 in nonzero
+            # Mathematica pattern: {i2, i7, i8_}
+            ind4[1] == i2 || continue
+            ind4[2] == i7 || continue
+
+            i8 = ind4[3]
+
+            if mt[i8, i9, i3] != 0 &&
+              _crit3_sum((i4, i5, i6, i7, i8, i9), d, mt) == 0 &&
+              _crit2_has_one((i1, i2, i3, i7, i8, i9), d, mt)
+              return true
+            end
+          end
+        end
+      end
+    end
+  end
+
+  return false
+end
+
+#TODO: take a look at this too
+"""
+    osc_criterion(ring)
+
+Return `true` if the One Spectrum Criterion rules out categorifiability.
+
+This is a direct Julia port of the Mathematica `OSCriterion` logic.
+"""
+function osc_criterion(ring::FusionRing)::Bool
+  mt = _mult_table(ring)
+  r = size(mt, 1)
+
+  d = _dual_indices_from_mt(mt)
+  nonzero = _nonzero_structure_constants(mt)
+
+  for i2 in 1:r, i1 in 1:r, i3 in 1:r
+    mt[i2, i1, i3] == 0 || continue
+
+    for ind1 in nonzero
+      # Mathematica pattern: {i4_, i1, i6_}
+      ind1[2] == i1 || continue
+
+      i4 = ind1[1]
+      i6 = ind1[3]
+
+      for ind2 in nonzero
+        # Mathematica pattern: {i5_, i4, i2}
+        ind2[2] == i4 || continue
+        ind2[3] == i2 || continue
+
+        i5 = ind2[1]
+
+        mt[i5, i6, i3] != 0 || continue
+
+        for ind3 in nonzero
+          # Mathematica pattern: {i7_, i9_, i1}
+          ind3[3] == i1 || continue
+
+          i7 = ind3[1]
+          i9 = ind3[2]
+
+          for i0 in 1:r
+            mt[i4, i7, i0] == 1 || continue
+            mt[i6, d[i9], i0] == 1 || continue
+            _crit1_has_one((i9, i0, i6, i7, i4, i1), d, mt) || continue
+
+            for i8 in 1:r
+              if mt[i2, i7, i8] != 0 &&
+                mt[i8, i9, i3] != 0 &&
+                mt[d[i5], i8, i0] == 1 &&
+                _crit1_has_one((i7, i2, i8, i4, i5, i0), d, mt) &&
+                _crit1_has_one((i9, i8, i3, i0, i5, i6), d, mt) &&
+                _crit3_sum((i4, i5, i6, i7, i8, i9), d, mt) == 1
+                return true
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  return false
+end

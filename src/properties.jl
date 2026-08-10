@@ -1431,34 +1431,51 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export formal_codegrees
+#TODO: fixed - old code had undefined r and did not construct one result for each char
+"""
+    formal_codegrees(fr; force_compute=false)
 
+Return  formal codegrees of a commutative fusion ring.
+
+If `χ_j` is  `j`th irreducible character and `i*` is  dual
+of simple object `i`, then
+
+    f_j = sum(χ_j(i) * χ_j(i*) for i in 1:rank(fr)).
+"""
 function formal_codegrees(
-  fr::FusionRing; usecharacters = true, force_compute = false
+  fr::FusionRing;
+  force_compute::Bool = false,
 )::Vector{QQBarFieldElem}
-  fcd = fr.formal_codegrees
-  !ismissing(fcd) && !force_compute && return from_qqb_id.(fcd)
+  is_commutative(fr) ||
+    throw(
+      ArgumentError(
+        "formal_codegrees currently supports only commutative fusion rings",
+      ),
+    )
 
-  d = conjugate_element(fr)
   r = rank(fr)
 
-  if is_commutative(fr) && usecharacters
-    chars = characters(fr)
-    φ(i) = j -> chars[i, j]
-
-    return sort([sum(φ(i)(j) * φ(i)(d(j)) for j in 1:r) for i in 1:r]; by = z -> abs(z))
-  else
-    mat(i) = matrix(ZZ, multiplication_table(fr)[i, :, :])
-    m = sum(mat(d(i)) * mat(i) for i in 1:r)
-    es = eigenspaces(QQBar, m)
-    fcs = QQBarFieldElem[]
-
-    for k in collect(keys(es))
-      for i in 1:nrows(es[k])
-        push!(fcs, k)
-      end
-    end
-    return sort(fcs; by = z -> abs(z))
+  if r == 1
+    return QQBarFieldElem[QQBar(1)]
   end
+
+  chars = characters(
+    fr;
+    force_compute = force_compute,
+  )
+
+  dual_indices = [
+    conjugate_element(fr, i)
+    for i in 1:r
+  ]
+
+  return QQBarFieldElem[
+    sum(
+      chars[j, i] * chars[j, dual_indices[i]]
+      for i in 1:r
+    )
+    for j in 1:r
+  ]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

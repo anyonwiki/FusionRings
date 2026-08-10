@@ -30,6 +30,33 @@ function csp_criterion(ring::FusionRing)
   return false
 end
 
+
+
+
+#TODO: added previously unavailable helper
+"""
+Return true when `z` is an algebraic integer.
+
+ QQBar el is  algebraic integer exactly when  monic
+minimal polynomial over QQ has integer coefficients.
+"""
+function _is_algebraic_integer(
+  z::QQBarFieldElem,
+)::Bool
+  polynomial_ring_qq, _ =
+    polynomial_ring(QQ, :x)
+
+  polynomial =
+    minpoly(polynomial_ring_qq, z)
+
+  return all(
+    coefficient ->
+      denominator(coefficient) == 1,
+    coefficients(polynomial),
+  )
+end
+
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                       pivotal drinfeld center criterion                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

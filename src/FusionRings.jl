@@ -4,6 +4,8 @@ using Oscar, JSON, Base.Threads, Accessors
 using LinearAlgebra: eigen, eigvals, diag
 using ProgressMeter
 using UUIDs
+using Pkg
+using Pkg.Artifacts
 
 import Oscar:
   multiplication_table,
@@ -80,54 +82,22 @@ function __init__()
   global QQb     = algebraic_closure(QQ)
   global QQab, ζ = abelian_closure(QQ)
 
-  global datadir = joinpath(@__DIR__, "data")
-  fns = readdir(datadir)
 
-  # IF FIRST TIME USING PACKAGE: split number data in separate files
-  # these will be loaded on demand rather than all at the same time.
-
-  ids = Oscar.load(joinpath(datadir, "qqb_ids.mrdi"))
-  nf = length(ids)
-  if "split_number_data" ∉ fns ||
-    length(readdir(joinpath(datadir, "split_number_data"))) < nf
-    println("Dataset of algebraic numbers not yet optimized. Optimizing for future use.")
-    # Create directory for numbers
-    splitdatapath = joinpath(datadir, "split_number_data/")
-    mkpath(splitdatapath)
-
-    println("Importing algebraic numbers.")
-    # Import qqb numbers from big files
-    qqb_nums = begin
-      nums = Oscar.load(joinpath(datadir, "qqb_vals.mrdi"))
-
-      [(ids[i], nums[i]) for i in 1:length(ids)]
-    end
-
-    println("Exporting numbers separately.")
-    # Export qqb numbers
-    function exportnum(tuple)
-      path = joinpath(datadir, "split_number_data/", tuple[1]*".mrdi")
-      return Oscar.save(path, tuple[2])
-    end
-
-    @showprogress for num in qqb_nums
-      exportnum(num)
-    end
-    println("Dataset is optimized.")
-  end
-
-  # qqb_dict starts empty and grows on demand
-  global qqb_dict = Dict{String, QQBarFieldElem}()
+  fusionrings_data_path       = artifact"FusionRings"
+  algebraic_numbers_data_path = artifact"AlgebraicNumbers"
 
   # IMPORT FUSION RINGS
-  global fusion_ring_list = import_rings(joinpath(datadir, "fusionrings.json"));
+
+  fr_filenames = readdir(fusionrings_data_path)
+  global fusion_ring_list =
+    vcat([ import_rings(joinpath(fusionrings_data_path, fn)) for fn in fr_filenames ]...);
 
   global frl = fusion_ring_list
 
   global uuid_dict = Dict(uuid(r) => r for r in frl)
 
   # for unknown rings, the rank, mult, and nnsd can
-  # be determined quickly. We will group the known fusion rings by 
+  # be determined quickly. We will group the known fusion rings by
   # those properties so its faster to identify unknown rings.
   grouped_by_first3 = Dict{Vector{Int64}, Vector{FusionRing}}()
   for ring in frl
@@ -142,7 +112,47 @@ function __init__()
 
   global fusion_ring_dict = Dict(k => fourth_to_dict(v) for (k, v) in grouped_by_first3)
 
-  return global frd = fusion_ring_dict
+  global frd = fusion_ring_dict
+
+  # CHECK IF FIRST TIME USING PACKAGE
+
+  #split number data in separate files
+  # these will be loaded on demand rather than all at the same time.
+  global datadir = joinpath(@__DIR__, "data")
+  fns = readdir(datadir)
+
+  ids = Oscar.load(joinpath(algebraic_numbers_data_path, "qqb_ids.mrdi"))
+  nf = length(ids)
+  if "split_number_data" ∉ fns || length(readdir(joinpath(datadir, "split_number_data"))) < nf
+    println("Dataset of algebraic numbers not yet optimized. Optimizing for future use.")
+    # Create directory for numbers
+    splitdatapath = joinpath(datadir, "split_number_data/")
+    mkpath(splitdatapath)
+
+    println("Importing algebraic numbers.")
+    # Import qqb numbers from big files
+    qqb_nums = begin
+      nums = Oscar.load(joinpath(algebraic_numbers_data_path, "qqb_vals.mrdi"))
+
+      [(ids[i], nums[i]) for i in 1:length(ids)]
+    end
+
+    println()
+    # Export qqb numbers
+    function exportnum(tuple)
+      path = joinpath(datadir, "split_number_data/", tuple[1]*".mrdi")
+      return Oscar.save(path, tuple[2])
+    end
+
+    @showprogress desc="Exporting numbers separately." dt = 0.5 for num in qqb_nums
+      exportnum(num)
+    end
+    println("Dataset is optimized.")
+  end
+
+  # qqb_dict starts empty and grows on demand
+  global qqb_dict = Dict{String, QQBarFieldElem}()
+
 end
 
 end

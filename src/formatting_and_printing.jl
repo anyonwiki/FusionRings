@@ -329,7 +329,7 @@ function radicals_tex_rep(x::QQBarFieldElem)
   end
 end
 
-# writes an integer as a multiplication of a squared number
+# writes an integer as a multiplication of a squared integer
 # and a non-square
 function factor_squares(x)
   zzx = ZZ(x)

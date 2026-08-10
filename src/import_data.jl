@@ -336,13 +336,24 @@ function nfromjs(js)::Vector{String}
   return String.(stored_names)
 end
 
-# import texnames. Might fail
-function tnfromjs(js)
-  try
-    Vector{String}(js["texnames"])
-  catch e
-    String[]
-  end
+#TODO: fixed behaviour
+function tnfromjs(js)::Vector{String}
+  haskey(js, "texnames") ||
+    return String[]
+
+  stored_names = js["texnames"]
+
+  stored_names === nothing &&
+    return String[]
+
+  stored_names isa AbstractVector ||
+    throw(
+      ArgumentError(
+        "texnames must be an array or null",
+      ),
+    )
+
+  return String.(stored_names)
 end
 
 # import projective SL2Z reps

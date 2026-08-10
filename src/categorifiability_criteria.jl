@@ -141,21 +141,56 @@ function dn_criterion(fr::FusionRing)::Bool
   return false
 end
 
-function is_d_number(z::QQBarFieldElem)::Bool
-  R, _ = polynomial_ring(QQ, :x)
-  mp   = minpoly(R, z)
-  n    = degree(mp)
 
-  an  = constant_coefficient(mp)
-  cfs = collect(coefficients(mp))[2:(end - 1)]
+#TODO: fixed, previous version checked a_n^i / a_i^n
+#OSCAR lists polyn coefficients in ascending deg order so mismatched coefficients
+"""
+    is_d_number(z)
 
-  is_empty(cfs) && return true
+Return whether  algebraic number `z` is a d-number.
 
-  divint(i) = is_integer((an^i) / (cfs[i]^n))
+Let  monic minimal polynomial of `z` be
 
-  return all(divint, 1:(n - 1))
+    x^n + a₁x^(n-1) + ... + aₙ.
+
+ `z` is  d-number exactly when `aᵢ^n / aₙ^i` is  integer
+for all `i = 1, ..., n-1`.
+"""
+function is_d_number(
+  z::QQBarFieldElem,
+)::Bool
+  polynomial_ring_qq, _ =
+    polynomial_ring(QQ, :x)
+
+  polynomial =
+    minpoly(polynomial_ring_qq, z)
+
+  n = degree(polynomial)
+
+  # Every rational algebraic integer - generally every
+  # deg-one algebraic number satisfies  coefficient condition.
+  n <= 1 &&
+    return true
+
+  constant_term =
+    coeff(polynomial, 0)
+
+  constant_term == 0 &&
+    return false
+
+  for i in 1:(n - 1)
+    # a_i is  coefficient of x^(n-i).
+    a_i = coeff(polynomial, n - i)
+
+    quotient =
+      a_i^n / constant_term^i
+
+    denominator(quotient) == 1 ||
+      return false
+  end
+
+  return true
 end
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                          extended cyclotomic criterion                          ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

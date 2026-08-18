@@ -366,6 +366,7 @@ function import_ring(js::JSON.Object{String, Any}; skip_check = false)
     sub_fusion_rings            = sfrfromjs(js),
     frobenius_perron_dimension  = fpdfromjs(js),
     frobenius_perron_dimensions = fpdsfromjs(js),
+    formal_codegrees            = fcdfromjs(js),
     has_categories_with_props   = ctpfromjs(js),
     categorifications           = ctsfromjs(js),
     references                  = refsfromjs(js),
@@ -515,6 +516,10 @@ function agtojs(fr::FusionRing)
   ag = fr.all_gradings
   (ismissing(ag) || isnothing(ag)) && return nothing
 
+  gap_id(id::String) = small_group_identification(to_group(from_uuid(id)))
+
+  #TODO: add gap_id to info
+
   return [[g[1], g[2]] for g in ag]
 end
 
@@ -542,6 +547,8 @@ function auttojs(fr::FusionRing)
   mgs = minimal_size_generating_set(ag)
   remove_unit_cycles(cyc) = filter(x -> length(x) != 1, cyc)
   cyc = remove_unit_cycles.(cycles.(mgs))
+
+  gap_id = small_group_identification(ag)
 
   return Dict("group" => tex_describe(ag), "cycles" => cyc)
 end

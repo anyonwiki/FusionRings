@@ -254,7 +254,7 @@ end
 function fcdfromjs(js)
   fcd = safe_fetch(js, "formal_codegrees")
 
-  fcd isa Vector && return string.(fpds)
+  fcd isa Vector && return string.(fcd)
 
   return fcd
 end
@@ -283,18 +283,8 @@ function ctpfromjs(js)
   return hcwp
 end
 
-# TODO: only works for cats given by anyonwiki_code. Should use UUIDs in future
-# categorifications
 function ctsfromjs(js)
-  #TODO: uncomment once categorification are given by uuids
-  #cats = js["categorifications"]
-
-  #isnothing(cats) && return missing
-
-  #length(cats) === 0 && return Vector{Int64}[]
-
-  #return  [Int.(code) for code in cats]
-  return missing
+  return safe_fetch(js,"categorifications")
 end
 
 function refsfromjs(js)

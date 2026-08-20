@@ -323,12 +323,26 @@ function radicals_tex_rep(x::QQBarFieldElem)
 
     Δ    = b^2 - 4*a*c
     pval = (-QQb(b) + sqrt(QQb(Δ)))//(2*a)
-    s2   = pval == x ? "+" : "-"
+    s2   =
+      if pval != x
+        "-"
+      else
+        s1 == "" ? "" : "+"
+      end
 
     (d, e) = factor_squares(Δ)
     s3     = d//(2*a) == 1 ? "" : string(d//(2*a))
 
-    s4 = string("\\sqrt{", (Δ > 0 ? e : -e), "}")
+    s4 =
+      if e == 1
+        ""
+      elseif e == -1
+        "i"
+      elseif e > 0
+        string("\\sqrt{", e , "}")
+      else
+        string("\\sqrt{", -e , "} i")
+      end
 
     return fix_poly_string(string(s1, s2, s3, s4))
   else

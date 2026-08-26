@@ -83,12 +83,13 @@ function __init__()
   global QQab, ζ = abelian_closure(QQ)
 
 
-  fusionrings_data_path       = artifact"FusionRings"
-  algebraic_numbers_data_path = artifact"AlgebraicNumbers"
+  fusionrings_data_path       = joinpath( artifact"FusionRings", "FusionRings" )
+  algebraic_numbers_data_path = joinpath( artifact"AlgebraicNumbers", "AlgebraicNumbers" )
 
   # IMPORT FUSION RINGS
+  is_fr_data_file( s::String ) = s[1:4] == "mult" && s[end-4:end] == ".json"
+  fr_filenames = filter( is_fr_data_file, readdir(fusionrings_data_path) )
 
-  fr_filenames = readdir(fusionrings_data_path)
   global fusion_ring_list =
     vcat([ import_rings(joinpath(fusionrings_data_path, fn)) for fn in fr_filenames ]...);
 
@@ -125,6 +126,7 @@ function __init__()
   nf = length(ids)
   if "split_number_data" ∉ fns || length(readdir(joinpath(datadir, "split_number_data"))) < nf
     println("Dataset of algebraic numbers not yet optimized. Optimizing for future use.")
+
     # Create directory for numbers
     splitdatapath = joinpath(datadir, "split_number_data/")
     mkpath(splitdatapath)

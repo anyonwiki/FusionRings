@@ -569,6 +569,7 @@ using Oscar
     maybe_testset("intermediate", "2. intermediate correctness") do
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
+      known_z2 = fawc(2, 1, 0, 1)
 
       ad3_set, ad3_ring = adjoint_fusion_ring(z3)
       check_equal(
@@ -586,7 +587,35 @@ using Oscar
       check_equal(last(ucs3)[1], [1], "upper_central_series(z3) last subset was incorrect")
 
       check_true(is_nilpotent(z3), "is_nilpotent(z3) should have returned true")
-      return check_true(is_nilpotent(z4), "is_nilpotent(z4) should have returned true")
+      check_true(is_nilpotent(z4), "is_nilpotent(z4) should have returned true")
+
+      stale_z2 = change_properties(
+        known_z2,
+        :upper_central_series => [
+          (collect(1:rank(known_z2)), uuid(known_z2)),
+        ],
+      )
+      cached_grading, _ = universal_grading(stale_z2)
+      forced_grading, _ = universal_grading(stale_z2; force_compute = true)
+
+      check_equal(
+        cached_grading,
+        [1, 1],
+        "universal_grading did not use stored adjoint metadata by default",
+      )
+      check_equal(
+        forced_grading,
+        [1, 2],
+        "universal_grading(force_compute=true) reused stored adjoint metadata",
+      )
+      check_false(
+        is_nilpotent(stale_z2),
+        "is_nilpotent did not use stored upper-central-series metadata by default",
+      )
+      return check_true(
+        is_nilpotent(stale_z2; force_compute = true),
+        "is_nilpotent(force_compute=true) reused stored upper-central-series metadata",
+      )
     end
 
     maybe_testset("reference", "3. reference / Anyonica parity") do

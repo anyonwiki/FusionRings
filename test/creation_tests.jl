@@ -147,6 +147,12 @@
         () -> fusion_ring(mt; frobenius_perron_dimensions = ["qqbar-id"]),
         "fusion_ring accepted a stored FP-dimension vector of the wrong length",
       )
+      check_throws(
+        () -> fusion_ring(
+          mt; upper_central_series = [([1, 3], uuid(r))]
+        ),
+        "fusion_ring accepted an out-of-range upper-central-series index",
+      )
 
       check_equal(
         FusionRings.fusion_product(r, 1, 1),

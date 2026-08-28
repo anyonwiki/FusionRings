@@ -229,7 +229,7 @@ function numeric_fpdims(fr::FusionRing; force_compute = false)
     @views S .+= N[a, :, :]
   end
   vals, vecs = eigen(S)
-  idx = argmax(vals)
+  idx = argmax(real.(vals))
   v = abs.(vecs[:, idx])
   return v ./ v[1]
 end
@@ -492,10 +492,9 @@ function sub_fusion_rings(r::FusionRing; force_compute = false, represent_by_kno
   end
 
   subsets = sub_fusion_ring_subsets(r)
-  mt = multiplication_table(r)
   rbk = represent_by_known ? replace_by_known : identity
 
-  return [(s, rbk(fusion_ring(mt[s, s, s]))) for s in subsets]
+  return [(s, rbk(restrict_subring(r, s))) for s in subsets]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1105,8 +1104,12 @@ end
 
 export is_nilpotent
 
-function is_nilpotent(r::FusionRing)::Bool
-  chain = upper_central_series(r)
+function is_nilpotent(
+  r::FusionRing; force_compute = false, represent_by_known = true
+)::Bool
+  chain = upper_central_series(
+    r; force_compute = force_compute, represent_by_known = represent_by_known
+  )
   last_set, _ = last(chain)
   return length(last_set) == 1
 end
@@ -1143,8 +1146,12 @@ So for each simple e I start w/ {e} and apply that until stabilizes:
 
 Note: the code is slightly different than that in anyonica but ive highlighted/commented the parts that match
 """
-function adjoint_irreps(fr::FusionRing)::Vector{Vector{Int}}
-  adj_el, adj_ring = adjoint_fusion_ring(fr)
+function adjoint_irreps(
+  fr::FusionRing; force_compute = false, represent_by_known = true
+)::Vector{Vector{Int}}
+  adj_el, _ = adjoint_fusion_ring(
+    fr; force_compute = force_compute, represent_by_known = represent_by_known
+  )
 
   r = rank(fr)
 
@@ -1195,8 +1202,12 @@ end
 
 export universal_grading
 
-function universal_grading(fr::FusionRing)
-  components = adjoint_irreps(fr)
+function universal_grading(
+  fr::FusionRing; force_compute = false, represent_by_known = true
+)
+  components = adjoint_irreps(
+    fr; force_compute = force_compute, represent_by_known = represent_by_known
+  )
   number_of_components = length(components)
   grade_of = zeros(Int, rank(fr))
 
@@ -1229,7 +1240,8 @@ function universal_grading(fr::FusionRing)
   end
 
   grading_ring = fusion_ring(grading_mt)
-  return grade_of, replace_by_known(grading_ring)
+  known_grading_ring = represent_by_known ? replace_by_known(grading_ring) : grading_ring
+  return grade_of, known_grading_ring
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1260,7 +1272,7 @@ function all_gradings(
 
   rank(fr) == 1 && return Tuple{Vector{Int64}, FusionRing}[([1], fawc(1, 1, 0, 1))]
 
-  grvec, ug = universal_grading(fr)
+  grvec, ug = universal_grading(fr; force_compute = force_compute)
 
   UG, ϕ = to_group_with_emb(ug)
 

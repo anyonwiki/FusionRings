@@ -288,8 +288,11 @@ function fusion_ring(
   end
   if !ismissing(ucs)
     for (indices, term_uuid) in ucs
-      all(>(0), indices) ||
-        error("upper-central-series indices must be positive")
+      !isempty(indices) || error("upper-central-series indices cannot be empty")
+      length(unique(indices)) == length(indices) ||
+        error("upper-central-series indices cannot contain duplicates")
+      all(i -> 1 <= i <= r, indices) ||
+        error("upper-central-series index is outside the parent ring")
       is_valid_uuid(term_uuid) ||
         error("upper-central-series UUID string is invalid")
     end

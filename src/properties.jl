@@ -120,6 +120,12 @@ end
 
 export frobenius_perron_dimensions
 
+function _frobenius_perron_eigenvalue(A)::QQBarFieldElem
+  # A nonnegative fusion matrix has its spectral radius as a real eigenvalue,
+  # and no other eigenvalue has a larger real part.
+  return maximum(real, eigenvalues(QQBar, A))
+end
+
 function frobenius_perron_dimensions(
   r::FusionRing; force_compute = false
 )::Vector{QQBarFieldElem}
@@ -127,7 +133,7 @@ function frobenius_perron_dimensions(
   if ismissing(stored_dims) || force_compute
     mt = multiplication_table(r)
     multmats = [matrix(ZZ, mt[i, :, :]) for i in 1:rank(r)]
-    return [first(eigenvalues(QQBar, A)) for A in multmats]
+    return _frobenius_perron_eigenvalue.(multmats)
   else
     return from_qqb_id(stored_dims)
   end
@@ -163,13 +169,20 @@ end
 
 export frobenius_perron_dimension
 
-function frobenius_perron_dimension(r::FusionRing, force_compute = false)::QQBarFieldElem
+function frobenius_perron_dimension(
+  r::FusionRing; force_compute::Bool = false
+)::QQBarFieldElem
   stored_dim = r.frobenius_perron_dimension
   if ismissing(stored_dim) || force_compute
-    return sum(fpdims(r) .^ 2)
+    return sum(fpdims(r; force_compute = force_compute) .^ 2)
   else
     return from_qqb_id(stored_dim)
   end
+end
+
+# Preserve the positional form supported by earlier releases.
+function frobenius_perron_dimension(r::FusionRing, force_compute::Bool)::QQBarFieldElem
+  return frobenius_perron_dimension(r; force_compute = force_compute)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -206,7 +219,7 @@ function numeric_fpdims(fr::FusionRing; force_compute = false)
   fpds = fr.frobenius_perron_dimensions
 
   if !ismissing(fpds) && !force_compute
-    return ComplexF64.(from_qqb_id.(fpds))
+    return Float64.(real.(ComplexF64.(from_qqb_id(fpds))))
   end
 
   r = rank(fr)
@@ -231,10 +244,10 @@ function numeric_fpdim(fr::FusionRing; force_compute = false)
   fpd = fr.frobenius_perron_dimension
 
   if !ismissing(fpd) && !force_compute
-    return ComplexF64(from_qqb_id(fpd))
+    return Float64(real(ComplexF64(from_qqb_id(fpd))))
   end
 
-  return sum(x->x*x, numeric_fpdims(fr))
+  return sum(x -> x*x, numeric_fpdims(fr; force_compute = force_compute))
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -384,14 +397,15 @@ function barcode(fr::FusionRing; force_compute = false)
   #non-self dual ones and non-self dual ones are grouped in dual pairs.
   #the self-dual ones are then sorted by increasing fpdim and the same
   #for the pairs of dual elements
-  sr = sort(fr; by = "sd_conj")
+  sr = sort(fr; by = "sd_conj", force_compute = force_compute)
   r  = rank(sr)
 
   #we only allow permutations that preserve the order above
   cp = conjugate_pairs(sr)
 
   #some useful functions
-  fpd(i)     = fpdims(fr)[i]
+  sorted_fpdims = fpdims(sr; force_compute = force_compute)
+  fpd(i)     = sorted_fpdims[i]
   addunit(v) = vcat(1, v .+ 1)
 
   # first we set up possible permutations for self-dual elements
@@ -795,7 +809,7 @@ function decompositions(
   tpd = (fr.realizations)["tensor_product"]
   if ismissing(tpd) || isnothing(tpd) || force_compute
     return non_trivial_tensor_product_decompositions(
-      fr; represent_by_known = represent_by_known
+      fr; represent_by_known = represent_by_known, force_compute = force_compute
     )
   else
     [[from_uuid(id) for id in decomp] for decomp in tpd]
@@ -814,14 +828,21 @@ export non_trivial_tensor_product_decompositions
 Return non-trivial decompositions of `r` as tensor products of fusion rings.
 """
 function non_trivial_tensor_product_decompositions(
-  fr::FusionRing; represent_by_known = true
+  fr::FusionRing; represent_by_known = true, force_compute = false
 )::Vector{Vector{FusionRing}}
   r = rank(fr)
 
   # since every fusion ring has an identity 1, every component
   # in the tensor product is a subring whose rank divides the rank of fr
   subrings = filter_equivalents(
-    is_equivalent_fusion_ring, [t[2] for t in sub_fusion_rings(fr)]
+    is_equivalent_fusion_ring,
+    [
+      t[2] for t in sub_fusion_rings(
+        fr;
+        force_compute = force_compute,
+        represent_by_known = represent_by_known,
+      )
+    ],
   )
 
   #@info subrings
@@ -1193,8 +1214,9 @@ where N is a normal subgroup of U.
 function all_gradings(
   fr::FusionRing; force_compute = false
 )::Vector{Tuple{Vector{Int64}, FusionRing}}
-  #TODO: uncomment line once FusionRing has field all_gradings
-  #!force_compute && !ismissing(fr.all_gradings) && return fr.all_gradings
+  if !force_compute && !ismissing(fr.all_gradings)
+    return [(t[1], from_uuid(t[2])) for t in fr.all_gradings]
+  end
 
   rank(fr) == 1 && return Tuple{Vector{Int64}, FusionRing}[([1], fawc(1, 1, 0, 1))]
 
@@ -1443,7 +1465,7 @@ function formal_codegrees(
   r = rank(fr)
 
   if is_commutative(fr) && usecharacters
-    chars = characters(fr)
+    chars = characters(fr; force_compute = force_compute)
     φ(i) = j -> chars[i, j]
 
     return sort([sum(φ(i)(j) * φ(i)(d(j)) for j in 1:r) for i in 1:r]; by = z -> abs(z))

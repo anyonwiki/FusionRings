@@ -331,6 +331,12 @@
     maybe_testset("intermediate", "2. intermediate correctness") do
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
+      su2_2 = su2k_fusion_ring(2)
+      stale_su2_2 = change_properties(
+        su2_2,
+        :frobenius_perron_dimensions =>
+          fill(z3.frobenius_perron_dimension, rank(su2_2)),
+      )
 
       check_equal(
         FusionRings.perm_vec_qd(z3),
@@ -349,6 +355,21 @@
         [1, 2, 3],
         "FusionRings.perm_vec_sd_conj(z3) was not the identity permutation",
       )
+
+      check_equal(
+        FusionRings.perm_vec_sd_conj(stale_su2_2),
+        [1, 2, 3],
+        "perm_vec_sd_conj did not use stored FP dimensions by default",
+      )
+
+      check_equal(
+        FusionRings.perm_vec_sd_conj(stale_su2_2; force_compute = true),
+        [1, 3, 2],
+        "perm_vec_sd_conj(force_compute=true) used stale FP dimensions",
+      )
+
+      @test_throws ArgumentError sort(z3; by = "unknown")
+      @test_throws ArgumentError sort(z3; order = :sideways)
 
       return check_equal(
         FusionRings.perm_vec_sd_conj(z4),

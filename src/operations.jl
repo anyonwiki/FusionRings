@@ -203,29 +203,49 @@ end
 
 export sort
 
-function sort(fr::FusionRing; by = "fpdims", order::Symbol = :increasing)
+function _validate_sort_order(order::Symbol)
+  order in (:increasing, :decreasing) ||
+    throw(ArgumentError("order must be :increasing or :decreasing"))
+  return nothing
+end
+
+function sort(
+  fr::FusionRing; by = "fpdims", order::Symbol = :increasing, force_compute = false
+)
+  _validate_sort_order(order)
+
   if by == "fpdims"
-    return permute(perm_vec_qd(fr; order = order), fr)
+    return permute(
+      perm_vec_qd(fr; order = order, force_compute = force_compute), fr
+    )
   elseif by == "sd_conj"
-    return permute(perm_vec_sd_conj(fr; order = order), fr)
+    return permute(
+      perm_vec_sd_conj(fr; order = order, force_compute = force_compute), fr
+    )
   else
-    message("by= argument was not \"fpdims\" or \"sd_conj\".")
+    throw(ArgumentError("by must be \"fpdims\" or \"sd_conj\""))
   end
 end
 
 """perm_vec_qd(r; order = :increasing) – permutation that sorts the non‑vacuum
     elements by Frobenius–Perron dimension."""
-function perm_vec_qd(r::FusionRing; order::Symbol = :increasing)::Vector{Int}
+function perm_vec_qd(
+  r::FusionRing; order::Symbol = :increasing, force_compute = false
+)::Vector{Int}
+  _validate_sort_order(order)
   idx = collect(2:rank(r))
-  qd  = fpdims(r)
+  qd  = fpdims(r; force_compute = force_compute)
   sort!(idx; by = i -> qd[i], rev = (order == :decreasing))
   return vcat(1, idx)
 end
 
 """perm_vec_sd_conj(r; order = :increasing) – self‑duals first (ordered by fpdim), then conjugate
     pairs, with blocks ordered by FP‑dimension."""
-function perm_vec_sd_conj(r::FusionRing; order::Symbol = :increasing)::Vector{Int}
-  fpd   = fpdims(r)
+function perm_vec_sd_conj(
+  r::FusionRing; order::Symbol = :increasing, force_compute = false
+)::Vector{Int}
+  _validate_sort_order(order)
+  fpd   = fpdims(r; force_compute = force_compute)
   pairs = conjugate_pairs(r)
 
   sd, nsd = binsplit(p -> length(p)==1, pairs)

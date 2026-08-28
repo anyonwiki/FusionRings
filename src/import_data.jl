@@ -39,6 +39,7 @@ function root_sort_crit(x)
   return (- Int(is_real(x)), real(x), imag(x))
 end
 
+#changed: Save into a configurable directory, synchronize qqb_dict, and return the stable QQBar ID.
 function save_qqb_num(
   x::QQBarFieldElem;
   directory::AbstractString = joinpath(datadir, "split_number_data"),
@@ -121,6 +122,7 @@ function safe_fetch(js, key)
 end
 
 # mult tab
+#changed: Require a positive-rank cubic integer array before decoding the multiplication table.
 function mtfromjs(js)::Array{Int64, 3}
   jsmt = safe_fetch(js, "mult_tab")
   ismissing(jsmt) && throw(ArgumentError("mult_tab is required"))
@@ -233,6 +235,7 @@ function tnfromjs(js)
 end
 
 # labels
+#changed: Treat absent labels as missing and validate that present labels are array-like.
 function lfromjs(js)
   lbs = safe_fetch(js, "labels")
 
@@ -243,6 +246,7 @@ function lfromjs(js)
 end
 
 # characters
+#changed: Validate square character data and preserve the row-character/column-simple orientation.
 function chfromjs(js)
   chrs = safe_fetch(js, "characters")
   ismissing(chrs) && return missing
@@ -258,6 +262,7 @@ function chfromjs(js)
 end
 
 # sub-fusion rings
+#changed: Decode current [indices, UUID] subring metadata with explicit shape and type checks.
 function sfrfromjs(js)
   sfr = safe_fetch(js, "non_trivial_sub_fusion_rings")
   ismissing(sfr) && return missing
@@ -278,6 +283,7 @@ function sfrfromjs(js)
   return decoded
 end
 
+#changed: Require the stored scalar FP dimension to be a QQBar ID string when present.
 function fpdfromjs(js)
   fpd = safe_fetch(js, "frobenius_perron_dimension")
   ismissing(fpd) && return missing
@@ -286,6 +292,7 @@ function fpdfromjs(js)
   return String(fpd)
 end
 
+#changed: Require a vector of QQBar ID strings for stored component FP dimensions.
 function fpdsfromjs(js)
   fpds = safe_fetch(js, "frobenius_perron_dimensions")
   ismissing(fpds) && return missing
@@ -298,6 +305,7 @@ function fpdsfromjs(js)
   return String.(fpds)
 end
 
+#changed: Require a vector of QQBar ID strings for stored formal codegrees.
 function fcdfromjs(js)
   fcd = safe_fetch(js, "formal_codegrees")
   ismissing(fcd) && return missing
@@ -353,6 +361,7 @@ function sfromjs(js)
   return sftw
 end
 
+#changed: Decode current [degrees, UUID] grading metadata with explicit shape and type checks.
 function agfromjs(js)
   ag = safe_fetch(js, "all_gradings")
   ismissing(ag) && return missing
@@ -373,6 +382,7 @@ function agfromjs(js)
   return decoded
 end
 
+#changed: Decode current [indices, UUID] upper-central-series metadata with explicit validation.
 function ucsfromjs(js)
   ucs = safe_fetch(js, "upper_central_series")
   ismissing(ucs) && return missing
@@ -393,6 +403,7 @@ function ucsfromjs(js)
   return decoded
 end
 
+#changed: Validate realization objects and normalize the legacy TensorProduct key.
 function rfromjs(js)
   stored = safe_fetch(js, "realizations")
   ismissing(stored) && return Dict{String, Any}("tensor_product" => missing)
@@ -407,6 +418,7 @@ function rfromjs(js)
   return result
 end
 
+#changed: Handle missing automorphism metadata safely and validate cycle generators before group construction.
 function afromjs(js)
   aut = safe_fetch(js, "automorphisms")
   ismissing(aut) && return missing
@@ -510,6 +522,7 @@ function actojs(fr::FusionRing)::Union{Vector{Int64}, Nothing}
   return ismissing(c) ? nothing : c
 end
 
+#changed: Export character rows without the prior transpose so JSON round trips preserve orientation.
 function chtojs(fr::FusionRing)
   ch = fr.characters
   if ch !== missing

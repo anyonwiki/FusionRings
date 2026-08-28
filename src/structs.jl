@@ -46,6 +46,7 @@ function check_struct_const(mt)
   return all(x -> x isa Integer && x >= 0, mt)
 end
 
+#changed: Reject rank-zero tensors in addition to requiring a cubic multiplication table.
 function check_mt_dims(mt)
   dims = size(mt)
   return length(dims) == 3 && first(dims) >= 1 && is_constant_array(dims)
@@ -63,6 +64,7 @@ function check_unit(mt)
   return true
 end
 
+#changed: Validate one matching left/right dual for every simple object, not only a global sum.
 function check_inverse(mt)
   r = size(mt, 1)
   unit_coefficients = @view mt[:, :, 1]
@@ -102,6 +104,7 @@ function is_valid_uuid(s::String)
   return !isnothing(tryparse(UUID, s))
 end
 
+#changed: Fix TeX-name handling and validate cached characters, dimensions, subrings, gradings, and UCS metadata.
 function fusion_ring(
   mt::Array{Int, 3};
   uuid                        = missing,

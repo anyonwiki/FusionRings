@@ -79,6 +79,7 @@ end
 export restrict_subring
 
 # restrict ring to subindices S (Anyonica's MT[ring][[el,el,el]])
+#changed: Preserve the selected simple-object labels and retain original-table closure validation.
 function restrict_subring(
   fr::FusionRing, S::Vector{Int}; check_closed::Bool = true
 )::FusionRing
@@ -119,6 +120,7 @@ export permute
    `perm[1]` **must** equal 1 to keep the vacuum first.
 """
 
+#changed: Reindex labels and every simple-indexed cache consistently, even when the multiplication table is symmetric.
 function permute(σ::Vector{Int}, r::FusionRing)::FusionRing
   n = rank(r)
   n == length(σ) || throw(ArgumentError("perm length ≠ rank"))
@@ -183,6 +185,7 @@ end
 
 Apply permutation `p` (fixing 1) to all three indices of `N`.
 """
+#changed: Replace the manual loop with validated three-axis indexing and reject invalid permutations.
 function permute_mult_tab(N::Array{Int, 3}, p::Vector{Int})::Array{Int, 3}
   r = size(N, 1)
   size(N) == (r, r, r) || throw(ArgumentError("multiplication table must be cubic"))
@@ -203,12 +206,14 @@ end
 
 export sort
 
+#changed: Add one shared validator so unsupported sort orders fail with a clear ArgumentError.
 function _validate_sort_order(order::Symbol)
   order in (:increasing, :decreasing) ||
     throw(ArgumentError("order must be :increasing or :decreasing"))
   return nothing
 end
 
+#changed: Propagate force_compute into sorting helpers and replace the undefined message(...) error path.
 function sort(
   fr::FusionRing; by = "fpdims", order::Symbol = :increasing, force_compute = false
 )
@@ -229,6 +234,7 @@ end
 
 """perm_vec_qd(r; order = :increasing) – permutation that sorts the non‑vacuum
     elements by Frobenius–Perron dimension."""
+#changed: Support forced FP-dimension recomputation and validate the requested ordering.
 function perm_vec_qd(
   r::FusionRing; order::Symbol = :increasing, force_compute = false
 )::Vector{Int}
@@ -241,6 +247,7 @@ end
 
 """perm_vec_sd_conj(r; order = :increasing) – self‑duals first (ordered by fpdim), then conjugate
     pairs, with blocks ordered by FP‑dimension."""
+#changed: Support forced FP-dimension recomputation and validate the requested ordering.
 function perm_vec_sd_conj(
   r::FusionRing; order::Symbol = :increasing, force_compute = false
 )::Vector{Int}

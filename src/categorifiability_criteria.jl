@@ -23,6 +23,7 @@ commutative criterion does not apply.
 `characters(ring)` stores characters by row and simple objects by column, so
 the theorem's `λ[i,j]` is represented by `chars[j,i]` here.
 """
+#changed: Correct the character-table orientation/FP denominator, add force_compute, and use obstruction semantics.
 function csp_criterion(
   ring::FusionRing; force_compute::Bool = false
 )::Bool
@@ -43,6 +44,7 @@ function csp_criterion(
 end
 
 """Return whether a `QQBarFieldElem` is an algebraic integer."""
+#changed: Add the missing exact QQBar algebraic-integrality test used by PDC and d-number checks.
 function _is_algebraic_integer(z::QQBarFieldElem)::Bool
   polynomial_ring_qq, _ = polynomial_ring(QQ, :x)
   polynomial = minpoly(polynomial_ring_qq, z)
@@ -61,6 +63,7 @@ end
 Return `true` when the pivotal Drinfeld-center criterion obstructs a complex
 pivotal categorification.
 """
+#changed: Implement the formal-codegree ratio test with exact integrality, force_compute, and obstruction semantics.
 function pdc_criterion(
   fr::FusionRing; force_compute::Bool = false
 )::Bool
@@ -108,8 +111,12 @@ end
     dn_criterion(fr; force_compute=false)
 
 Return `true` when at least one formal codegree is not a d-number, obstructing
-a complex categorification.
+a complex categorification. This executable test currently returns `false` for
+noncommutative rings because the package's general noncommutative formal-codegree
+path does not yet recover the irreducible-representation dimensions needed to
+separate `f_E` from `f_E * dim(E)`.
 """
+#changed: Apply Ostrik's d-number theorem to every supported commutative formal codegree; any failure obstructs categorification.
 function dn_criterion(
   fr::FusionRing; force_compute::Bool = false
 )::Bool
@@ -119,6 +126,7 @@ function dn_criterion(
 end
 
 """Return whether the algebraic number `z` is a d-number."""
+#changed: Require algebraic integrality and correct the minimal-polynomial coefficient/divisibility direction.
 function is_d_number(z::QQBarFieldElem)::Bool
   _is_algebraic_integer(z) || return false
 
@@ -231,6 +239,7 @@ end
 #
 #  ];
 #
+#changed: Replace the old Boolean crit1 helper with the three integer sums required by ZSC/OSC.
 function _crit1_sums(i, d, mt)
   length(i) == 6 || throw(ArgumentError("crit1 requires six indices"))
   r = size(mt, 1)
@@ -241,8 +250,10 @@ function _crit1_sums(i, d, mt)
   )
 end
 
+#changed: Add an explicit Boolean wrapper for the "one appears" spectrum condition.
 _crit1_has_one(i, d, mt)::Bool = any(==(1), _crit1_sums(i, d, mt))
 
+#changed: Replace the old Boolean crit2 helper with the three integer sums required by ZSC.
 function _crit2_sums(i, d, mt)
   length(i) == 6 || throw(ArgumentError("crit2 requires six indices"))
   r = size(mt, 1)
@@ -253,8 +264,10 @@ function _crit2_sums(i, d, mt)
   )
 end
 
+#changed: Add an explicit Boolean wrapper for the second "one appears" spectrum condition.
 _crit2_has_one(i, d, mt)::Bool = any(==(1), _crit2_sums(i, d, mt))
 
+#changed: Return the raw triple-product sum so ZSC can test zero and OSC can test one.
 function _crit3_sum(i, d, mt)::Int
   length(i) == 6 || throw(ArgumentError("crit3 requires six indices"))
   r = size(mt, 1)
@@ -336,6 +349,7 @@ Return `true` if the Zero Spectrum Criterion rules out categorifiability.
 This is a direct Julia port of the Mathematica `ZSCriterion` logic, but with
 explicit Boolean helpers.
 """
+#changed: Replace undefined helper calls with the package multiplication, duality, and NZSC APIs.
 function zsc_criterion(ring::FusionRing)::Bool
   mt = multiplication_table(ring)
   r = size(mt, 1)
@@ -399,6 +413,7 @@ Return `true` if the One Spectrum Criterion rules out categorifiability.
 
 This is a direct Julia port of the Mathematica `OSCriterion` logic.
 """
+#changed: Replace undefined helper calls with the package multiplication, duality, and NZSC APIs.
 function osc_criterion(ring::FusionRing)::Bool
   mt = multiplication_table(ring)
   r = size(mt, 1)

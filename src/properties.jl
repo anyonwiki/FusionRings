@@ -549,6 +549,7 @@ function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
   # indices in S must lie in range 1, ...,  r
   r = rank(fr)
   !all(i -> 1 <= i <= r, S) && return false
+  length(unique(S)) == length(S) || return false
 
   # multiplication must be internal
   for a in S, b in S

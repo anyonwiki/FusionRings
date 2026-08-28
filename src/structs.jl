@@ -48,7 +48,7 @@ end
 
 function check_mt_dims(mt)
   dims = size(mt)
-  return length(dims) == 3 && is_constant_array(dims)
+  return length(dims) == 3 && first(dims) >= 1 && is_constant_array(dims)
 end
 
 function check_unit(mt)
@@ -64,7 +64,24 @@ function check_unit(mt)
 end
 
 function check_inverse(mt)
-  return sum(mt[:, :, 1]) == size(mt, 1)
+  r = size(mt, 1)
+  unit_coefficients = @view mt[:, :, 1]
+
+  for i in 1:r
+    left_coefficients = view(unit_coefficients, :, i)
+    right_coefficients = view(unit_coefficients, i, :)
+    left_duals = findall(==(1), left_coefficients)
+    right_duals = findall(==(1), right_coefficients)
+
+    length(left_duals) == 1 || return false
+    length(right_duals) == 1 || return false
+    only(left_duals) == only(right_duals) || return false
+
+    all(x -> x == 0 || x == 1, left_coefficients) || return false
+    all(x -> x == 0 || x == 1, right_coefficients) || return false
+  end
+
+  return true
 end
 
 function check_associativity(mt::Array{Int, 3})

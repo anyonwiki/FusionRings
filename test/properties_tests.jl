@@ -286,6 +286,14 @@ using Oscar
         "is_sub_fusion_ring(z4, [1,3]) should have returned true",
       )
       check_false(
+        is_sub_fusion_ring(su2k_fusion_ring(2), [1, 2]),
+        "is_sub_fusion_ring ignored a fusion outcome outside the proposed subset",
+      )
+      check_false(
+        is_sub_fusion_ring(z4, [1, 1]),
+        "is_sub_fusion_ring accepted duplicate indices",
+      )
+      check_false(
         is_sub_fusion_ring(z4, [1, 2]),
         "is_sub_fusion_ring(z4, [1,2]) should have returned false",
       )

@@ -105,6 +105,26 @@
         is_group_ring(r),
         "fusion_ring constructed a valid Z2 table but the result was not detected as a group ring",
       )
+
+      rank_zero_mt = zeros(Int, 0, 0, 0)
+      check_false(
+        FusionRings.check_mt_dims(rank_zero_mt),
+        "check_mt_dims accepted a rank-zero multiplication table",
+      )
+      check_throws(
+        () -> fusion_ring(rank_zero_mt),
+        "fusion_ring accepted a rank-zero multiplication table",
+      )
+
+      mt_bad_dual_distribution = make_z3_mt()
+      mt_bad_dual_distribution[2, 3, 1] = 0
+      mt_bad_dual_distribution[2, 2, 1] = 1
+
+      check_false(
+        FusionRings.check_inverse(mt_bad_dual_distribution),
+        "check_inverse accepted an invalid distribution of dual objects",
+      )
+
       check_equal(
         FusionRings.fusion_product(r, 1, 1),
         Dict(1 => 1),

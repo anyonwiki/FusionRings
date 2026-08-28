@@ -39,9 +39,15 @@ function root_sort_crit(x)
   return (- Int(is_real(x)), real(x), imag(x))
 end
 
-function save_qqb_num(x::QQBarFieldElem)
-  path = joinpath(@__DIR__, "data", "split_number_data", qqb_id(x)*".mrdi")
-  return Oscar.save(path, x)
+function save_qqb_num(
+  x::QQBarFieldElem;
+  directory::AbstractString = joinpath(datadir, "split_number_data"),
+)
+  id = qqb_id(x)
+  mkpath(directory)
+  Oscar.save(joinpath(directory, id*".mrdi"), x)
+  qqb_dict[id] = x
+  return id
 end
 
 # Loading from library of qqb elements
@@ -116,11 +122,26 @@ end
 
 # mult tab
 function mtfromjs(js)::Array{Int64, 3}
-  jsmt = js["mult_tab"]
+  jsmt = safe_fetch(js, "mult_tab")
+  ismissing(jsmt) && throw(ArgumentError("mult_tab is required"))
+  jsmt isa AbstractVector || throw(ArgumentError("mult_tab must be a cubic array"))
+
   r = length(jsmt)
+  r > 0 || throw(ArgumentError("mult_tab must have positive rank"))
+  all(
+    plane ->
+      plane isa AbstractVector &&
+      length(plane) == r &&
+      all(row -> row isa AbstractVector && length(row) == r, plane),
+    jsmt,
+  ) || throw(ArgumentError("mult_tab must be a cubic array"))
+
   mt = zeros(Int, r, r, r)
   for i in 1:r, j in 1:r, k in 1:r
-    mt[i, j, k] = Int.(jsmt[i][j][k])
+    value = jsmt[i][j][k]
+    value isa Integer ||
+      throw(ArgumentError("every mult_tab entry must be an integer"))
+    mt[i, j, k] = Int(value)
   end
   return mt
 end
@@ -215,48 +236,77 @@ end
 function lfromjs(js)
   lbs = safe_fetch(js, "labels")
 
-  lbs isa Vector{Any} && return string.(lbs)
+  ismissing(lbs) && return missing
+  lbs isa AbstractVector || throw(ArgumentError("labels must be an array or null"))
 
-  return lbs
+  return string.(lbs)
 end
 
 # characters
 function chfromjs(js)
   chrs = safe_fetch(js, "characters")
-  chrs isa Vector &&
-    return [string(chrs[i][j]) for i in 1:length(chrs), j in 1:length(chrs[1])]
+  ismissing(chrs) && return missing
+  chrs isa AbstractVector ||
+    throw(ArgumentError("characters must be a square array or null"))
 
-  return chrs
+  r = length(chrs)
+  r > 0 || throw(ArgumentError("characters cannot be an empty array"))
+  all(row -> row isa AbstractVector && length(row) == r, chrs) ||
+    throw(ArgumentError("characters must be a square array"))
+
+  return [string(chrs[i][j]) for i in 1:r, j in 1:r]
 end
 
 # sub-fusion rings
 function sfrfromjs(js)
   sfr = safe_fetch(js, "non_trivial_sub_fusion_rings")
-  if sfr isa Vector
-    return Tuple{Vector{Int64}, String}[(Int64.(s[1]), s[2]) for s in sfr]
-  else
-    sfr
+  ismissing(sfr) && return missing
+  sfr isa AbstractVector ||
+    throw(ArgumentError("non_trivial_sub_fusion_rings must be an array or null"))
+
+  decoded = Tuple{Vector{Int64}, String}[]
+  for entry in sfr
+    entry isa AbstractVector && length(entry) == 2 ||
+      throw(ArgumentError("each stored subring must be [indices, uuid]"))
+    indices, id = entry
+    indices isa AbstractVector && all(x -> x isa Integer, indices) ||
+      throw(ArgumentError("stored subring indices must be integers"))
+    id isa AbstractString ||
+      throw(ArgumentError("stored subring UUID must be a string"))
+    push!(decoded, (Int64.(indices), String(id)))
   end
+  return decoded
 end
 
 function fpdfromjs(js)
-  return safe_fetch(js, "frobenius_perron_dimension")
+  fpd = safe_fetch(js, "frobenius_perron_dimension")
+  ismissing(fpd) && return missing
+  fpd isa AbstractString ||
+    throw(ArgumentError("frobenius_perron_dimension must be a QQBar ID string or null"))
+  return String(fpd)
 end
 
 function fpdsfromjs(js)
   fpds = safe_fetch(js, "frobenius_perron_dimensions")
+  ismissing(fpds) && return missing
+  fpds isa AbstractVector || throw(
+    ArgumentError("frobenius_perron_dimensions must be an array of QQBar ID strings or null")
+  )
+  all(x -> x isa AbstractString, fpds) ||
+    throw(ArgumentError("every stored FP dimension must be a QQBar ID string"))
 
-  fpds isa Vector && return string.(fpds)
-
-  return fpds
+  return String.(fpds)
 end
 
 function fcdfromjs(js)
   fcd = safe_fetch(js, "formal_codegrees")
+  ismissing(fcd) && return missing
+  fcd isa AbstractVector ||
+    throw(ArgumentError("formal_codegrees must be an array of QQBar ID strings or null"))
+  all(x -> x isa AbstractString, fcd) ||
+    throw(ArgumentError("every formal codegree must be a QQBar ID string"))
 
-  fcd isa Vector && return string.(fcd)
-
-  return fcd
+  return String.(fcd)
 end
 
 function ctpfromjs(js)
@@ -305,35 +355,86 @@ end
 
 function agfromjs(js)
   ag = safe_fetch(js, "all_gradings")
+  ismissing(ag) && return missing
+  ag isa AbstractVector ||
+    throw(ArgumentError("all_gradings must be an array or null"))
 
-  ag isa Vector && return [(Int64.(gr[1]), gr[2]) for gr in ag]
-  return ag
+  decoded = Tuple{Vector{Int64}, String}[]
+  for grading in ag
+    grading isa AbstractVector && length(grading) == 2 ||
+      throw(ArgumentError("each stored grading must be [degrees, uuid]"))
+    degrees, id = grading
+    degrees isa AbstractVector && all(x -> x isa Integer, degrees) ||
+      throw(ArgumentError("stored grading degrees must be integers"))
+    id isa AbstractString ||
+      throw(ArgumentError("stored grading-ring UUID must be a string"))
+    push!(decoded, (Int64.(degrees), String(id)))
+  end
+  return decoded
 end
 
 function ucsfromjs(js)
   ucs = safe_fetch(js, "upper_central_series")
+  ismissing(ucs) && return missing
+  ucs isa AbstractVector ||
+    throw(ArgumentError("upper_central_series must be an array or null"))
 
-  ucs isa Vector && return [(Int64.(t[1]), t[2]) for t in ucs]
-
-  return ucs
+  decoded = Tuple{Vector{Int64}, String}[]
+  for term in ucs
+    term isa AbstractVector && length(term) == 2 ||
+      throw(ArgumentError("each upper-central-series term must be [indices, uuid]"))
+    indices, id = term
+    indices isa AbstractVector && all(x -> x isa Integer, indices) ||
+      throw(ArgumentError("upper-central-series indices must be integers"))
+    id isa AbstractString ||
+      throw(ArgumentError("upper-central-series UUID must be a string"))
+    push!(decoded, (Int64.(indices), String(id)))
+  end
+  return decoded
 end
 
 function rfromjs(js)
-  r = safe_fetch(js, "realizations")
+  stored = safe_fetch(js, "realizations")
+  ismissing(stored) && return Dict{String, Any}("tensor_product" => missing)
+  stored isa AbstractDict ||
+    throw(ArgumentError("realizations must be a JSON object or null"))
 
-  return ismissing(r) ? Dict{String, Any}("tensor_product" => missing) : r
+  result = Dict{String, Any}(String(k) => v for (k, v) in stored)
+  if !haskey(result, "tensor_product") && haskey(result, "TensorProduct")
+    result["tensor_product"] = pop!(result, "TensorProduct")
+  end
+  get!(result, "tensor_product", missing)
+  return result
 end
 
 function afromjs(js)
   aut = safe_fetch(js, "automorphisms")
-  mt  = safe_fetch(js, "mult_tab")
-  rk  = size(mt, 1)
-  gns = aut["cycles"]
-  cyc = [cperm([Int64.(c) for c in cyc]) for cyc in gns]
+  ismissing(aut) && return missing
+  aut isa AbstractDict ||
+    throw(ArgumentError("automorphisms must be a JSON object or null"))
+  haskey(aut, "cycles") ||
+    throw(ArgumentError("automorphisms must contain a cycles field"))
 
-  aut isa JSON.Object{String, Any} && return permutation_group(rk, cyc)
+  generators = aut["cycles"]
+  generators isa AbstractVector ||
+    throw(ArgumentError("automorphism cycles must be an array"))
 
-  return aut
+  mt = safe_fetch(js, "mult_tab")
+  ismissing(mt) && throw(ArgumentError("mult_tab is required to decode automorphisms"))
+  rk = length(mt)
+  isempty(generators) &&
+    return permutation_group(rk, [perm(collect(1:rk))])
+
+  converted = map(generators) do generator
+    generator isa AbstractVector ||
+      throw(ArgumentError("each automorphism generator must be an array of cycles"))
+    all(
+      cycle -> cycle isa AbstractVector && all(x -> x isa Integer, cycle), generator
+    ) || throw(ArgumentError("automorphism cycles must contain integer indices"))
+    return cperm([Int64.(cycle) for cycle in generator])
+  end
+
+  return permutation_group(rk, converted)
 end
 
 export import_ring
@@ -413,7 +514,7 @@ function chtojs(fr::FusionRing)
   ch = fr.characters
   if ch !== missing
     r = rank(fr)
-    return [ch[i, j] for j in 1:r, i in 1:r]
+    return [[ch[i, j] for j in 1:r] for i in 1:r]
   else
     return nothing
   end

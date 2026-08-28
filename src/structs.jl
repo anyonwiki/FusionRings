@@ -202,7 +202,7 @@ function fusion_ring(
   texnms = if ismissing(texnames)
     _nonames
   elseif texnames isa Vector
-    mscnames(string.(names))
+    mscnames(string.(texnames))
   else
     Dict(k => convert_nms(v) for (k, v) in texnames)
   end
@@ -255,6 +255,44 @@ function fusion_ring(
     [(t[1], t[2].uuid) for t in sub_fusion_rings]
   else
     sub_fusion_rings
+  end
+
+  if !ismissing(anyonwiki_code)
+    length(anyonwiki_code) == 4 || error("anyonwiki_code must have four entries")
+  end
+  if !ismissing(chars)
+    size(chars) == (r, r) || error("characters must be an r × r matrix")
+  end
+  if !ismissing(fpds)
+    length(fpds) == r || error("frobenius_perron_dimensions length must equal rank")
+  end
+  if !ismissing(fcds)
+    length(fcds) == r || error("formal_codegrees length must equal rank")
+  end
+  if !ismissing(sfr)
+    for (indices, subring_uuid) in sfr
+      !isempty(indices) || error("stored subring indices cannot be empty")
+      length(unique(indices)) == length(indices) ||
+        error("stored subring indices cannot contain duplicates")
+      all(i -> 1 <= i <= r, indices) ||
+        error("stored subring index is outside the parent ring")
+      is_valid_uuid(subring_uuid) || error("stored subring UUID string is invalid")
+    end
+  end
+  if !ismissing(ag)
+    for (degrees, grading_uuid) in ag
+      length(degrees) == r || error("stored grading length must equal rank")
+      all(>(0), degrees) || error("stored grading degrees must be positive")
+      is_valid_uuid(grading_uuid) || error("stored grading UUID string is invalid")
+    end
+  end
+  if !ismissing(ucs)
+    for (indices, term_uuid) in ucs
+      all(>(0), indices) ||
+        error("upper-central-series indices must be positive")
+      is_valid_uuid(term_uuid) ||
+        error("upper-central-series UUID string is invalid")
+    end
   end
 
   rlztns =

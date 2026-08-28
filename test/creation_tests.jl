@@ -36,7 +36,12 @@
   @testset "fusion_ring core constructor" begin
     maybe_testset("basic", "1. basic construction") do
       mt = make_z2_mt()
-      r = fusion_ring(mt; labels = ["0", "1"], names = ["Z2"])
+      r = fusion_ring(
+        mt;
+        labels = ["0", "1"],
+        names = ["Z2"],
+        texnames = ["\\mathbb{Z}_2"],
+      )
 
       check_true(r isa FusionRing, "fusion_ring did not return a FusionRing")
       check_true(rank(r) > 0, "fusion_ring did not construct a positive-rank ring")
@@ -82,7 +87,12 @@
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       mt = make_z2_mt()
-      r = fusion_ring(mt; labels = ["0", "1"], names = ["Z2"])
+      r = fusion_ring(
+        mt;
+        labels = ["0", "1"],
+        names = ["Z2"],
+        texnames = ["\\mathbb{Z}_2"],
+      )
 
       check_equal(
         rank(r),
@@ -96,6 +106,11 @@
         names(r)["miscellaneous"],
         ["Z2"],
         "fusion_ring did not preserve names for a valid Z2 table",
+      )
+      check_equal(
+        tex_names(r)["miscellaneous"],
+        ["\\mathbb{Z}_2"],
+        "fusion_ring used ordinary names instead of the supplied TeX names",
       )
       check_true(
         is_commutative(r),
@@ -123,6 +138,14 @@
       check_false(
         FusionRings.check_inverse(mt_bad_dual_distribution),
         "check_inverse accepted an invalid distribution of dual objects",
+      )
+      check_throws(
+        () -> fusion_ring(mt; characters = fill("qqbar-id", 1, 1)),
+        "fusion_ring accepted a character table whose shape did not match the rank",
+      )
+      check_throws(
+        () -> fusion_ring(mt; frobenius_perron_dimensions = ["qqbar-id"]),
+        "fusion_ring accepted a stored FP-dimension vector of the wrong length",
       )
 
       check_equal(

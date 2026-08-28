@@ -325,7 +325,8 @@ end
 export cayley_table
 
 function cayley_table(fr::FusionRing)
-  !is_group_ring(fr) && message("Ring must be group ring")
+  is_group_ring(fr) ||
+    throw(ArgumentError("cayley_table requires a group fusion ring"))
 
   mt = multiplication_table(fr)
   r  = rank(fr)
@@ -800,13 +801,23 @@ end
 
 export decompositions
 
+function _normalize_decomposition_kind(kind)
+  normalized = lowercase(replace(String(kind), "_" => "", " " => ""))
+  normalized == "tensorproduct" ||
+    throw(ArgumentError("only tensor-product decompositions are defined"))
+  return "tensor_product"
+end
+
 function decompositions(
   fr::FusionRing; kind = "tensor_product", force_compute = false, represent_by_known = true
 )#::Vector{ Vector{FusionRing} }
-  kind == "tensor_product" ||
-    error("Only tensor product decompositions are defined at the moment.")
+  _normalize_decomposition_kind(kind)
 
-  tpd = (fr.realizations)["tensor_product"]
+  tpd = get(
+    fr.realizations,
+    "tensor_product",
+    get(fr.realizations, "TensorProduct", missing),
+  )
   if ismissing(tpd) || isnothing(tpd) || force_compute
     return non_trivial_tensor_product_decompositions(
       fr; represent_by_known = represent_by_known, force_compute = force_compute
@@ -814,6 +825,20 @@ function decompositions(
   else
     [[from_uuid(id) for id in decomp] for decomp in tpd]
   end
+end
+
+function decompositions(
+  fr::FusionRing,
+  kind;
+  force_compute = false,
+  represent_by_known = true,
+)
+  return decompositions(
+    fr;
+    kind = kind,
+    force_compute = force_compute,
+    represent_by_known = represent_by_known,
+  )
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -955,17 +980,26 @@ function is_equivalent_decomposition(d1, d2)
   r_m_nnsd_nnzsc(ring::FusionRing) =
     (rank(ring), multiplicity(ring), nnsd(ring), nnzsc(ring))
 
-  sort(r_m_nnsd_nnzsc.(d1)) ≠ sort(r_m_nnsd_nnzsc.(d1)) && return false
+  sort(r_m_nnsd_nnzsc.(d1)) ≠ sort(r_m_nnsd_nnzsc.(d2)) && return false
 
-  # check if uuids exist and if so compare these
+  # Equal UUID multisets give a fast positive answer, but distinct UUIDs do
+  # not imply inequivalent rings: newly constructed equivalent rings receive
+  # distinct identifiers.
   uuids1 = uuid.(d1)
   uuids2 = uuid.(d2)
   if !any(ismissing, uuids1) && !any(ismissing, uuids2)
-    return sort(uuids1) == sort(uuids2)
+    sort(uuids1) == sort(uuids2) && return true
   end
 
-  # if standard tests fail we have to do it the hard way
-  return length(filter_equivalents(is_equivalent_fusion_ring, vcat(d1, d2))) == length(d1)
+  # Match factors as multisets under fusion-ring equivalence. This preserves
+  # multiplicities, unlike counting equivalence classes in the concatenation.
+  unmatched = collect(d2)
+  for factor in d1
+    index = findfirst(candidate -> is_equivalent_fusion_ring(factor, candidate), unmatched)
+    isnothing(index) && return false
+    deleteat!(unmatched, index)
+  end
+  return isempty(unmatched)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1162,34 +1196,40 @@ end
 export universal_grading
 
 function universal_grading(fr::FusionRing)
-  irreps = adjoint_irreps(fr)
-  n = size(irreps, 1)
+  components = adjoint_irreps(fr)
+  number_of_components = length(components)
+  grade_of = zeros(Int, rank(fr))
 
-  grading = Pair{Int, Int}[]
-  @inbounds for a in 1:n
-    for x in irreps[a]
-      push!(grading, x => a)
+  for grade in 1:number_of_components, simple in components[grade]
+    grade_of[simple] == 0 ||
+      error("adjoint components assigned simple object $simple more than once")
+    grade_of[simple] = grade
+  end
+
+  all(grade_of .> 0) ||
+    error("adjoint components did not cover every simple object")
+
+  grading_mt = zeros(
+    Int, number_of_components, number_of_components, number_of_components
+  )
+
+  for a in 1:number_of_components, b in 1:number_of_components
+    output_grades = Set{Int}()
+    for x in components[a], y in components[b], z in fusion_outcomes(fr, x, y)
+      push!(output_grades, grade_of[z])
     end
-  end
-  sort!(grading; by = p -> first(p))
-  grading = [grading[i][2] for i in 1:length(grading)]
 
-  function _cond(l1::Vector{Int}, l2::Vector{Int}, l3::Vector{Int})::Bool
-    @inbounds for i in l1, j in l2
-      for c in fusion_outcomes(fr, i, j)
-        c ∉ l3 && return false
-      end
-    end
-    return true
+    length(output_grades) == 1 ||
+      error(
+        "fusion of universal-grading components $a and $b produced " *
+        "$(length(output_grades)) output grades: " *
+        string(sort(collect(output_grades))),
+      )
+    grading_mt[a, b, only(output_grades)] = 1
   end
 
-  mt = zeros(Int, n, n, n)
-  @inbounds for a in 1:n, b in 1:n, c in 1:n
-    mt[a, b, c] = _cond(irreps[a], irreps[b], irreps[c]) ? 1 : 0
-  end
-
-  groupRing = fusion_ring(mt)
-  return grading, replace_by_known(groupRing)
+  grading_ring = fusion_ring(grading_mt)
+  return grade_of, replace_by_known(grading_ring)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

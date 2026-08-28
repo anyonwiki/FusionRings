@@ -265,9 +265,10 @@ using Oscar
       check_true(is_group_ring(z3), "is_group_ring(zn_fusion_ring(3)) returned false")
       check_false(is_group_ring(su2_2), "is_group_ring(su2k_fusion_ring(2)) returned true")
       check_true(is_commutative(z3), "is_commutative(zn_fusion_ring(3)) returned false")
-      return check_true(
+      check_true(
         is_commutative(su2_2), "is_commutative(su2k_fusion_ring(2)) returned false"
       )
+      return @test_throws ArgumentError cayley_table(su2_2)
     end
 
     maybe_testset("reference", "3. reference / Anyonica parity") do
@@ -518,6 +519,17 @@ using Oscar
         ),
         Vector{Vector{FusionRing}}(),
         "decomposition discovery did not use stored subrings by default",
+      )
+      equivalent_z2 = fusion_ring(multiplication_table(z2))
+      check_true(
+        FusionRings.is_equivalent_decomposition([z2, z2], [equivalent_z2, z2]),
+        "equivalent decompositions with independently assigned UUIDs were rejected",
+      )
+      check_false(
+        FusionRings.is_equivalent_decomposition(
+          [z2, z2], [equivalent_z2, zn_fusion_ring(3)]
+        ),
+        "decomposition equivalence ignored factor multiplicity or invariants",
       )
       return check_true(
         !isempty(

@@ -816,7 +816,7 @@ using Oscar
       )
 
       check_equal(
-        string.(characters(z1)),
+        vec(string.(Matrix(characters(z1)))),
         ["{a1: 1.00000}"],
         "characters(zn_fusion_ring(1)) were not [1]",
       )

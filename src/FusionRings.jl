@@ -28,6 +28,7 @@ include("creation.jl")
 include("properties.jl")
 include("operations.jl")
 include("import_data.jl")
+include("categorifiability_criteria.jl")
 
 export qqb_dict, fusion_ring_list, frl, fusion_ring_dict, frd, from_anyonwiki_code, fawc
 

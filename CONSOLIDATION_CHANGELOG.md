@@ -1,48 +1,41 @@
-# Changelog (just to see what changed)
+## Summary
 
+This PR cleans up and reconciles a number of issues across validation, metadata handling, imports, gradings, categorifiability checks, and the test suite.
 
-## Functional changes
+All changes are marked with `#changed:` to make them easier to review.
 
-| Area | Summary |
-| --- | --- |
-| Constructor validation | Reject rank-zero tables; validate a unique matching left/right dual for every simple; validate cached character, FP-dimension, subring, grading, and upper-central-series metadata; fix vector `texnames` handling. |
-| Subrings | Reject duplicate subring indices, check closure against the parent table, and preserve selected labels in computed restricted rings. |
-| Permutations | Reindex labels, character columns, FP dimensions, subring/UCS indices, grading values, and automorphism data consistently; validate permutation shape and unit preservation. |
-| FP dimensions and caching | Select exact/numeric Perron eigenvalues robustly; return real numeric FP values; propagate `force_compute` through scalar/component FP dimensions, sorting, barcode, characters, formal codegrees, decompositions, gradings, and nilpotence. |
-| Decompositions | Normalize the supported tensor-product kind, preserve positional compatibility, propagate forced subring discovery, fix the `d1`/`d2` comparison typo, and compare factor multisets by fusion-ring equivalence rather than UUID identity alone. |
-| Gradings and central series | Validate universal-grading coverage and unique output grades, restore stored `all_gradings` reuse, and ensure forced recomputation bypasses nested adjoint/UCS caches. |
-| Import/export | Validate current JSON shapes and types, handle absent automorphism metadata, normalize the legacy `TensorProduct` key, preserve character-table orientation on round trip, and synchronize the QQBar disk/in-memory cache. |
-| Error behavior | Replace undefined `message(...)` paths with explicit `ArgumentError`s for invalid sort choices and non-group Cayley-table requests. |
-| Categorifiability | Enable and export CSP, PDC, d-number, zero-spectrum, and one-spectrum criteria; correct CSP indexing and denominator; add exact algebraic-integrality support; repair the d-number divisibility direction; replace undefined ZSC/OSC helpers with project APIs. |
-| Tests | Add regression coverage for validation, label/metadata permutations, stale-cache bypass, decompositions, import/export orientation and validation, d-numbers, and categorifiability criteria, including the existing Anyonica reference-test structure. |
-| Dependencies | Replay checkout 7, codecov 7, cache 3, setup-julia 3, JSON 1.7.1, and Documenter 1.17.0. |
+## Main changes
 
+* Tightened validation for multiplication tables, inverses, associativity, and subrings.
+* Fixed restriction and permutation so labels and other metadata tied to simple objects are preserved correctly.
+* Made `force_compute` behavior consistent across dimensions, characters, formal codegrees, decompositions, gradings, and categorifiability checks.
+* Fixed several inconsistencies involving tensor product decompositions, upper central series data, universal/all gradings, imports, and automorphism metadata.
 
+## Data and database handling
 
-## Some bugfixes:
+* Added stricter `JSON3`/`StructTypes` decoding through `RingData`, while keeping the legacy dictionary decoder for bulk and in-memory imports.
+* Added typed projective-representation import/export using `data[ogid][name][pair_index]`, including validation for malformed inputs.
+* Moved the public ring database lookup functions into `src/database.jl`.
+* Simplified `src/FusionRings.jl` so it mainly handles imports, includes, and initialization.
+* Replaced writes to the source tree for algebraic-number data with a lazy Scratch cache in a user-writable location.
+* Added `is_optimized_db()::Bool`.
+* Fixed bulk `Dict` imports.
+* Updated compatibility metadata for the Julia 1.12 `Pkg` stdlib series.
 
-- No exported source function was intentionally deleted.
--  `crit1`, `crit2`, and `crit3` were replaced by
-  raw-sum helpers plus explicit Boolean wrappers so ZSC and OSC can test 
-  distinct zero/one conditions correctly.
-- Positional decomposition-kind calls remain supported.
-- Malformed stored JSON now fails early instead of being silently normalized
-  into inconsistent metadata.
+## Subrings and injections
 
-## Commit groups
+* Added the Combinatorics dependency and qualified its usage.
+* Fixed `which_injection` so failed permutation matches are skipped safely.
+* Implemented `injection_form`.
+* Replaced the undefined `sub_ring_tables` placeholder with a typed compatibility error that points users to the supported API.
 
-I grouped the commits into several categories so hopefully that allow to see changes nicely
+## Tests and CI
 
-| Commit | Contents |
-| --- | --- |
-| Validation, duality, and subring invariants |
-| Permutations, labels, and cached metadata |
-|  Exact/numeric FP dimensions and forced recomputation |
-| Decompositions, gradings, imports, TeX names, and QQBar persistence |
-| Categorifiability criteria and tests |
-|  Six dependency updates |
-| CI line-ending normalization |
-|  Nested cache propagation and final metadata checks |
+* Added support for `FUSIONRINGS_FORCE_COMPUTE` in the test suite.
+* Expanded `test/testdata/README.md` with the fixture layout, Git LFS requirements, test levels/groups, representative-case selection, and commands for running the full oracle tests.
+* Updated CI to check out LFS content before testing.
+* Representative cases now run by default.
+* Added a scheduled/manual full Anyonica oracle run with forced computation enabled.
 
 
 

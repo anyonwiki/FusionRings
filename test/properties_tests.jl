@@ -375,6 +375,11 @@ using Oscar
         multiplication_table(z2),
         "restrict_subring(z4, [1,3]) did not match zn_fusion_ring(2)",
       )
+      check_equal(
+        labels(sub),
+        ["0", "2"],
+        "restrict_subring(z4, [1,3]) did not preserve the selected labels",
+      )
 
       check_equal(
         FusionRings._internal_closed_subsets(z4, 1),

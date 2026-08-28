@@ -104,9 +104,7 @@ function restrict_subring(
     end
   end
 
-  # TODO: might want to conserve as much information as possible, but 
-  # it's better to wait until all fields of the FusionRing struct are finalized
-  return fusion_ring(Nsub)
+  return fusion_ring(Nsub; labels = labels(fr)[sS])
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -126,27 +124,23 @@ function permute(σ::Vector{Int}, r::FusionRing)::FusionRing
   n == length(σ) || throw(ArgumentError("perm length ≠ rank"))
   sort(σ) == collect(1:n) || throw(ArgumentError("perm must be a true permutation"))
   σ[1] == 1 || throw(ArgumentError("vacuum must stay at index 1"))
+  σ == collect(1:n) && return r
 
-  # Core table
-  mt  = multiplication_table(r)
   pmt = permute_mult_tab(multiplication_table(r), σ)
+  iσ = invperm(σ)
+  permute_indices(v) = iσ[v]
 
-  pmt == mt && return r
+  lbs = r.labels[σ]
 
-  permute_vector(p, v) = [p[v[i]] for i in 1:size(v, 1)]
-
-  # Data that needs re‑ordering (guard against `missing`)
+  # Character columns and FP dimensions are indexed by simple objects.
   ch = r.characters
   if !ismissing(ch)
     ch = ch[:, σ]
   end
 
-  iσ = invperm(σ)
-  permute_sub_fus_ring(t) = (permute_vector(iσ, t[1]), t[2])
-
   sr = r.sub_fusion_rings
   if !ismissing(sr)
-    sr = permute_sub_fus_ring.(sr)
+    sr = [(permute_indices(t[1]), t[2]) for t in sr]
   end
 
   fpd = r.frobenius_perron_dimensions
@@ -155,27 +149,26 @@ function permute(σ::Vector{Int}, r::FusionRing)::FusionRing
   end
 
   ag = r.all_gradings
-  if !ismissing(fpd)
+  if !ismissing(ag)
     ag = [(g[1][σ], g[2]) for g in ag]
   end
 
   aut = r.automorphism_group
-  if !ismissing(ag)
+  if !ismissing(aut)
     aut = conjugate_group(aut, perm(iσ))
   end
 
   ucs = r.upper_central_series
   if !ismissing(ucs)
-    ucs = vcat(
-      [(collect(1:rank(r)), uuid(r))],
-      [(permute_vector(iσ, ucs[i][1]), ucs[i][2]) for i in 2:length(ucs)],
-    )
+    ucs = [(permute_indices(t[1]), t[2]) for t in ucs]
   end
 
   return change_properties(
     r,
-    Dict(
+    Dict{Symbol, Any}(
       :multiplication_table        => pmt,
+      :labels                      => lbs,
+      :characters                  => ch,
       :sub_fusion_rings            => sr,
       :frobenius_perron_dimensions => fpd,
       :upper_central_series        => ucs,
@@ -190,14 +183,14 @@ end
 
 Apply permutation `p` (fixing 1) to all three indices of `N`.
 """
-function permute_mult_tab(N::Array{Int, 3}, p::Vector{Int})
-  p[1] == 1 || error("Permutation must fix the unit at index 1")
+function permute_mult_tab(N::Array{Int, 3}, p::Vector{Int})::Array{Int, 3}
   r = size(N, 1)
-  M = fill(0, r, r, r)
-  @inbounds for a in 1:r, b in 1:r, c in 1:r
-    M[a, b, c] = N[p[a], p[b], p[c]]
-  end
-  return M
+  size(N) == (r, r, r) || throw(ArgumentError("multiplication table must be cubic"))
+  length(p) == r || throw(ArgumentError("permutation length must equal table rank"))
+  sort(p) == collect(1:r) || throw(ArgumentError("perm must be a true permutation"))
+  p[1] == 1 || throw(ArgumentError("permutation must fix the unit at index 1"))
+
+  return N[p, p, p]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

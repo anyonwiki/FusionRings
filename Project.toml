@@ -1,6 +1,6 @@
 name = "FusionRings"
 uuid = "750f8238-3f78-4e88-85d4-6e65b940c8ab"
-version = "0.2.0"
+version = "0.2.5"
 authors = ["gert-vercleyen <gert.vercleyen@protonmail.com>", "Szagha02"]
 
 [deps]

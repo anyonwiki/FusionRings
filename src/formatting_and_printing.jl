@@ -222,14 +222,14 @@ function export_tex_reps(filename::String, v::Vector{QQBarFieldElem}; try_cyclo 
   end
 end
 
-function tex_reps(x::QQBarFieldElem; try_cyclo = false)
+function tex_reps(x::QQBarFieldElem, qqbid::String; try_cyclo = false)::Dict{String,String}
   rat = rational_tex_rep(x)
   if rat != ""
     return Dict(
       "rational"  => rat,
       "radical"   => rat,
       "cyclo"     => rat,
-      "general"   => general_tex_rep(x),
+      "general"   => qqb_id_rep(qqbid),
     )
   end
 
@@ -246,14 +246,21 @@ function tex_reps(x::QQBarFieldElem; try_cyclo = false)
     "rational"  => rational_tex_rep(x),
     "radical"   => radicals_tex_rep(x),
     "cyclo"     => cyc,
-    "general"   => general_tex_rep(x),
+    "general"   => qqb_id_rep(qqbid),
   )
 end
 
-function general_tex_rep(x::QQBarFieldElem)
-  n = string(rootnum(x))
+function tex_reps(x::QQBarFieldElem; try_cyclo = false )
+  tex_reps(x, qqb_id(x) ,try_cyclo = try_cyclo, )
+end
 
-  return fix_poly_string("[" * string(minpoly(x)) * "]_{" * n * "}")
+function qqb_id_rep(s::String)::String
+  R, x = QQ["x"]
+  nums = split(s,"_")
+  coeffs = parse.(Int64, nums[1:end-2])
+  n = nums[end]
+
+  return fix_poly_string("[" * string(R(coeffs)) * "]_{" * n * "}")
 end
 
 function fix_fractions(str::String)::String
@@ -316,12 +323,26 @@ function radicals_tex_rep(x::QQBarFieldElem)
 
     Δ    = b^2 - 4*a*c
     pval = (-QQb(b) + sqrt(QQb(Δ)))//(2*a)
-    s2   = pval == x ? "+" : "-"
+    s2   =
+      if pval != x
+        "-"
+      else
+        s1 == "" ? "" : "+"
+      end
 
     (d, e) = factor_squares(Δ)
     s3     = d//(2*a) == 1 ? "" : string(d//(2*a))
 
-    s4 = string("\\sqrt{", (Δ > 0 ? e : -e), "}")
+    s4 =
+      if e == 1
+        ""
+      elseif e == -1
+        "i"
+      elseif e > 0
+        string("\\sqrt{", e , "}")
+      else
+        string("\\sqrt{", -e , "} i")
+      end
 
     return fix_poly_string(string(s1, s2, s3, s4))
   else

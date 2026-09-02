@@ -224,6 +224,7 @@ end
 
 # returns dictionary with keys equal to f(l) for l in lis
 # and values equal to all l ∈ lis that map to the key
+export group_by
 
 function group_by(f, lis)
   isempty(lis) && return Dict()
@@ -243,6 +244,7 @@ end
 # f while keeping their relative order within the subgroups,
 # i.e. if a came before b in lis and a and b belong
 # to the same group then a will come before b in their group
+export gather_by
 
 function gather_by(f, lis)
   isempty(lis) && return Vector{eltype(lis)}[]

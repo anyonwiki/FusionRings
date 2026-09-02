@@ -422,6 +422,7 @@ end
 function afromjs(js)
   aut = safe_fetch(js, "automorphisms")
   ismissing(aut) && return missing
+#= <<<<<<< consolidated_changes  
   aut isa AbstractDict ||
     throw(ArgumentError("automorphisms must be a JSON object or null"))
   haskey(aut, "cycles") ||
@@ -445,8 +446,15 @@ function afromjs(js)
     ) || throw(ArgumentError("automorphism cycles must contain integer indices"))
     return cperm([Int64.(cycle) for cycle in generator])
   end
+=#
+  mt  = safe_fetch(js, "mult_tab")
+  rk  = size(mt, 1)
+  gns = aut["cycles"]
+  cyc = [cperm([Int64.(c) for c in cyc]) for cyc in gns]
 
-  return permutation_group(rk, converted)
+  aut isa JSON.Object{String, Any} && return permutation_group(rk, cyc)
+
+  return aut
 end
 
 export import_ring
@@ -641,11 +649,11 @@ function rtojs(fr::FusionRing)
     return [[uuid(ring) for ring in list] for list in val]
   end
 
-  return Dict(k => convert_realization(v) for (k, v) in realizations(fr))
+  return Dict(k => convert_realization(v) for (k, v) in fr.realizations )
 end
 
 function auttojs(fr::FusionRing)
-  ag = automorphism_group(fr)
+  ag = fr.automorphism_group
 
   (ismissing(ag) || isnothing(ag)) && return nothing
 

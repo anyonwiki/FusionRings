@@ -120,6 +120,14 @@ end
 
 export frobenius_perron_dimensions
 
+#changed: Select the exact Perron eigenvalue by largest real part instead of relying on eigenvalue order.
+function _frobenius_perron_eigenvalue(A)::QQBarFieldElem
+  # A nonnegative fusion matrix has its spectral radius as a real eigenvalue,
+  # and no other eigenvalue has a larger real part.
+  return maximum(real, eigenvalues(QQBar, A))
+end
+
+#changed: Use the exact Perron selector and honor force_compute instead of trusting stored component dimensions.
 function frobenius_perron_dimensions(
   r::FusionRing; force_compute = false
 )::Vector{QQBarFieldElem}
@@ -127,7 +135,7 @@ function frobenius_perron_dimensions(
   if ismissing(stored_dims) || force_compute
     mt = multiplication_table(r)
     multmats = [matrix(ZZ, mt[i, :, :]) for i in 1:rank(r)]
-    return [first(eigenvalues(QQBar, A)) for A in multmats]
+    return _frobenius_perron_eigenvalue.(multmats)
   else
     return from_qqb_id(stored_dims)
   end
@@ -163,13 +171,22 @@ end
 
 export frobenius_perron_dimension
 
-function frobenius_perron_dimension(r::FusionRing, force_compute = false)::QQBarFieldElem
+#changed: Normalize force_compute as a keyword and propagate it into the component FP dimensions.
+function frobenius_perron_dimension(
+  r::FusionRing; force_compute::Bool = false
+)::QQBarFieldElem
   stored_dim = r.frobenius_perron_dimension
   if ismissing(stored_dim) || force_compute
-    return sum(fpdims(r) .^ 2)
+    return sum(fpdims(r; force_compute = force_compute) .^ 2)
   else
     return from_qqb_id(stored_dim)
   end
+end
+
+# Preserve the positional form supported by earlier releases.
+#changed: Preserve the earlier positional Bool API while routing it through the corrected keyword implementation.
+function frobenius_perron_dimension(r::FusionRing, force_compute::Bool)::QQBarFieldElem
+  return frobenius_perron_dimension(r; force_compute = force_compute)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -202,11 +219,12 @@ end
 
 export numeric_fpdims
 
+#changed: Use stored values only when allowed, return real floats, and select the numeric Perron eigenpair robustly.
 function numeric_fpdims(fr::FusionRing; force_compute = false)
   fpds = fr.frobenius_perron_dimensions
 
   if !ismissing(fpds) && !force_compute
-    return ComplexF64.(from_qqb_id.(fpds))
+    return Float64.(real.(ComplexF64.(from_qqb_id(fpds))))
   end
 
   r = rank(fr)
@@ -216,7 +234,7 @@ function numeric_fpdims(fr::FusionRing; force_compute = false)
     @views S .+= N[a, :, :]
   end
   vals, vecs = eigen(S)
-  idx = argmax(vals)
+  idx = argmax(real.(vals))
   v = abs.(vecs[:, idx])
   return v ./ v[1]
 end
@@ -227,14 +245,15 @@ end
 
 export numeric_fpdim
 
+#changed: Return a real scalar and propagate force_compute into numeric_fpdims.
 function numeric_fpdim(fr::FusionRing; force_compute = false)
   fpd = fr.frobenius_perron_dimension
 
   if !ismissing(fpd) && !force_compute
-    return ComplexF64(from_qqb_id(fpd))
+    return Float64(real(ComplexF64(from_qqb_id(fpd))))
   end
 
-  return sum(x->x*x, numeric_fpdims(fr))
+  return sum(x -> x*x, numeric_fpdims(fr; force_compute = force_compute))
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -311,8 +330,10 @@ end
 
 export cayley_table
 
+#changed: Replace the undefined message(...) call with an explicit ArgumentError for non-group rings.
 function cayley_table(fr::FusionRing)
-  !is_group_ring(fr) && message("Ring must be group ring")
+  is_group_ring(fr) ||
+    throw(ArgumentError("cayley_table requires a group fusion ring"))
 
   mt = multiplication_table(fr)
   r  = rank(fr)
@@ -378,20 +399,22 @@ end
 
 export barcode
 
+#changed: Propagate force_compute through sorting and use FP dimensions in the sorted ring's index order.
 function barcode(fr::FusionRing; force_compute = false)
 
   #first we sort the elements of the ring. Selfdual elements appear before
   #non-self dual ones and non-self dual ones are grouped in dual pairs.
   #the self-dual ones are then sorted by increasing fpdim and the same
   #for the pairs of dual elements
-  sr = sort(fr; by = "sd_conj")
+  sr = sort(fr; by = "sd_conj", force_compute = force_compute)
   r  = rank(sr)
 
   #we only allow permutations that preserve the order above
   cp = conjugate_pairs(sr)
 
   #some useful functions
-  fpd(i)     = fpdims(fr)[i]
+  sorted_fpdims = fpdims(sr; force_compute = force_compute)
+  fpd(i)     = sorted_fpdims[i]
   addunit(v) = vcat(1, v .+ 1)
 
   # first we set up possible permutations for self-dual elements
@@ -470,6 +493,7 @@ end
 
 export sub_fusion_rings
 
+#changed: Honor cached/forced behavior and materialize computed subrings through label-preserving restriction.
 function sub_fusion_rings(r::FusionRing; force_compute = false, represent_by_known = true)
   sfr = r.sub_fusion_rings
   if !ismissing(sfr) && !force_compute
@@ -477,10 +501,9 @@ function sub_fusion_rings(r::FusionRing; force_compute = false, represent_by_kno
   end
 
   subsets = sub_fusion_ring_subsets(r)
-  mt = multiplication_table(r)
   rbk = represent_by_known ? replace_by_known : identity
 
-  return [(s, rbk(fusion_ring(mt[s, s, s]))) for s in subsets]
+  return [(s, rbk(restrict_subring(r, s))) for s in subsets]
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -541,6 +564,7 @@ Return `true` iff `S` is a fusion-closed subset of simples containing the unit.
 `S` may be a vector of indices (`Int`/`Integer`) or a vector of labels
 (`String`/`Symbol`).
 """
+#changed: Reject duplicate indices before testing closure and the fusion-ring axioms.
 function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
   # any subring must contain unit
   isempty(S) && return false
@@ -549,6 +573,7 @@ function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
   # indices in S must lie in range 1, ...,  r
   r = rank(fr)
   !all(i -> 1 <= i <= r, S) && return false
+  length(unique(S)) == length(S) || return false
 
   # multiplication must be internal
   for a in S, b in S
@@ -785,20 +810,47 @@ end
 
 export decompositions
 
+#changed: Normalize supported tensor-product spellings and reject unsupported decomposition kinds consistently.
+function _normalize_decomposition_kind(kind)
+  normalized = lowercase(replace(String(kind), "_" => "", " " => ""))
+  normalized == "tensorproduct" ||
+    throw(ArgumentError("only tensor-product decompositions are defined"))
+  return "tensor_product"
+end
+
+#changed: Normalize realization keys, honor force_compute, and propagate it into decomposition discovery.
 function decompositions(
   fr::FusionRing; kind = "tensor_product", force_compute = false, represent_by_known = true
 )#::Vector{ Vector{FusionRing} }
-  kind == "tensor_product" ||
-    error("Only tensor product decompositions are defined at the moment.")
+  _normalize_decomposition_kind(kind)
 
-  tpd = (fr.realizations)["tensor_product"]
+  tpd = get(
+    fr.realizations,
+    "tensor_product",
+    get(fr.realizations, "TensorProduct", missing),
+  )
   if ismissing(tpd) || isnothing(tpd) || force_compute
     return non_trivial_tensor_product_decompositions(
-      fr; represent_by_known = represent_by_known
+      fr; represent_by_known = represent_by_known, force_compute = force_compute
     )
   else
     [[from_uuid(id) for id in decomp] for decomp in tpd]
   end
+end
+
+#changed: Preserve the positional kind API by forwarding it to the reconciled keyword implementation.
+function decompositions(
+  fr::FusionRing,
+  kind;
+  force_compute = false,
+  represent_by_known = true,
+)
+  return decompositions(
+    fr;
+    kind = kind,
+    force_compute = force_compute,
+    represent_by_known = represent_by_known,
+  )
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -812,15 +864,23 @@ export non_trivial_tensor_product_decompositions
 
 Return non-trivial decompositions of `r` as tensor products of fusion rings.
 """
+#changed: Propagate forced subring recomputation while retaining the current exhaustive equivalence-checked search.
 function non_trivial_tensor_product_decompositions(
-  fr::FusionRing; represent_by_known = true
+  fr::FusionRing; represent_by_known = true, force_compute = false
 )::Vector{Vector{FusionRing}}
   r = rank(fr)
 
   # since every fusion ring has an identity 1, every component
   # in the tensor product is a subring whose rank divides the rank of fr
   subrings = filter_equivalents(
-    is_equivalent_fusion_ring, [t[2] for t in sub_fusion_rings(fr)]
+    is_equivalent_fusion_ring,
+    [
+      t[2] for t in sub_fusion_rings(
+        fr;
+        force_compute = force_compute,
+        represent_by_known = represent_by_known,
+      )
+    ],
   )
 
   #@info subrings
@@ -927,23 +987,33 @@ function cartesian_choices(lists::Vector{Vector{FusionRing}})
   return out
 end
 
+#changed: Compare d1 with d2 and match factor multisets by ring equivalence instead of UUID identity alone.
 function is_equivalent_decomposition(d1, d2)
   length(d1) ≠ length(d2) && return false
 
   r_m_nnsd_nnzsc(ring::FusionRing) =
     (rank(ring), multiplicity(ring), nnsd(ring), nnzsc(ring))
 
-  sort(r_m_nnsd_nnzsc.(d1)) ≠ sort(r_m_nnsd_nnzsc.(d1)) && return false
+  sort(r_m_nnsd_nnzsc.(d1)) ≠ sort(r_m_nnsd_nnzsc.(d2)) && return false
 
-  # check if uuids exist and if so compare these
+  # Equal UUID multisets give a fast positive answer, but distinct UUIDs do
+  # not imply inequivalent rings: newly constructed equivalent rings receive
+  # distinct identifiers.
   uuids1 = uuid.(d1)
   uuids2 = uuid.(d2)
   if !any(ismissing, uuids1) && !any(ismissing, uuids2)
-    return sort(uuids1) == sort(uuids2)
+    sort(uuids1) == sort(uuids2) && return true
   end
 
-  # if standard tests fail we have to do it the hard way
-  return length(filter_equivalents(is_equivalent_fusion_ring, vcat(d1, d2))) == length(d1)
+  # Match factors as multisets under fusion-ring equivalence. This preserves
+  # multiplicities, unlike counting equivalence classes in the concatenation.
+  unmatched = collect(d2)
+  for factor in d1
+    index = findfirst(candidate -> is_equivalent_fusion_ring(factor, candidate), unmatched)
+    isnothing(index) && return false
+    deleteat!(unmatched, index)
+  end
+  return isempty(unmatched)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1049,8 +1119,13 @@ end
 
 export is_nilpotent
 
-function is_nilpotent(r::FusionRing)::Bool
-  chain = upper_central_series(r)
+#changed: Propagate force_compute through the upper central series instead of reusing stale nested metadata.
+function is_nilpotent(
+  r::FusionRing; force_compute = false, represent_by_known = true
+)::Bool
+  chain = upper_central_series(
+    r; force_compute = force_compute, represent_by_known = represent_by_known
+  )
   last_set, _ = last(chain)
   return length(last_set) == 1
 end
@@ -1087,8 +1162,13 @@ So for each simple e I start w/ {e} and apply that until stabilizes:
 
 Note: the code is slightly different than that in anyonica but ive highlighted/commented the parts that match
 """
-function adjoint_irreps(fr::FusionRing)::Vector{Vector{Int}}
-  adj_el, adj_ring = adjoint_fusion_ring(fr)
+#changed: Propagate force_compute and represent_by_known into adjoint-subring computation.
+function adjoint_irreps(
+  fr::FusionRing; force_compute = false, represent_by_known = true
+)::Vector{Vector{Int}}
+  adj_el, _ = adjoint_fusion_ring(
+    fr; force_compute = force_compute, represent_by_known = represent_by_known
+  )
 
   r = rank(fr)
 
@@ -1139,35 +1219,47 @@ end
 
 export universal_grading
 
-function universal_grading(fr::FusionRing)
-  irreps = adjoint_irreps(fr)
-  n = size(irreps, 1)
+#changed: Check component coverage and unique product grades while propagating forced adjoint recomputation.
+function universal_grading(
+  fr::FusionRing; force_compute = false, represent_by_known = true
+)
+  components = adjoint_irreps(
+    fr; force_compute = force_compute, represent_by_known = represent_by_known
+  )
+  number_of_components = length(components)
+  grade_of = zeros(Int, rank(fr))
 
-  grading = Pair{Int, Int}[]
-  @inbounds for a in 1:n
-    for x in irreps[a]
-      push!(grading, x => a)
+  for grade in 1:number_of_components, simple in components[grade]
+    grade_of[simple] == 0 ||
+      error("adjoint components assigned simple object $simple more than once")
+    grade_of[simple] = grade
+  end
+
+  all(grade_of .> 0) ||
+    error("adjoint components did not cover every simple object")
+
+  grading_mt = zeros(
+    Int, number_of_components, number_of_components, number_of_components
+  )
+
+  for a in 1:number_of_components, b in 1:number_of_components
+    output_grades = Set{Int}()
+    for x in components[a], y in components[b], z in fusion_outcomes(fr, x, y)
+      push!(output_grades, grade_of[z])
     end
-  end
-  sort!(grading; by = p -> first(p))
-  grading = [grading[i][2] for i in 1:length(grading)]
 
-  function _cond(l1::Vector{Int}, l2::Vector{Int}, l3::Vector{Int})::Bool
-    @inbounds for i in l1, j in l2
-      for c in fusion_outcomes(fr, i, j)
-        c ∉ l3 && return false
-      end
-    end
-    return true
+    length(output_grades) == 1 ||
+      error(
+        "fusion of universal-grading components $a and $b produced " *
+        "$(length(output_grades)) output grades: " *
+        string(sort(collect(output_grades))),
+      )
+    grading_mt[a, b, only(output_grades)] = 1
   end
 
-  mt = zeros(Int, n, n, n)
-  @inbounds for a in 1:n, b in 1:n, c in 1:n
-    mt[a, b, c] = _cond(irreps[a], irreps[b], irreps[c]) ? 1 : 0
-  end
-
-  groupRing = fusion_ring(mt)
-  return grading, replace_by_known(groupRing)
+  grading_ring = fusion_ring(grading_mt)
+  known_grading_ring = represent_by_known ? replace_by_known(grading_ring) : grading_ring
+  return grade_of, known_grading_ring
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -1189,15 +1281,17 @@ is  universal grading,  every grading  obtained from U/N,
 where N is a normal subgroup of U.
 """
 
+#changed: Restore stored-grading reuse and make force_compute bypass both direct and nested cached data.
 function all_gradings(
   fr::FusionRing; force_compute = false
 )::Vector{Tuple{Vector{Int64}, FusionRing}}
-  #TODO: uncomment line once FusionRing has field all_gradings
-  #!force_compute && !ismissing(fr.all_gradings) && return fr.all_gradings
+  if !force_compute && !ismissing(fr.all_gradings)
+    return [(t[1], from_uuid(t[2])) for t in fr.all_gradings]
+  end
 
   rank(fr) == 1 && return Tuple{Vector{Int64}, FusionRing}[([1], fawc(1, 1, 0, 1))]
 
-  grvec, ug = universal_grading(fr)
+  grvec, ug = universal_grading(fr; force_compute = force_compute)
 
   UG, ϕ = to_group_with_emb(ug)
 
@@ -1282,6 +1376,7 @@ end
 
 export characters
 
+#changed: Honor forced recomputation and return a correctly shaped exact 1x1 matrix for rank-one rings.
 function characters(ring::FusionRing; use_numerics = true, force_compute = false)
   if !ismissing(ring.characters) && !force_compute
     return from_qqb_id(ring.characters)
@@ -1293,7 +1388,7 @@ function characters(ring::FusionRing; use_numerics = true, force_compute = false
     )
   end
 
-  rank(ring) == 1 && return [qqbar(1);]
+  rank(ring) == 1 && return matrix(QQBar, [QQBar(1);;])
 
   mt   = multiplication_table(ring)
   r    = rank(ring)
@@ -1432,6 +1527,7 @@ end
 
 export formal_codegrees
 
+#changed: Propagate force_compute into character computation while preserving stored and noncommutative paths.
 function formal_codegrees(
   fr::FusionRing; usecharacters = true, force_compute = false
 )::Vector{QQBarFieldElem}
@@ -1442,7 +1538,7 @@ function formal_codegrees(
   r = rank(fr)
 
   if is_commutative(fr) && usecharacters
-    chars = characters(fr)
+    chars = characters(fr; force_compute = force_compute)
     φ(i) = j -> chars[i, j]
 
     return sort([sum(φ(i)(j) * φ(i)(d(j)) for j in 1:r) for i in 1:r]; by = z -> abs(z))
@@ -1480,6 +1576,7 @@ Throws if no common eigenbasis is found after `tries` attempts.
 #2. Eigen-decompose `M = V Λ V⁻¹`.
 #3. Verify that every `V⁻¹ N_i V` is (numerically) diagonal. If not, retry.
 #Normalize and sort V
+#changed: Honor forced recomputation and return a correctly shaped numeric 1x1 matrix for rank-one rings.
 function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = false)
   nc = ring.characters
   if !ismissing(nc) && !force_compute
@@ -1492,7 +1589,7 @@ function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = 
     )
   end
 
-  rank(ring) == 1 && return [1.0;]
+  rank(ring) == 1 && return [1.0;;]
 
   mt   = multiplication_table(ring)
   r    = rank(ring)

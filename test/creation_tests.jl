@@ -36,7 +36,12 @@
   @testset "fusion_ring core constructor" begin
     maybe_testset("basic", "1. basic construction") do
       mt = make_z2_mt()
-      r = fusion_ring(mt; labels = ["0", "1"], names = ["Z2"])
+      r = fusion_ring(
+        mt;
+        labels = ["0", "1"],
+        names = ["Z2"],
+        texnames = ["\\mathbb{Z}_2"],
+      )
 
       check_true(r isa FusionRing, "fusion_ring did not return a FusionRing")
       check_true(rank(r) > 0, "fusion_ring did not construct a positive-rank ring")
@@ -82,7 +87,12 @@
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       mt = make_z2_mt()
-      r = fusion_ring(mt; labels = ["0", "1"], names = ["Z2"])
+      r = fusion_ring(
+        mt;
+        labels = ["0", "1"],
+        names = ["Z2"],
+        texnames = ["\\mathbb{Z}_2"],
+      )
 
       check_equal(
         rank(r),
@@ -97,6 +107,11 @@
         ["Z2"],
         "fusion_ring did not preserve names for a valid Z2 table",
       )
+      check_equal(
+        tex_names(r)["miscellaneous"],
+        ["\\mathbb{Z}_2"],
+        "fusion_ring used ordinary names instead of the supplied TeX names",
+      )
       check_true(
         is_commutative(r),
         "fusion_ring constructed a valid Z2 table but the result was not detected as commutative",
@@ -105,6 +120,40 @@
         is_group_ring(r),
         "fusion_ring constructed a valid Z2 table but the result was not detected as a group ring",
       )
+
+      rank_zero_mt = zeros(Int, 0, 0, 0)
+      check_false(
+        FusionRings.check_mt_dims(rank_zero_mt),
+        "check_mt_dims accepted a rank-zero multiplication table",
+      )
+      check_throws(
+        () -> fusion_ring(rank_zero_mt),
+        "fusion_ring accepted a rank-zero multiplication table",
+      )
+
+      mt_bad_dual_distribution = make_z3_mt()
+      mt_bad_dual_distribution[2, 3, 1] = 0
+      mt_bad_dual_distribution[2, 2, 1] = 1
+
+      check_false(
+        FusionRings.check_inverse(mt_bad_dual_distribution),
+        "check_inverse accepted an invalid distribution of dual objects",
+      )
+      check_throws(
+        () -> fusion_ring(mt; characters = fill("qqbar-id", 1, 1)),
+        "fusion_ring accepted a character table whose shape did not match the rank",
+      )
+      check_throws(
+        () -> fusion_ring(mt; frobenius_perron_dimensions = ["qqbar-id"]),
+        "fusion_ring accepted a stored FP-dimension vector of the wrong length",
+      )
+      check_throws(
+        () -> fusion_ring(
+          mt; upper_central_series = [([1, 3], uuid(r))]
+        ),
+        "fusion_ring accepted an out-of-range upper-central-series index",
+      )
+
       check_equal(
         FusionRings.fusion_product(r, 1, 1),
         Dict(1 => 1),

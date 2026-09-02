@@ -46,9 +46,10 @@ function check_struct_const(mt)
   return all(x -> x isa Integer && x >= 0, mt)
 end
 
+#changed: Reject rank-zero tensors in addition to requiring a cubic multiplication table.
 function check_mt_dims(mt)
   dims = size(mt)
-  return length(dims) == 3 && is_constant_array(dims)
+  return length(dims) == 3 && first(dims) >= 1 && is_constant_array(dims)
 end
 
 function check_unit(mt)
@@ -63,8 +64,26 @@ function check_unit(mt)
   return true
 end
 
+#changed: Validate one matching left/right dual for every simple object, not only a global sum.
 function check_inverse(mt)
-  return sum(mt[:, :, 1]) == size(mt, 1)
+  r = size(mt, 1)
+  unit_coefficients = @view mt[:, :, 1]
+
+  for i in 1:r
+    left_coefficients = view(unit_coefficients, :, i)
+    right_coefficients = view(unit_coefficients, i, :)
+    left_duals = findall(==(1), left_coefficients)
+    right_duals = findall(==(1), right_coefficients)
+
+    length(left_duals) == 1 || return false
+    length(right_duals) == 1 || return false
+    only(left_duals) == only(right_duals) || return false
+
+    all(x -> x == 0 || x == 1, left_coefficients) || return false
+    all(x -> x == 0 || x == 1, right_coefficients) || return false
+  end
+
+  return true
 end
 
 function check_associativity(mt::Array{Int, 3})
@@ -85,6 +104,7 @@ function is_valid_uuid(s::String)
   return !isnothing(tryparse(UUID, s))
 end
 
+#changed: Fix TeX-name handling and validate cached characters, dimensions, subrings, gradings, and UCS metadata.
 function fusion_ring(
   mt::Array{Int, 3};
   uuid                        = missing,
@@ -185,7 +205,7 @@ function fusion_ring(
   texnms = if ismissing(texnames)
     _nonames
   elseif texnames isa Vector
-    mscnames(string.(names))
+    mscnames(string.(texnames))
   else
     Dict(k => convert_nms(v) for (k, v) in texnames)
   end
@@ -238,6 +258,47 @@ function fusion_ring(
     [(t[1], t[2].uuid) for t in sub_fusion_rings]
   else
     sub_fusion_rings
+  end
+
+  if !ismissing(anyonwiki_code)
+    length(anyonwiki_code) == 4 || error("anyonwiki_code must have four entries")
+  end
+  if !ismissing(chars)
+    size(chars) == (r, r) || error("characters must be an r × r matrix")
+  end
+  if !ismissing(fpds)
+    length(fpds) == r || error("frobenius_perron_dimensions length must equal rank")
+  end
+  if !ismissing(fcds)
+    length(fcds) == r || error("formal_codegrees length must equal rank")
+  end
+  if !ismissing(sfr)
+    for (indices, subring_uuid) in sfr
+      !isempty(indices) || error("stored subring indices cannot be empty")
+      length(unique(indices)) == length(indices) ||
+        error("stored subring indices cannot contain duplicates")
+      all(i -> 1 <= i <= r, indices) ||
+        error("stored subring index is outside the parent ring")
+      is_valid_uuid(subring_uuid) || error("stored subring UUID string is invalid")
+    end
+  end
+  if !ismissing(ag)
+    for (degrees, grading_uuid) in ag
+      length(degrees) == r || error("stored grading length must equal rank")
+      all(>(0), degrees) || error("stored grading degrees must be positive")
+      is_valid_uuid(grading_uuid) || error("stored grading UUID string is invalid")
+    end
+  end
+  if !ismissing(ucs)
+    for (indices, term_uuid) in ucs
+      !isempty(indices) || error("upper-central-series indices cannot be empty")
+      length(unique(indices)) == length(indices) ||
+        error("upper-central-series indices cannot contain duplicates")
+      all(i -> 1 <= i <= r, indices) ||
+        error("upper-central-series index is outside the parent ring")
+      is_valid_uuid(term_uuid) ||
+        error("upper-central-series UUID string is invalid")
+    end
   end
 
   rlztns =

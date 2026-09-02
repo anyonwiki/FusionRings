@@ -151,6 +151,19 @@
         "permute_mult_tab on Z3 with permutation [1,3,2] did not preserve the table as expected",
       )
 
+      check_throws(
+        () -> FusionRings.permute_mult_tab(N3, [1, 1, 2]),
+        "permute_mult_tab accepted a vector with duplicate indices",
+      )
+      check_throws(
+        () -> FusionRings.permute_mult_tab(N3, [1, 2]),
+        "permute_mult_tab accepted a permutation of the wrong length",
+      )
+      check_throws(
+        () -> FusionRings.permute_mult_tab(zeros(Int, 2, 2, 3), [1, 2]),
+        "permute_mult_tab accepted a non-cubic multiplication table",
+      )
+
       return check_throws(
         () -> FusionRings.permute_mult_tab(N3, [2, 1, 3]),
         "permute_mult_tab accepted a permutation that did not fix the vacuum",
@@ -209,8 +222,47 @@
 
       check_equal(
         labels(pz3),
-        ["0", "1", "2"],
+        ["0", "2", "1"],
         "permute([1,3,2], z3) did not permute labels correctly",
+      )
+
+      characters = ["a" "b" "c"; "d" "e" "f"; "g" "h" "i"]
+      annotated_z3 = change_properties(
+        z3,
+        Dict{Symbol, Any}(
+          :characters                  => characters,
+          :frobenius_perron_dimensions => ["d1", "d2", "d3"],
+          :sub_fusion_rings            => [([1, 2], uuid(z3))],
+          :all_gradings                => [([1, 2, 3], uuid(z3))],
+          :upper_central_series        => [([1, 2], uuid(z3))],
+        ),
+      )
+      permuted_annotated_z3 = permute([1, 3, 2], annotated_z3)
+
+      check_equal(
+        permuted_annotated_z3.characters,
+        characters[:, [1, 3, 2]],
+        "permute did not reorder character-table columns",
+      )
+      check_equal(
+        permuted_annotated_z3.frobenius_perron_dimensions,
+        ["d1", "d3", "d2"],
+        "permute did not reorder stored FP dimensions",
+      )
+      check_equal(
+        first(permuted_annotated_z3.sub_fusion_rings)[1],
+        [1, 3],
+        "permute did not remap stored subring indices",
+      )
+      check_equal(
+        first(permuted_annotated_z3.all_gradings)[1],
+        [1, 3, 2],
+        "permute did not reorder stored grading values",
+      )
+      check_equal(
+        first(permuted_annotated_z3.upper_central_series)[1],
+        [1, 3],
+        "permute did not remap upper-central-series indices",
       )
 
       check_true(
@@ -279,6 +331,12 @@
     maybe_testset("intermediate", "2. intermediate correctness") do
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
+      su2_2 = su2k_fusion_ring(2)
+      stale_su2_2 = change_properties(
+        su2_2,
+        :frobenius_perron_dimensions =>
+          fill(z3.frobenius_perron_dimension, rank(su2_2)),
+      )
 
       check_equal(
         FusionRings.perm_vec_qd(z3),
@@ -297,6 +355,21 @@
         [1, 2, 3],
         "FusionRings.perm_vec_sd_conj(z3) was not the identity permutation",
       )
+
+      check_equal(
+        FusionRings.perm_vec_sd_conj(stale_su2_2),
+        [1, 2, 3],
+        "perm_vec_sd_conj did not use stored FP dimensions by default",
+      )
+
+      check_equal(
+        FusionRings.perm_vec_sd_conj(stale_su2_2; force_compute = true),
+        [1, 3, 2],
+        "perm_vec_sd_conj(force_compute=true) used stale FP dimensions",
+      )
+
+      @test_throws ArgumentError sort(z3; by = "unknown")
+      @test_throws ArgumentError sort(z3; order = :sideways)
 
       return check_equal(
         FusionRings.perm_vec_sd_conj(z4),

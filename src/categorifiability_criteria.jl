@@ -1,3 +1,10 @@
+export csp_criterion,
+  pdc_criterion,
+  dn_criterion,
+  is_d_number,
+  zsc_criterion,
+  osc_criterion
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                     commutative schur product criterion                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -6,19 +13,31 @@
 #Todo
 # csp_criterion( fusion_ring ) returns true if fusion_ring does not have a unitary categorification due to the commutative schur product criterion
 
-function csp_criterion(ring::FusionRing)
+"""
+    csp_criterion(ring; force_compute=false)
+
+Return `true` when the commutative Schur product criterion obstructs a
+unitary categorification. A noncommutative ring returns `false` because this
+commutative criterion does not apply.
+
+`characters(ring)` stores characters by row and simple objects by column, so
+the theorem's `λ[i,j]` is represented by `chars[j,i]` here.
+"""
+#changed: Correct the character-table orientation/FP denominator, add force_compute, and use obstruction semantics.
+function csp_criterion(
+  ring::FusionRing; force_compute::Bool = false
+)::Bool
   is_commutative(ring) || return false
 
-  chars = characters(ring)
+  chars = characters(ring; force_compute = force_compute)
+  dimensions = fpdims(ring; force_compute = force_compute)
   r = rank(ring)
 
   for j1 in 1:r, j2 in 1:r, j3 in 1:r
-    s = sum(chars[i, j1] * chars[i, j2] * chars[i, j3] / chars[i, 1] for i in 1:r)
-    if is_real(s) && s < 0
-      return true
-    else
-      continue
-    end
+    coefficient = sum(
+      chars[j1, i] * chars[j2, i] * chars[j3, i] / dimensions[i] for i in 1:r
+    )
+    (!is_real(coefficient) || coefficient < 0) && return true
   end
 
   return false
@@ -30,17 +49,22 @@ end
 
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
 
-function pdc_criterion(fr::FusionRing)::Bool
-  !is_commutative(fr) && return false
+"""
+    pdc_criterion(fr; force_compute=false)
 
-  r = rank(fr)
-  fcds = formal_codegrees(fr)
+Return `true` when the pivotal Drinfeld-center criterion obstructs a complex
+pivotal categorification.
+"""
+#changed: Implement the formal-codegree ratio test with exact integrality, force_compute, and obstruction semantics.
+function pdc_criterion(
+  fr::FusionRing; force_compute::Bool = false
+)::Bool
+  is_commutative(fr) || return false
 
-  for j in 1:r
-    ratios = [fcds[j]/fcds[i] for i in 1:r]
-    if all(is_algebraic_integer, ratios)
+  codegrees = formal_codegrees(fr; force_compute = force_compute)
+  for candidate in codegrees
+    all(codegree -> is_algebraic_integer(candidate/codegree), codegrees) &&
       return false
-    end
   end
 
   return true
@@ -75,33 +99,42 @@ end
 #
 # The function returns true if the fusion ring has no complex categorification
 #
-export dn_criterion
+"""
+    dn_criterion(fr; force_compute=false)
 
-function dn_criterion(fr::FusionRing)::Bool
-  !is_commutative(fr) && return false
-
-  fcds = formal_codegrees(fr)
-
-  for z in fcds
-    !is_d_number(z) && return true
-  end
-
-  return false
+Return `true` when at least one formal codegree is not a d-number, obstructing
+a complex categorification. This executable test currently returns `false` for
+noncommutative rings because the package's general noncommutative formal-codegree
+path does not yet recover the irreducible-representation dimensions needed to
+separate `f_E` from `f_E * dim(E)`.
+"""
+#changed: Apply Ostrik's d-number theorem to every supported commutative formal codegree; any failure obstructs categorification.
+function dn_criterion(
+  fr::FusionRing; force_compute::Bool = false
+)::Bool
+  is_commutative(fr) || return false
+  codegrees = formal_codegrees(fr; force_compute = force_compute)
+  return any(codegree -> !is_d_number(codegree), codegrees)
 end
 
+"""Return whether the algebraic number `z` is a d-number."""
+#changed: Require algebraic integrality and correct the minimal-polynomial coefficient/divisibility direction.
 function is_d_number(z::QQBarFieldElem)::Bool
-  R, _ = polynomial_ring(QQ, :x)
-  mp   = minpoly(R, z)
-  n    = degree(mp)
+  is_algebraic_integer(z) || return false
 
-  an  = constant_coefficient(mp)
-  cfs = collect(coefficients(mp))[2:(end - 1)]
+  polynomial_ring_qq, _ = polynomial_ring(QQ, :x)
+  polynomial = minpoly(polynomial_ring_qq, z)
+  n = degree(polynomial)
+  n <= 1 && return true
 
-  is_empty(cfs) && return true
+  constant_term = coeff(polynomial, 0)
+  constant_term == 0 && return false
 
-  divint(i) = is_integer((an^i) / (cfs[i]^n))
-
-  return all(divint, 1:(n - 1))
+  for i in 1:(n - 1)
+    coefficient = coeff(polynomial, n - i)
+    denominator(coefficient^n / constant_term^i) == 1 || return false
+  end
+  return true
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -198,25 +231,41 @@ end
 #
 #  ];
 #
-function crit1(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+#changed: Replace the old Boolean crit1 helper with the three integer sums required by ZSC/OSC.
+function _crit1_sums(i, d, mt)
+  length(i) == 6 || throw(ArgumentError("crit1 requires six indices"))
   r = size(mt, 1)
-  return sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
-         sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
-         sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k in 1:r) == 1
+  return (
+    sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k in 1:r),
+    sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k in 1:r),
+    sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k in 1:r),
+  )
 end
 
-function crit2(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+#changed: Add an explicit Boolean wrapper for the "one appears" spectrum condition.
+_crit1_has_one(i, d, mt)::Bool = any(==(1), _crit1_sums(i, d, mt))
+
+#changed: Replace the old Boolean crit2 helper with the three integer sums required by ZSC.
+function _crit2_sums(i, d, mt)
+  length(i) == 6 || throw(ArgumentError("crit2 requires six indices"))
   r = size(mt, 1)
-  return sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
-         sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
-         sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k in 1:r) == 1
+  return (
+    sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k in 1:r),
+    sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k in 1:r),
+    sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k in 1:r),
+  )
 end
 
-function crit3(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
+#changed: Add an explicit Boolean wrapper for the second "one appears" spectrum condition.
+_crit2_has_one(i, d, mt)::Bool = any(==(1), _crit2_sums(i, d, mt))
+
+#changed: Return the raw triple-product sum so ZSC can test zero and OSC can test one.
+function _crit3_sum(i, d, mt)::Int
+  length(i) == 6 || throw(ArgumentError("crit3 requires six indices"))
   r = size(mt, 1)
   return sum(
     mt[i[1], i[4], k] * mt[d[i[2]], i[5], k] * mt[i[3], d[i[6]], k] for k in 1:r
-  ) == 0
+  )
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -292,12 +341,13 @@ Return `true` if the Zero Spectrum Criterion rules out categorifiability.
 This is a direct Julia port of the Mathematica `ZSCriterion` logic, but with
 explicit Boolean helpers.
 """
+#changed: Replace undefined helper calls with the package multiplication, duality, and NZSC APIs.
 function zsc_criterion(ring::FusionRing)::Bool
-  mt = _mult_table(ring)
+  mt = multiplication_table(ring)
   r = size(mt, 1)
 
-  d = _dual_indices_from_mt(mt)
-  nonzero = _nonzero_structure_constants(mt)
+  d = [conjugate_element(ring, i) for i in 1:r]
+  nonzero = nonzero_structure_constants(ring)
 
   for i2 in 1:r, i1 in 1:r, i3 in 1:r
     mt[i2, i1, i3] == 1 || continue
@@ -355,12 +405,13 @@ Return `true` if the One Spectrum Criterion rules out categorifiability.
 
 This is a direct Julia port of the Mathematica `OSCriterion` logic.
 """
+#changed: Replace undefined helper calls with the package multiplication, duality, and NZSC APIs.
 function osc_criterion(ring::FusionRing)::Bool
-  mt = _mult_table(ring)
+  mt = multiplication_table(ring)
   r = size(mt, 1)
 
-  d = _dual_indices_from_mt(mt)
-  nonzero = _nonzero_structure_constants(mt)
+  d = [conjugate_element(ring, i) for i in 1:r]
+  nonzero = nonzero_structure_constants(ring)
 
   for i2 in 1:r, i1 in 1:r, i3 in 1:r
     mt[i2, i1, i3] == 0 || continue

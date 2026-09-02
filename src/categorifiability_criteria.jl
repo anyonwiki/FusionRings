@@ -43,14 +43,6 @@ function csp_criterion(
   return false
 end
 
-"""Return whether a `QQBarFieldElem` is an algebraic integer."""
-#changed: Add the missing exact QQBar algebraic-integrality test used by PDC and d-number checks.
-function _is_algebraic_integer(z::QQBarFieldElem)::Bool
-  polynomial_ring_qq, _ = polynomial_ring(QQ, :x)
-  polynomial = minpoly(polynomial_ring_qq, z)
-  return all(coefficient -> denominator(coefficient) == 1, coefficients(polynomial))
-end
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                       pivotal drinfeld center criterion                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -71,7 +63,7 @@ function pdc_criterion(
 
   codegrees = formal_codegrees(fr; force_compute = force_compute)
   for candidate in codegrees
-    all(codegree -> _is_algebraic_integer(candidate/codegree), codegrees) &&
+    all(codegree -> is_algebraic_integer(candidate/codegree), codegrees) &&
       return false
   end
 
@@ -128,7 +120,7 @@ end
 """Return whether the algebraic number `z` is a d-number."""
 #changed: Require algebraic integrality and correct the minimal-polynomial coefficient/divisibility direction.
 function is_d_number(z::QQBarFieldElem)::Bool
-  _is_algebraic_integer(z) || return false
+  is_algebraic_integer(z) || return false
 
   polynomial_ring_qq, _ = polynomial_ring(QQ, :x)
   polynomial = minpoly(polynomial_ring_qq, z)

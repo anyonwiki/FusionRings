@@ -996,7 +996,10 @@ function is_equivalent_decomposition(d1, d2)
   end
 
   # Match factors as multisets under fusion-ring equivalence. This preserves
-  # multiplicities, unlike counting equivalence classes in the concatenation.
+  # multiplicities, unlike counting equivalence classes in the concatenation.k
+
+  # TODO: this can be done faster. If some uuids already coincide in both lists
+  # then those rings should be removed from both lists
   unmatched = collect(d2)
   for factor in d1
     index = findfirst(candidate -> is_equivalent_fusion_ring(factor, candidate), unmatched)

@@ -183,12 +183,6 @@ function frobenius_perron_dimension(
   end
 end
 
-# Preserve the positional form supported by earlier releases.
-#changed: Preserve the earlier positional Bool API while routing it through the corrected keyword implementation.
-function frobenius_perron_dimension(r::FusionRing, force_compute::Bool)::QQBarFieldElem
-  return frobenius_perron_dimension(r; force_compute = force_compute)
-end
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                     fpdim                                       ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

@@ -278,7 +278,7 @@ function fusion_ring(
       length(unique(indices)) == length(indices) ||
         error("stored subring indices cannot contain duplicates")
       all(i -> 1 <= i <= r, indices) ||
-        error("stored subring index is outside the parent ring")
+        error("stored subring index is outside the range 1,...,$r")
       is_valid_uuid(subring_uuid) || error("stored subring UUID string is invalid")
     end
   end
@@ -295,7 +295,7 @@ function fusion_ring(
       length(unique(indices)) == length(indices) ||
         error("upper-central-series indices cannot contain duplicates")
       all(i -> 1 <= i <= r, indices) ||
-        error("upper-central-series index is outside the parent ring")
+        error("upper-central-series index is outside the range 1,...,$r")
       is_valid_uuid(term_uuid) ||
         error("upper-central-series UUID string is invalid")
     end

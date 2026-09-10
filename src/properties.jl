@@ -818,11 +818,7 @@ function decompositions(
 )#::Vector{ Vector{FusionRing} }
   _normalize_decomposition_kind(kind)
 
-  tpd = get(
-    fr.realizations,
-    "tensor_product",
-    get(fr.realizations, "TensorProduct", missing),
-  )
+  tpd = get(fr.realizations)
   if ismissing(tpd) || isnothing(tpd) || force_compute
     return non_trivial_tensor_product_decompositions(
       fr; represent_by_known = represent_by_known, force_compute = force_compute

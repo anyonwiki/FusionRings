@@ -104,7 +104,8 @@ function restrict_subring(
       end
     end
   end
-
+  # TODO: might want to conserve as much information as possible, but 
+  # it's better to wait until all fields of the FusionRing struct are finalized
   return fusion_ring(Nsub; labels = labels(fr)[sS])
 end
 

@@ -133,8 +133,6 @@ function permute(σ::Vector{Int}, r::FusionRing)::FusionRing
   iσ = invperm(σ)
   permute_indices(v) = iσ[v]
 
-  lbs = r.labels[σ]
-
   # Character columns and FP dimensions are indexed by simple objects.
   ch = r.characters
   if !ismissing(ch)
@@ -170,7 +168,6 @@ function permute(σ::Vector{Int}, r::FusionRing)::FusionRing
     r,
     Dict{Symbol, Any}(
       :multiplication_table        => pmt,
-      :labels                      => lbs,
       :characters                  => ch,
       :sub_fusion_rings            => sr,
       :frobenius_perron_dimensions => fpd,

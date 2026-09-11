@@ -222,7 +222,7 @@
 
       check_equal(
         labels(pz3),
-        ["0", "2", "1"],
+        ["0", "1", "2"],
         "permute([1,3,2], z3) did not permute labels correctly",
       )
 

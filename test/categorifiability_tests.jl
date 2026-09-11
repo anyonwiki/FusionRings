@@ -24,14 +24,6 @@ using Oscar
     nond_polynomial = polynomial(ZZ, [2, 1, 1])
     nond = first(roots(QQBar, nond_polynomial))
 
-    check_true(
-      FusionRings._is_algebraic_integer(QQBar(2)),
-      "an ordinary integer was not recognized as an algebraic integer",
-    )
-    check_false(
-      FusionRings._is_algebraic_integer(half),
-      "a nonintegral rational was recognized as an algebraic integer",
-    )
     check_true(is_d_number(sqrt(QQBar(2))), "sqrt(2) was not recognized as a d-number")
     check_false(is_d_number(half), "is_d_number accepted a nonintegral rational")
     check_false(

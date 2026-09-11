@@ -117,7 +117,7 @@ function Base.show(io::IO, ring::FusionRing)
 
   props = string.(comap([rank, multiplicity, nnsd], ring))
 
-  return p("FR(" * join(props, ", ") * ", ? )")
+  return p("FR(" * join(props, ", ") * ", ?)")
 end
 
 export print_multiplication_table

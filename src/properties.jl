@@ -676,7 +676,7 @@ function which_permutation(
   if !all  # only need first permutation
     for σ in S
       p = addunit(Vector(σ, r-1))
-      if sm1[p, p, p] == sm2
+      if is_permuted_multtab(sm1, sm2, p)
         iuσ2 = invperm(uσ2)
         return [uσ1[p[iuσ2]]]
       end
@@ -686,7 +686,7 @@ function which_permutation(
 
     for σ in S
       p = addunit(Vector(σ, r-1))
-      if sm1[p, p, p] == sm2
+      if is_permuted_multtab( sm1, sm2, p)
         iuσ2 = invperm(uσ2)
         push!(allperms, uσ1[p[iuσ2]])
       end
@@ -730,6 +730,21 @@ function is_self_conjugate(fr)
   return x -> (x == conjugate_element(fr, x))
 end
 
+# TODO: check where else we can get speedups by swapping order of iterations
+function is_permuted_multtab( mt1::Array{Int64,3}, mt2::Array{Int64,3}, p::Vector{Int64} )::Bool
+  # we assume both multiplication tables have same 
+  r  = size(mt1,1)
+  r2 = size(mt2,1)
+  r != r2 && error("Multiplication tables should have same length")
+  r != length(p) && error("Permutation vector should have same length as multiplication table")
+
+  @inbounds for k ∈ 1:r, j ∈ 1:r, i ∈ 1:r # i as last since column-major indexing
+    mt1[p[i],p[j],p[k]] != mt2[i,j,k] && return false
+  end
+  return true
+end
+
+
 # Apply permutation P on all three indices: A'[i,j,k] = A[P[i],P[j],P[k]]
 # TODO: we already have permute_mult_tab. Isn't this the same? If so remove the code below
 # in favor of permute_mult_tab
@@ -741,6 +756,7 @@ function _permute_multtab(A::Array{Int, 3}, P::Vector{Int})::Array{Int, 3}
   end
   return B
 end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                            fusion_ring_automorphisms                            ┃

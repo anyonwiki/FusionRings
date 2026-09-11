@@ -52,9 +52,21 @@
       ids = qqb_id(ds)
       ds2 = from_qqb_id(Any[ids...])
 
-      return check_equal(
+      check_equal(
         ds2, ds, "from_qqb_id.(qqb_id.(fpdims(r))) did not recover the FP dimensions"
       )
+
+      return mktempdir() do directory
+        saved_id = FusionRings.save_qqb_num(d; directory = directory)
+        check_equal(saved_id, s, "save_qqb_num did not return the QQBar identifier")
+        check_true(
+          isfile(joinpath(directory, s*".mrdi")),
+          "save_qqb_num did not write to the requested directory",
+        )
+        return check_equal(
+          qqb_dict[s], d, "save_qqb_num did not synchronize the in-memory QQBar cache"
+        )
+      end
     end
 
     maybe_testset("reference", "3. reference / Anyonica parity") do
@@ -156,6 +168,26 @@
         FusionRings.rfromjs(js_tpd3)["tensor_product"],
         [["uuid1", "uuid2"], ["uuid3"]],
         "FusionRings.tpdfromjs did not decode direct decomposition data correctly",
+      )
+
+      js_legacy_tpd = Dict("realizations" => Dict("TensorProduct" => Any[]))
+      check_true(
+        haskey(FusionRings.rfromjs(js_legacy_tpd), "tensor_product"),
+        "rfromjs did not normalize the legacy TensorProduct key",
+      )
+
+      check_true(
+        ismissing(FusionRings.afromjs(js_mt)),
+        "afromjs did not return missing when automorphism metadata was absent",
+      )
+      @test_throws ArgumentError FusionRings.mtfromjs(
+        Dict("mult_tab" => [[[1, 0]], [[0, 1]]])
+      )
+      @test_throws ArgumentError FusionRings.chfromjs(
+        Dict("characters" => [["one", "two"], ["three"]])
+      )
+      @test_throws ArgumentError FusionRings.fpdfromjs(
+        Dict("frobenius_perron_dimension" => 2)
       )
 
       js_names = Dict("names" => FusionRings.mscnames(["A", "B"]))
@@ -326,6 +358,14 @@
         "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"anyonwiki_id\"",
       )
 
+      char_ids = ["a" "b"; "c" "d"]
+      ring_with_chars = change_properties(r, :characters => char_ids)
+      check_equal(
+        FusionRings.chtojs(ring_with_chars),
+        [["a", "b"], ["c", "d"]],
+        "chtojs transposed character rows and simple-object columns",
+      )
+
       return check_true(
         haskey(d, "frobenius_perron_dimension"),
         "FusionRings.ring_to_dict(zn_fusion_ring(2)) did not contain key \"frobenius_perron_dimension\"",
@@ -373,7 +413,15 @@
         check_true(isfile(file), "FusionRings.export_ring did not create the output file")
 
         r2 = FusionRings.import_ring(file)
-        return check_true(r2 isa FusionRing, "import_ring did not return a FusionRing")
+        check_true(r2 isa FusionRing, "import_ring did not return a FusionRing")
+
+        js_without_automorphisms = FusionRings.ring_to_dict(r)
+        delete!(js_without_automorphisms, "automorphisms")
+        r3 = FusionRings.import_ring(js_without_automorphisms)
+        return check_true(
+          ismissing(r3.automorphism_group),
+          "import_ring failed to preserve missing automorphism metadata",
+        )
       end
     end
 

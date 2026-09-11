@@ -149,6 +149,15 @@ using Oscar
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
 
+      stale_z3 = change_properties(
+        z3,
+        Dict{Symbol, Any}(
+          :frobenius_perron_dimension => first(z3.frobenius_perron_dimensions),
+          :frobenius_perron_dimensions =>
+            fill(z3.frobenius_perron_dimension, rank(z3)),
+        ),
+      )
+
       check_equal(
         string.(fpdims(z3)),
         ["{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}"],
@@ -161,8 +170,28 @@ using Oscar
         ["{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}", "{a1: 1.00000}"],
         "fpdims(zn_fusion_ring(4)) were not all 1",
       )
-      return check_equal(
+      check_equal(
         string(fpdim(z4)), "{a1: 4.00000}", "fpdim(zn_fusion_ring(4)) was not 4"
+      )
+      check_equal(
+        string(fpdim(stale_z3)),
+        "{a1: 1.00000}",
+        "fpdim did not use the stored scalar value by default",
+      )
+      check_equal(
+        string.(fpdims(stale_z3; force_compute = true)),
+        fill("{a1: 1.00000}", 3),
+        "fpdims(force_compute=true) used stale stored component dimensions",
+      )
+      check_equal(
+        string(fpdim(stale_z3; force_compute = true)),
+        "{a1: 3.00000}",
+        "fpdim(force_compute=true) used stale stored component dimensions",
+      )
+      return check_equal(
+        string(fpdim(stale_z3, true)),
+        "{a1: 3.00000}",
+        "the positional force_compute compatibility form did not recompute fpdim",
       )
     end
 
@@ -236,9 +265,10 @@ using Oscar
       check_true(is_group_ring(z3), "is_group_ring(zn_fusion_ring(3)) returned false")
       check_false(is_group_ring(su2_2), "is_group_ring(su2k_fusion_ring(2)) returned true")
       check_true(is_commutative(z3), "is_commutative(zn_fusion_ring(3)) returned false")
-      return check_true(
+      check_true(
         is_commutative(su2_2), "is_commutative(su2k_fusion_ring(2)) returned false"
       )
+      return @test_throws ArgumentError cayley_table(su2_2)
     end
 
     maybe_testset("reference", "3. reference / Anyonica parity") do
@@ -284,6 +314,14 @@ using Oscar
       check_true(
         is_sub_fusion_ring(z4, [1, 3]),
         "is_sub_fusion_ring(z4, [1,3]) should have returned true",
+      )
+      check_false(
+        is_sub_fusion_ring(su2k_fusion_ring(2), [1, 2]),
+        "is_sub_fusion_ring ignored a fusion outcome outside the proposed subset",
+      )
+      check_false(
+        is_sub_fusion_ring(z4, [1, 1]),
+        "is_sub_fusion_ring accepted duplicate indices",
       )
       check_false(
         is_sub_fusion_ring(z4, [1, 2]),
@@ -366,6 +404,11 @@ using Oscar
         multiplication_table(sub),
         multiplication_table(z2),
         "restrict_subring(z4, [1,3]) did not match zn_fusion_ring(2)",
+      )
+      check_equal(
+        labels(sub),
+        ["0", "2"],
+        "restrict_subring(z4, [1,3]) did not preserve the selected labels",
       )
 
       check_equal(
@@ -460,10 +503,41 @@ using Oscar
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       z2 = zn_fusion_ring(2)
+      z2_squared = tensor_product(z2, z2)
+      stale_product = change_properties(
+        z2_squared,
+        :sub_fusion_rings => Vector{Tuple{Vector{Int64}, String}}(),
+      )
 
       check_throws(
         () -> decompositions(z2, "DirectSum"),
         "decompositions(z2, \"DirectSum\") should have thrown because only tensor products are implemented",
+      )
+      check_equal(
+        non_trivial_tensor_product_decompositions(
+          stale_product; represent_by_known = false
+        ),
+        Vector{Vector{FusionRing}}(),
+        "decomposition discovery did not use stored subrings by default",
+      )
+      equivalent_z2 = fusion_ring(multiplication_table(z2))
+      check_true(
+        FusionRings.is_equivalent_decomposition([z2, z2], [equivalent_z2, z2]),
+        "equivalent decompositions with independently assigned UUIDs were rejected",
+      )
+      check_false(
+        FusionRings.is_equivalent_decomposition(
+          [z2, z2], [equivalent_z2, zn_fusion_ring(3)]
+        ),
+        "decomposition equivalence ignored factor multiplicity or invariants",
+      )
+      return check_true(
+        !isempty(
+          non_trivial_tensor_product_decompositions(
+            stale_product; force_compute = true, represent_by_known = false
+          ),
+        ),
+        "forced decomposition discovery reused stale stored subrings",
       )
     end
 
@@ -495,6 +569,7 @@ using Oscar
     maybe_testset("intermediate", "2. intermediate correctness") do
       z3 = zn_fusion_ring(3)
       z4 = zn_fusion_ring(4)
+      known_z2 = fawc(2, 1, 0, 1)
 
       ad3_set, ad3_ring = adjoint_fusion_ring(z3)
       check_equal(
@@ -512,7 +587,35 @@ using Oscar
       check_equal(last(ucs3)[1], [1], "upper_central_series(z3) last subset was incorrect")
 
       check_true(is_nilpotent(z3), "is_nilpotent(z3) should have returned true")
-      return check_true(is_nilpotent(z4), "is_nilpotent(z4) should have returned true")
+      check_true(is_nilpotent(z4), "is_nilpotent(z4) should have returned true")
+
+      stale_z2 = change_properties(
+        known_z2,
+        :upper_central_series => [
+          (collect(1:rank(known_z2)), uuid(known_z2)),
+        ],
+      )
+      cached_grading, _ = universal_grading(stale_z2)
+      forced_grading, _ = universal_grading(stale_z2; force_compute = true)
+
+      check_equal(
+        cached_grading,
+        [1, 1],
+        "universal_grading did not use stored adjoint metadata by default",
+      )
+      check_equal(
+        forced_grading,
+        [1, 2],
+        "universal_grading(force_compute=true) reused stored adjoint metadata",
+      )
+      check_false(
+        is_nilpotent(stale_z2),
+        "is_nilpotent did not use stored upper-central-series metadata by default",
+      )
+      return check_true(
+        is_nilpotent(stale_z2; force_compute = true),
+        "is_nilpotent(force_compute=true) reused stored upper-central-series metadata",
+      )
     end
 
     maybe_testset("reference", "3. reference / Anyonica parity") do
@@ -594,6 +697,7 @@ using Oscar
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       z6 = zn_fusion_ring(6)
+      z2 = zn_fusion_ring(2)
       D_3 = fawc(6, 1, 2, 1)
       trivial_ring = frl[1]
 
@@ -602,6 +706,13 @@ using Oscar
       ag1 = rings_to_codes(all_gradings(z6))
       ag2 = rings_to_codes(all_gradings(D_3))
       ag3 = rings_to_codes(all_gradings(trivial_ring))
+
+      stale_z2 = change_properties(
+        z2,
+        :all_gradings => [([1, 1], uuid(trivial_ring))],
+      )
+      cached_ag = all_gradings(stale_z2)
+      forced_ag = all_gradings(stale_z2; force_compute = true)
 
       check_equal(
         ag1,
@@ -645,6 +756,18 @@ using Oscar
         [[1], FR(1,1,0,1)]
       ]
       """,
+      )
+      check_equal(
+        length(cached_ag), 1, "all_gradings did not use stored gradings by default"
+      )
+      check_equal(
+        uuid(only(cached_ag)[2]),
+        uuid(trivial_ring),
+        "all_gradings did not resolve the stored grading-ring UUID",
+      )
+      return check_true(
+        length(forced_ag) > length(cached_ag),
+        "all_gradings(force_compute=true) did not bypass stored gradings",
       )
     end
   end
@@ -705,10 +828,24 @@ using Oscar
 
     maybe_testset("intermediate", "2. intermediate correctness") do
       z1 = zn_fusion_ring(1)
+      z2 = zn_fusion_ring(2)
       z3 = zn_fusion_ring(3)
 
+      stale_z3 = change_properties(
+        z3,
+        Dict{Symbol, Any}(
+          :frobenius_perron_dimension => first(z3.frobenius_perron_dimensions),
+          :frobenius_perron_dimensions =>
+            fill(z3.frobenius_perron_dimension, rank(z3)),
+        ),
+      )
+      stale_z2_chars = change_properties(
+        z2,
+        :characters => fill(z2.frobenius_perron_dimension, rank(z2), rank(z2)),
+      )
+
       check_equal(
-        string.(characters(z1)),
+        vec(string.(Matrix(characters(z1)))),
         ["{a1: 1.00000}"],
         "characters(zn_fusion_ring(1)) were not [1]",
       )
@@ -731,6 +868,21 @@ using Oscar
         numeric_fpdims(z3),
         [1.0, 1.0, 1.0],
         "numeric_fpdims(zn_fusion_ring(3)) were not [1.0,1.0,1.0]",
+      )
+      check_approx(
+        numeric_fpdim(stale_z3),
+        1.0,
+        "numeric_fpdim did not use the stored scalar value by default",
+      )
+      check_approx(
+        numeric_fpdim(stale_z3; force_compute = true),
+        3.0,
+        "numeric_fpdim(force_compute=true) used stale stored component dimensions",
+      )
+      check_equal(
+        string.(formal_codegrees(stale_z2_chars; force_compute = true)),
+        ["{a1: 2.00000}", "{a1: 2.00000}"],
+        "formal_codegrees(force_compute=true) used the stale stored character table",
       )
 
       check_throws(

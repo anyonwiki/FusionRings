@@ -1370,9 +1370,9 @@ end
 export characters
 
 #changed: Honor forced recomputation and return a correctly shaped exact 1x1 matrix for rank-one rings.
-function characters(ring::FusionRing; use_numerics = true, force_compute = false)
+function characters(ring::FusionRing; use_numerics = true, force_compute = false)::AbstractAlgebra.Generic.MatSpaceElem{QQBarFieldElem}
   if !ismissing(ring.characters) && !force_compute
-    return from_qqb_id(ring.characters)
+    return matrix( QQBar, from_qqb_id(ring.characters) )
   end
 
   if !FusionRings.is_commutative(ring)

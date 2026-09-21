@@ -9,9 +9,23 @@ export csp_criterion,
 #┃                     commutative schur product criterion                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-# TODO: check whether s is correct
-#Todo
-# csp_criterion( fusion_ring ) returns true if fusion_ring does not have a unitary categorification due to the commutative schur product criterion
+#=
+@article{LIU2021107905,
+title = {Fusion bialgebras and Fourier analysis: Analytic obstructions for unitary categorification},
+journal = {Advances in Mathematics},
+volume = {390},
+pages = {107905},
+year = {2021},
+issn = {0001-8708},
+doi = {https://doi.org/10.1016/j.aim.2021.107905},
+url = {https://www.sciencedirect.com/science/article/pii/S0001870821003443},
+author = {Zhengwei Liu and Sebastien Palcoux and Jinsong Wu},
+keywords = {Quantum Fourier analysis, Subfactors, Planar algebras, Fusion rings, Unitary categorification},
+abstract = {We introduce fusion bialgebras and their duals and systematically study their Fourier analysis. As an application, we discover new efficient analytic obstructions on the unitary categorification of fusion rings. We prove the Hausdorff-Young inequality, uncertainty principles for fusion bialgebras and their duals. We show that the Schur product property, Young's inequality and the sum-set estimate hold for fusion bialgebras, but not always on their duals. If the fusion ring is the Grothendieck ring of a unitary fusion category, then these inequalities hold on the duals. Therefore, these inequalities are analytic obstructions of categorification. We classify simple integral fusion rings of Frobenius type up to rank 8 and of Frobenius-Perron dimension less than 4080. We find 34 ones, 4 of which are group-like and 28 of which can be eliminated by applying the Schur product property on the dual. In general, these inequalities are obstructions to subfactorize fusion bialgebras.}
+}
+
+Corollary 8.5
+=#
 
 """
     csp_criterion(ring; force_compute=false)
@@ -19,14 +33,22 @@ export csp_criterion,
 Return `true` when the commutative Schur product criterion obstructs a
 unitary categorification. A noncommutative ring returns `false` because this
 commutative criterion does not apply.
-
-`characters(ring)` stores characters by row and simple objects by column, so
-the theorem's `λ[i,j]` is represented by `chars[j,i]` here.
 """
-#changed: Correct the character-table orientation/FP denominator, add force_compute, and use obstruction semantics.
+
+# characters(ring) stores characters by row and simple objects by column, so
+# the theorem's `λ[i,j]` is represented by `chars[j,i]` here.
+ 
+  
 function csp_criterion(
   ring::FusionRing; force_compute::Bool = false
-)::Bool
+  )::Bool
+  first( csp_criterion_explanation(ring,force_compute = force_compute) )
+end
+
+
+function csp_criterion_explanation(
+  ring::FusionRing; force_compute::Bool = false
+)::Tuple{Bool,Tuple{QQBarFieldElem,Tuple{Int64,Int64,Int64}}, String }
   is_commutative(ring) || return false
 
   chars = characters(ring; force_compute = force_compute)
@@ -34,13 +56,30 @@ function csp_criterion(
   r = rank(ring)
 
   for j1 in 1:r, j2 in 1:r, j3 in 1:r
-    coefficient = sum(
+    coeff = sum(
       chars[j1, i] * chars[j2, i] * chars[j3, i] / dimensions[i] for i in 1:r
     )
-    (!is_real(coefficient) || coefficient < 0) && return true
+    (!is_real(coeff) || coeff < 0) && return ( true, ( coeff, ( j1, j2, j3 ) ), csp_explanation( coeff, (j1,j2,j3) ) )
   end
 
   return false
+end
+
+function csp_explanation( coeff, tup )
+  qqbstr = qqb_id(coeff)
+  appstr = _format_complex_float(ComplexF64(qqbstr))
+  j1,j2,j3 = tup
+  
+  "The fusion ring does not have a unitary categorification "*
+  "because \$s = \\sum_{i}\\frac{\\lambda_{$(j1),i}\\lambda_{$(j2),i}\\lambda{$(j3),i}}"*
+  "{\\lambda_{1,i}}\$ ="*qqbstr*" \\approx "*aprstr*
+  " but s \\geq 0 according to the commutative Schur product"*
+  " criterion from 10.1016/j.aim.2021.107905, corollary 8.5."
+end
+
+function _format_complex_float(s::String)
+  s = replace(s," + 0.0im" => "")
+  replace(s,"im"=>"i") 
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -70,10 +109,48 @@ function pdc_criterion(
   return true
 end
 
+
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                    pseudo-unitary drinfeld center criterion                     ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+function pudc_criterion(
+  fr::FusionRing; force_compute::Bool = false
+)::Bool
+  first( pdc_criterion_explanation(fr,force_compute=force_compute) )
+end
+
+
+function pudc_criterion_explanation(
+  fr::FusionRing; force_compute::Bool = false
+)::Tuple{Bool,Tuple{QQBarFieldElem,Int64},String}
+  is_commutative(fr) || return false
+
+  codegrees = formal_codegrees(fr; force_compute = force_compute)
+
+  for i in 1:rank(fr)
+    frac = codegrees[1]//codegrees[i]
+    if !is_algebraic_integer(frac)
+      return ( true, (frac, i), pdc_explanation(frac,i) )
+    end
+  end
+
+  return false
+end
+
+  
+function pudc_explanation( frac, int )
+  qqbstr = qqb_id(frac)
+  
+  "The fusion ring does not have a pseudo-untary categorification"*
+  " because \$\\frac{c_1}{c_$(int)}\$ ="*qqbstr*
+  ", where c_i is the i'th formal codegree, is not an algebraic"*
+  " integer which it needs to be according to the pseudo-unitary"*
+  " version of the Drinfeld center criterion from 10.1007/s11005-022-01542-1 "*
+  "Theorem 2.4."
+end
+  
 #function pudc_criterion(fr::FusionRing)
 #  !is_commutative(fr) && return false
 #

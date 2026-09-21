@@ -1524,6 +1524,10 @@ export formal_codegrees
 function formal_codegrees(
   fr::FusionRing; usecharacters = true, force_compute = false
 )::Vector{QQBarFieldElem}
+  is_commutative(fr) || error(
+      "Calculation of formal_codegrees for non-commutative fusion ring is not implemented yet."
+    )
+
   fcd = fr.formal_codegrees
   !ismissing(fcd) && !force_compute && return from_qqb_id.(fcd)
 

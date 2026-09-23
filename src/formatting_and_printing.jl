@@ -226,7 +226,6 @@ function tex_reps(x::QQBarFieldElem, qqbid::String; try_cyclo = false)::Dict{Str
   rat = rational_tex_rep(x)
   if rat != ""
     return Dict(
-      "rational"  => rat,
       "radical"   => rat,
       "cyclo"     => rat,
       "general"   => qqb_id_rep(qqbid),
@@ -243,7 +242,6 @@ function tex_reps(x::QQBarFieldElem, qqbid::String; try_cyclo = false)::Dict{Str
   end
 
   return Dict(
-    "rational"  => rational_tex_rep(x),
     "radical"   => radicals_tex_rep(x),
     "cyclo"     => cyc,
     "general"   => qqb_id_rep(qqbid),

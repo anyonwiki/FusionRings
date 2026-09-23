@@ -382,14 +382,13 @@ function power_sum_tex_rep(x::QQBarFieldElem)
     n = degree(mp)
     i = findfirst(j -> QQb(ζ(n+1)^j) == a*x, 0:n) - 1 #-1 since first el is 0
     factorstring =
-      if gen == 1
+      if a == 1
         ""
-      elseif gen == -1
+      elseif a == -1
         "-"
       else
-        string(1//gen)
+        string(1//a)
       end
-    
     return string(factorstring, "\\zeta_{", n+1, "}^{", i, "}")
   else
     return ""

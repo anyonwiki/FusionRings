@@ -541,7 +541,7 @@ Return `true` iff `S` is a fusion-closed subset of simples containing the unit.
 `S` may be a vector of indices (`Int`/`Integer`) or a vector of labels
 (`String`/`Symbol`).
 """
-function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
+function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int64})::Bool
   # any subring must contain unit
   isempty(S) && return false
   1 ∉ S && return false

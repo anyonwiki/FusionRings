@@ -1,3 +1,4 @@
+[![SWH](https://archive.softwareheritage.org/badge/origin/https://github.com/anyonwiki/FusionRings/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/anyonwiki/FusionRings)
 # FusionRings
 
 A package that aims to provide the fusion rings functionality of Anyonica.

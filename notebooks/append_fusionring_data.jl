@@ -2,8 +2,6 @@ using Revise, Oscar, Accessors, JSON, FusionRings, ProgressMeter, ProfileView
 
 datadir = "/home/gert/Projects/FusionRings.jl/src/data/"
 
-
-
 function update_rings( frs::Vector{FusionRing} )
   bm  = group_by( multiplicity, frs )
   kys = collect(keys(bm))

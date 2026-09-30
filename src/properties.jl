@@ -1508,8 +1508,8 @@ end
 function is_diagonalizing_matrix(mat, ring::FusionRing)
   mt   = FusionRings.multiplication_table(ring)
   r    = FusionRings.rank(ring)
-  mats = [matrix(qqb, mt[i, :, :]) for i in 1:r]
-  mat  = matrix(qqb, mat)
+  mats = [matrix(QQb, mt[i, :, :]) for i in 1:r]
+  mat  = matrix(QQb, mat)
 
   return all(is_diagonal(mat * m * inv(mat)) for m in mats)
 end

@@ -1679,9 +1679,13 @@ function which_injection(subring::FusionRing, ring::FusionRing)
 
   for S in _internal_closed_subsets(ring, rs)
     Nres = Nbig[S, S, S]
-    perm = first(which_permutation(fusion_ring(Nsub), fusion_ring(Nres)))
+    perms = which_permutation(fusion_ring(Nsub), fusion_ring(Nres))
 
-    perm === nothing && continue
+    # could be no perm exists
+    perms === nothing && continue
+
+    # if perm exists
+    perm = first(perms)
 
     inj = Dict{Int, Int}()
     @inbounds for i in 1:rs

@@ -646,7 +646,7 @@ end
 function rtojs(fr::FusionRing)
   function convert_realization(val)
     ismissing(val) && return nothing
-    return [[uuid(ring) for ring in list] for list in val]
+    return [[id for id in list] for list in val]
   end
 
   return Dict(k => convert_realization(v) for (k, v) in fr.realizations )

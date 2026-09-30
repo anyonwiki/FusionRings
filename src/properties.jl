@@ -1574,10 +1574,10 @@ Throws if no common eigenbasis is found after `tries` attempts.
 #3. Verify that every `V⁻¹ N_i V` is (numerically) diagonal. If not, retry.
 #Normalize and sort V
 #changed: Honor forced recomputation and return a correctly shaped numeric 1x1 matrix for rank-one rings.
-function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = false)
+function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = false)::Matrix{ComplexF64}
   nc = ring.characters
   if !ismissing(nc) && !force_compute
-    return ComplexF64.(characters(ring))
+    return ComplexF64.(Matrix(characters(ring)))
   end
 
   if !is_commutative(ring)

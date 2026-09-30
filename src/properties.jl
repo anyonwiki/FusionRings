@@ -1586,7 +1586,7 @@ function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = 
     )
   end
 
-  rank(ring) == 1 && return [1.0;;]
+  rank(ring) == 1 && return ComplexF64[1.0;;]
 
   mt   = multiplication_table(ring)
   r    = rank(ring)

@@ -1392,7 +1392,7 @@ function characters(ring::FusionRing; use_numerics = true, force_compute = false
 
   if use_numerics
     # find numeric diagonalizing matrix
-    V = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
+    V = normalize_first_col(numeric_diagonalizing_matrix(mats),tol=tol,tries=tries)
     # find symbolic evals
     evals = union(vcat([eigenvalues(matrix(qqb, m)) for m in mats] ...))
     # identify evals in V, sort mat, and convert to matrix of qqb's

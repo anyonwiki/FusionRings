@@ -191,16 +191,16 @@
       )
 
       js_names = Dict("names" => FusionRings.mscnames(["A", "B"]))
-      js_texnames = Dict("texnames" => FusionRings.mscnames(["A", "B"]))
+      js_tex_names = Dict("tex_names" => FusionRings.mscnames(["A", "B"]))
       check_equal(
         FusionRings.nfromjs(js_names)["miscellaneous"],
         ["A", "B"],
         "nfromjs did not decode names correctly",
       )
       return check_equal(
-        FusionRings.tnfromjs(js_texnames)["miscellaneous"],
+        FusionRings.tnfromjs(js_tex_names)["miscellaneous"],
         ["A", "B"],
-        "tnfromjs did not decode texnames correctly",
+        "tnfromjs did not decode tex_names correctly",
       )
     end
 

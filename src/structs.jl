@@ -9,7 +9,7 @@ struct FusionRing
 
   names::Dict{String, Union{Missing, Vector{String}}}
 
-  texnames::Dict{String, Union{Missing, Vector{String}}}
+  tex_names::Dict{String, Union{Missing, Vector{String}}}
 
   labels::Array{String, 1}
 
@@ -110,7 +110,7 @@ function fusion_ring(
   uuid                        = missing,
   anyonwiki_code              = missing,
   names                       = missing,
-  texnames                    = missing,
+  tex_names                    = missing,
   labels                      = missing,
   characters                  = missing,
   sub_fusion_rings            = missing,
@@ -202,12 +202,12 @@ function fusion_ring(
     Dict(k => convert_nms(v) for (k, v) in names)
   end
 
-  texnms = if ismissing(texnames)
+  texnms = if ismissing(tex_names)
     _nonames
-  elseif texnames isa Vector
-    mscnames(string.(texnames))
+  elseif tex_names isa Vector
+    mscnames(string.(tex_names))
   else
-    Dict(k => convert_nms(v) for (k, v) in texnames)
+    Dict(k => convert_nms(v) for (k, v) in tex_names)
   end
 
   # LEGACY compatibility

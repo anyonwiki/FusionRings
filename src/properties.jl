@@ -40,7 +40,7 @@ end
 export tex_names
 
 function tex_names(r::FusionRing)
-  return r.texnames
+  return r.tex_names
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

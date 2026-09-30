@@ -221,9 +221,9 @@ function nfromjs(js)
   return nms
 end
 
-# texnames
+# tex_names
 function tnfromjs(js)
-  nms = safe_fetch(js, "texnames")
+  nms = safe_fetch(js, "tex_names")
 
   ismissing(nms) && return _nonames
 
@@ -472,7 +472,7 @@ function import_ring(js::JSON.Object{String, Any}; skip_check = false)
     uuid                        = uuidfromjs(js),
     anyonwiki_code              = fcfromjs(js),
     names                       = nfromjs(js),
-    texnames                    = tnfromjs(js),
+    tex_names                    = tnfromjs(js),
     labels                      = lfromjs(js),
     characters                  = chfromjs(js),
     sub_fusion_rings            = sfrfromjs(js),
@@ -750,7 +750,7 @@ ringfieldinfo = """
       * "group_like": names associated to the theory of finite groups, such as "Z_2", "Rep(D_6)". Names associated to near-group or group theoretical fusion rings do not belong here but in miscelaneous.
       * "physics": names associated to applications in physics, such as "Fibonacci", "Ising", "Potts".
       * "miscellaneous": names not belonging to another of the above categories.
-    * texnames: a JSON dictionary mapping naming conventions to lists of strings of names typeset in LaTeX given using that convention. The conventions are the same as for the names field.
+    * tex_names: a JSON dictionary mapping naming conventions to lists of strings of names typeset in LaTeX given using that convention. The conventions are the same as for the names field.
     * labels: list of strings used to label the elements of the fusion ring. This is purely cosmetic and has no influence on any other properties. The default is a list of bold digits from 1 to the rank of the ring.
     * characters: vector of vectors [ v_1, ..., v_r ] where each v_i is a vector of r qqb_ids representing the image of the elements of the fusion ring under the i'th character.
     * non_trivial_sub_fusion_rings: list of vectors [ els, uuid ] where els are the elements of the parent ring that form a subring isomorphic to ring[uuid].
@@ -775,7 +775,7 @@ ringfieldinfo = """
       * reason: gives a more in-depth reason for why the value of bool is what it is. This could, e.g., be a reference to a theorem in a paper or a version of a software package used.
     * categorifications: a list of uuids of known fusion categories that categorify the fusion ring. It only contains uuids of categories of which the data is stored.
     * references: JSON dictionary mapping names of fields to a list of references to the paper that played a significant role in obtaining the data in the way it is represented here. Special field names are the same as for software. Only papers that have lead to the data as currently represented are included and thus no papers that represent theory that was not directly used, or ,e.g. , data in another format that was not used to obtain current data.
-    * software: JSON dictionary mapping names of fields to a list of reference to software that played a significant role in obtain the data in the way it is represented here. Special field names are
+    * software: JSON dictionary mapping names of fields to a dictionary describing to software that played a significant role in obtain the data in the way it is represented here. Special field names are
       * "all": when all fields of the ring point to the same software
       * "all_other_data": when all other data, besides the data having specific references, points to the same software.
     * all_gradings: vector of vectors [ els, uuid ] where ring[uuid] the group ring that grades this fusion ring, and els are elements of ring[uuid] that grade the elements of the parent ring.
@@ -802,7 +802,7 @@ function ring_to_dict(fr)
     "uuid"                                => uuid(fr),
     "anyonwiki_code"                      => actojs(fr),
     "names"                               => names(fr),
-    "texnames"                            => tex_names(fr),
+    "tex_names"                            => tex_names(fr),
     "labels"                              => labels(fr),
     "characters"                          => chtojs(fr),
     "non_trivial_sub_fusion_rings"        => sfrtojs(fr),
@@ -932,7 +932,7 @@ function auto_complete_missing_info(fr::FusionRing)::FusionRing
   nms = fr.names
 
   # autocompletion is too expensive on case-by-case basis
-  tnms = fr.texnames
+  tnms = fr.tex_names
 
   # no autocompletion necessary
   lbls = fr.labels
@@ -982,7 +982,7 @@ function auto_complete_missing_info(fr::FusionRing)::FusionRing
     uuid                        = id,
     anyonwiki_code              = awc,
     names                       = nms,
-    texnames                    = tnms,
+    tex_names                    = tnms,
     labels                      = lbls,
     characters                  = chrs,
     sub_fusion_rings            = sfr,
@@ -1078,7 +1078,7 @@ function add_nms(fr::FusionRing, tup::Pair{String, Vector{String}}; kind = "tex"
   end
 
   if kind == "tex"
-    return change_properties(fr, :texnames => nms)
+    return change_properties(fr, :tex_names => nms)
   else
     return change_properties(fr, :names => nms)
   end

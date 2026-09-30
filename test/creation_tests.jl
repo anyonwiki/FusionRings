@@ -40,7 +40,7 @@
         mt;
         labels = ["0", "1"],
         names = ["Z2"],
-        texnames = ["\\mathbb{Z}_2"],
+        tex_names = ["\\mathbb{Z}_2"],
       )
 
       check_true(r isa FusionRing, "fusion_ring did not return a FusionRing")
@@ -91,7 +91,7 @@
         mt;
         labels = ["0", "1"],
         names = ["Z2"],
-        texnames = ["\\mathbb{Z}_2"],
+        tex_names = ["\\mathbb{Z}_2"],
       )
 
       check_equal(

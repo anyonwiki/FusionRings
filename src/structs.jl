@@ -29,7 +29,7 @@ struct FusionRing
 
   references::Union{Missing, Dict{String, Vector{String}}}
 
-  software::Union{Missing, Dict{String, Vector{String}}}
+  software::Union{Missing, Dict{String, Dict{String,Union{Nothing,String}}}}
 
   all_gradings::Union{Missing, Vector{Tuple{Vector{Int64}, String}}}
 

@@ -42,16 +42,38 @@ commutative criterion does not apply.
  
   
 function csp_criterion(
-  ring::FusionRing; force_compute::Bool = false
-  )::Bool
-  first( csp_criterion_explanation(ring,force_compute = force_compute) )
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::Bool
+  return first(
+    csp_criterion_explanation(
+      ring;
+      force_compute = force_compute,
+    ),
+  )
 end
 
 
+
+
+
+#changed: Always return   explanation tuple when 
+# criterion does not apply or finds no obstruction.
 function csp_criterion_explanation(
-  ring::FusionRing; force_compute::Bool = false
-)::Tuple{Bool,Tuple{QQBarFieldElem,Tuple{Int64,Int64,Int64}}, String }
-  is_commutative(ring) || return false
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::Tuple{
+  Bool,
+  Union{Nothing,Tuple{QQBarFieldElem,NTuple{3,Int}}},
+  String
+}
+  if !is_commutative(ring)
+    return (
+      false,
+      nothing,
+      "The commutative Schur product criterion does not apply to noncommutative rings.",
+    )
+  end
 
   chars = characters(ring; force_compute = force_compute)
   dimensions = fpdims(ring; force_compute = force_compute)
@@ -59,30 +81,65 @@ function csp_criterion_explanation(
 
   for j1 in 1:r, j2 in 1:r, j3 in 1:r
     coeff = sum(
-      chars[j1, i] * chars[j2, i] * chars[j3, i] / dimensions[i] for i in 1:r
+      chars[j1, i] *
+      chars[j2, i] *
+      chars[j3, i] /
+      dimensions[i]
+      for i in 1:r
     )
-    (!is_real(coeff) || coeff < 0) && return ( true, ( coeff, ( j1, j2, j3 ) ), csp_explanation( coeff, (j1,j2,j3) ) )
+
+    if !is_real(coeff) || coeff < 0
+      indices = (j1, j2, j3)
+
+      return (
+        true,
+        (coeff, indices),
+        csp_explanation(coeff, indices),
+      )
+    end
   end
 
-  return false
+  return (
+    false,
+    nothing,
+    "The commutative Schur product criterion found no obstruction.",
+  )
 end
 
-function csp_explanation( coeff, tup )
-  qqbstr = qqb_id(coeff)
-  appstr = _format_complex_float(ComplexF64(qqbstr))
-  j1,j2,j3 = tup
-  
-  "The fusion ring does not have a unitary categorification "*
-  "because \$s = \\sum_{i}\\frac{\\lambda_{$(j1),i}\\lambda_{$(j2),i}\\lambda{$(j3),i}}"*
-  "{\\lambda_{1,i}}\$ ="*qqbstr*" \\approx "*aprstr*
-  " but s \\geq 0 according to the commutative Schur product"*
-  " criterion from 10.1016/j.aim.2021.107905, corollary 8.5."
+
+#changed: Format  exact | approximate coefficient correctly and remove
+#  undefined aprstr variable.
+function csp_explanation(
+  coeff::QQBarFieldElem,
+  indices::NTuple{3,Int},
+)::String
+  j1, j2, j3 = indices
+
+  exact_string = qqb_id_rep(qqb_id(coeff))
+  approximate_string = _format_complex_float(
+    string(ComplexF64(coeff)),
+  )
+
+  return "The fusion ring does not have a unitary categorification " *
+         "because \$s = \\sum_i " *
+         "\\frac{" *
+         "\\lambda_{$(j1),i}" *
+         "\\lambda_{$(j2),i}" *
+         "\\lambda_{$(j3),i}" *
+         "}{\\lambda_{1,i}}\$ = " *
+         exact_string *
+         " \\approx " *
+         approximate_string *
+         ", but \$s \\geq 0\$ according to the commutative Schur product " *
+         "criterion from 10.1016/j.aim.2021.107905, Corollary 8.5."
 end
 
-function _format_complex_float(s::String)
-  s = replace(s," + 0.0im" => "")
-  replace(s,"im"=>"i") 
+
+function _format_complex_float(s::String)::String
+  s = replace(s, " + 0.0im" => "")
+  return replace(s, "im" => "i")
 end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                       pivotal drinfeld center criterion                         ┃

@@ -297,121 +297,153 @@ function lagrange_criterion(
   return false
 end
 
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                      spectrum criterion helper functions                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+#changed: Build indexed candidate lists so ZSC  OSC do not repeatedly scan
+# every nonzero structure constant for fixed-coordinate matches.
+function nonzero_structure_constant_lookups(nonzero, r::Int)
+  tuple_type = eltype(nonzero)
+
+  by_second = [tuple_type[] for _i in 1:r]
+  by_second_third = [
+    tuple_type[] for _i in 1:r, _j in 1:r
+  ]
+  by_third = [tuple_type[] for _i in 1:r]
+  by_first_second = [
+    tuple_type[] for _i in 1:r, _j in 1:r
+  ]
+
+  for ind in nonzero
+    first_index, second_index, third_index = ind
+
+    push!(by_second[second_index], ind)
+    push!(by_second_third[second_index, third_index], ind)
+    push!(by_third[third_index], ind)
+    push!(by_first_second[first_index, second_index], ind)
+  end
+
+  return (
+    by_second,
+    by_second_third,
+    by_third,
+    by_first_second,
+  )
+end
 
 
-
-
-#changed: Replace the old Boolean crit1 helper with the three integer sums required by ZSC/OSC.
-function _crit1_sums(i, d, mt)
+#changed: Test  three crit1 sums one at a time and stop any sum as soon as
+# it exceeds one.
+function crit1_has_one(i, d, mt)::Bool
   length(i) == 6 || throw(ArgumentError("crit1 requires six indices"))
+
   r = size(mt, 1)
-  return (
-    sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k in 1:r),
-    sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k in 1:r),
-    sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k in 1:r),
-  )
+
+  total = 0
+  for k in 1:r
+    total += mt[i[5], i[4], k] * mt[i[3], d[i[1]], k]
+    total > 1 && break
+  end
+  total == 1 && return true
+
+  total = 0
+  for k in 1:r
+    total += mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k]
+    total > 1 && break
+  end
+  total == 1 && return true
+
+  total = 0
+  for k in 1:r
+    total += mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k]
+    total > 1 && return false
+  end
+
+  return total == 1
 end
 
-#changed: Add an explicit Boolean wrapper for the "one appears" spectrum condition.
-_crit1_has_one(i, d, mt)::Bool = any(==(1), _crit1_sums(i, d, mt))
 
-#changed: Replace the old Boolean crit2 helper with the three integer sums required by ZSC.
-function _crit2_sums(i, d, mt)
+#changed: same as before
+function crit2_has_one(i, d, mt)::Bool
   length(i) == 6 || throw(ArgumentError("crit2 requires six indices"))
+
   r = size(mt, 1)
-  return (
-    sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k in 1:r),
-    sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k in 1:r),
-    sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k in 1:r),
-  )
+
+  total = 0
+  for k in 1:r
+    total += mt[i[2], i[4], k] * mt[i[3], d[i[6]], k]
+    total > 1 && break
+  end
+  total == 1 && return true
+
+  total = 0
+  for k in 1:r
+    total += mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k]
+    total > 1 && break
+  end
+  total == 1 && return true
+
+  total = 0
+  for k in 1:r
+    total += mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k]
+    total > 1 && return false
+  end
+
+  return total == 1
 end
 
-#changed: Add an explicit Boolean wrapper for the second "one appears" spectrum condition.
-_crit2_has_one(i, d, mt)::Bool = any(==(1), _crit2_sums(i, d, mt))
 
-#changed: Return the raw triple-product sum so ZSC can test zero and OSC can test one.
-function _crit3_sum(i, d, mt)::Int
+#changed:  ZSC stops as soon as  crit3 sum  known to be nonzero.
+function crit3_is_zero(i, d, mt)::Bool
   length(i) == 6 || throw(ArgumentError("crit3 requires six indices"))
+
   r = size(mt, 1)
-  return sum(
-    mt[i[1], i[4], k] * mt[d[i[2]], i[5], k] * mt[i[3], d[i[6]], k] for k in 1:r
-  )
+
+  for k in 1:r
+    product =
+      mt[i[1], i[4], k] *
+      mt[d[i[2]], i[5], k] *
+      mt[i[3], d[i[6]], k]
+
+    product != 0 && return false
+  end
+
+  return true
 end
+
+
+#changed:  OSC stops as soon as  nonnegative crit3 sum > 1
+function crit3_is_one(i, d, mt)::Bool
+  length(i) == 6 || throw(ArgumentError("crit3 requires six indices"))
+
+  r = size(mt, 1)
+  total = 0
+
+  for k in 1:r
+    total +=
+      mt[i[1], i[4], k] *
+      mt[d[i[2]], i[5], k] *
+      mt[i[3], d[i[6]], k]
+
+    total > 1 && return false
+  end
+
+  return total == 1
+end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                              one spectrum criterion                             ┃
+#┃                              zero spectrum criterion                            ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#PackageExport["OSCriterion"]
-#
-#OSCriterion::usage =
-#  "OSCriterion[ fusionRing ] returns True if the fusion ring fusionRing cannot be categorified due to " <>
-#  "the One Spectrum criterion. (arXiv:2203.06522v1)";
-#
-#OSCriterion[ ring_FusionRing ] :=
-#  Module[{ mt, non0Cons, zeros, d, i1, i2, i3, i4, i5, i6, i7, i8, i9, matches1, matches2, matches3, matches4 },
-#    mt = MT[ring];
-#    non0Cons = NZSC[ring];
-#    zeros = Position[ mt, x_Integer/; x === 0 ];
-#    d = CC[ring] /@ Range[Rank[ring]];
-#
-#    Catch[
-#      Do[
-#        { i2, i1, i3 } = ind;
-#        matches1 = Cases[ non0Cons, { i4_, i1, i6_ } ];
-#        Do[
-#          { i4, i6 } = ind1[[ { 1, 3 } ]];
-#          matches2 = Cases[ non0Cons, { i5_, i4, i2 } ];
-#          Do[
-#            i5 = ind2[[ 1 ]];
-#            If[
-#              mt[[ i5, i6, i3 ]] =!= 0,
-#              matches3 = Cases[ non0Cons, { i7_, i9_, i1 } ];
-#              Do[
-#                { i7, i9 } = ind3[[ { 1, 2 } ]];
-#                matches4 =
-#                  Cases[
-#                    Range @ Rank @ ring, i0_ /;
-#                    mt[[i4,i7,i0]] === 1 &&
-#                    mt[[i6,d[[i9]],i0]] == 1 &&
-#                    MemberQ[ crit1[ { i9, i0, i6, i7, i4, i1  }, d, mt ], 1 ]
-#                  ];
-#                Do[
-#                  i0 = ind4;
-#                  If[
-#                    !MissingQ[
-#                      FirstCase[
-#                        Range @ Rank @ ring, i8_ /;
-#                        mt[[i2,i7,i8]] =!= 0 && mt[[i8,i9,i3]] =!= 0 &&
-#                        mt[[d[[i5]],i8,i0]] === 1 &&
-#                        MemberQ[ crit1[ { i7, i2, i8, i4, i5, i0  }, d, mt ], 1 ] &&
-#                        MemberQ[ crit1[ { i9, i8, i3, i0, i5, i6  }, d, mt ], 1 ] &&
-#                        crit3[ { i4, i5, i6, i7, i8, i9 }, d, mt ] == 1
-#                      ]
-#                    ],
-#                    Throw @ True
-#                  ]
-#                ,{ ind4, matches4 }]
-#              ,{ ind3, matches3 }]
-#            ]
-#            ,{ ind2, matches2 }]
-#          ,{ ind1, matches1 }]
-#        ,{ ind, zeros }
-#      ];
-#      False
-#    ]
-#
-#  ];
 
-#TODO: to me: take a look at and see if warrants replacement: 
 """
-    zsc_criterion(ring)
+zsc_criterion(ring)
 
-Return `true` if the Zero Spectrum Criterion rules out categorifiability.
-
-This is a direct Julia port of the Mathematica `ZSCriterion` logic, but with
-explicit Boolean helpers.
+Returns true if the Zero Spectrum Criterion rules out categorifiability.
 """
-#changed: Replace undefined helper calls with the package multiplication, duality, and NZSC APIs.
+#changed: Search only indexed matching structure constants, begin from entries
+# equal to one, and use short-circuiting.
 function zsc_criterion(ring::FusionRing)::Bool
   mt = multiplication_table(ring)
   r = size(mt, 1)
@@ -419,45 +451,59 @@ function zsc_criterion(ring::FusionRing)::Bool
   d = [conjugate_element(ring, i) for i in 1:r]
   nonzero = nonzero_structure_constants(ring)
 
-  for i2 in 1:r, i1 in 1:r, i3 in 1:r
-    mt[i2, i1, i3] == 1 || continue
+  (
+    by_second,
+    by_second_third,
+    by_third,
+    by_first_second,
+  ) = nonzero_structure_constant_lookups(nonzero, r)
 
-    for ind1 in nonzero
-      # Mathematica pattern: {i4_, i1, i6_}
-      ind1[2] == i1 || continue
+  # Each position is a CartesianIndex(i2, i1, i3) satisfying
+  # mt[i2, i1, i3] == 1.
+  for position in findall(==(1), mt)
+    i2, i1, i3 = Tuple(position)
 
+    # Tuples of the form (i4, i1, i6).
+    for ind1 in by_second[i1]
       i4 = ind1[1]
       i6 = ind1[3]
 
-      for ind2 in nonzero
-        # Mathematica pattern: {i5_, i4, i2}
-        ind2[2] == i4 || continue
-        ind2[3] == i2 || continue
-
+      # Tuples of the form (i5, i4, i2).
+      for ind2 in by_second_third[i4, i2]
         i5 = ind2[1]
 
         mt[i5, i6, i3] != 0 || continue
-        _crit1_has_one((i1, i2, i3, i4, i5, i6), d, mt) || continue
 
-        for ind3 in nonzero
-          # Mathematica pattern: {i7_, i9_, i1}
-          ind3[3] == i1 || continue
+        crit1_has_one(
+          (i1, i2, i3, i4, i5, i6),
+          d,
+          mt,
+        ) || continue
 
+        # Tuples of the form (i7, i9, i1).
+        for ind3 in by_third[i1]
           i7 = ind3[1]
           i9 = ind3[2]
 
-          for ind4 in nonzero
-            # Mathematica pattern: {i2, i7, i8_}
-            ind4[1] == i2 || continue
-            ind4[2] == i7 || continue
-
+          # Tuples of the form (i2, i7, i8).
+          for ind4 in by_first_second[i2, i7]
             i8 = ind4[3]
 
-            if mt[i8, i9, i3] != 0 &&
-              _crit3_sum((i4, i5, i6, i7, i8, i9), d, mt) == 0 &&
-              _crit2_has_one((i1, i2, i3, i7, i8, i9), d, mt)
-              return true
-            end
+            mt[i8, i9, i3] != 0 || continue
+
+            crit3_is_zero(
+              (i4, i5, i6, i7, i8, i9),
+              d,
+              mt,
+            ) || continue
+
+            crit2_has_one(
+              (i1, i2, i3, i7, i8, i9),
+              d,
+              mt,
+            ) || continue
+
+            return true
           end
         end
       end
@@ -467,15 +513,18 @@ function zsc_criterion(ring::FusionRing)::Bool
   return false
 end
 
-#TODO: take a look at this too
-"""
-    osc_criterion(ring)
 
-Return `true` if the One Spectrum Criterion rules out categorifiability.
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              one spectrum criterion                             ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-This is a direct Julia port of the Mathematica `OSCriterion` logic.
 """
-#changed: Replace undefined helper calls with the package multiplication, duality, and NZSC APIs.
+osc_criterion(ring)
+
+Returns true if  One Spectrum Criterion rules out categorifiability.
+"""
+#changed: Search only indexed matching structure constants and use
+# short-circuiting spectrum predicates.
 function osc_criterion(ring::FusionRing)::Bool
   mt = multiplication_table(ring)
   r = size(mt, 1)
@@ -483,46 +532,70 @@ function osc_criterion(ring::FusionRing)::Bool
   d = [conjugate_element(ring, i) for i in 1:r]
   nonzero = nonzero_structure_constants(ring)
 
+  (
+    by_second,
+    by_second_third,
+    by_third,
+    by_first_second,
+  ) = nonzero_structure_constant_lookups(nonzero, r)
+
+  # Zero entries are usually common, so retaining the direct traversal avoids
+  # allocating a potentially large list containing every zero position.
   for i2 in 1:r, i1 in 1:r, i3 in 1:r
     mt[i2, i1, i3] == 0 || continue
 
-    for ind1 in nonzero
-      # Mathematica pattern: {i4_, i1, i6_}
-      ind1[2] == i1 || continue
-
+    # Tuples of the form (i4, i1, i6).
+    for ind1 in by_second[i1]
       i4 = ind1[1]
       i6 = ind1[3]
 
-      for ind2 in nonzero
-        # Mathematica pattern: {i5_, i4, i2}
-        ind2[2] == i4 || continue
-        ind2[3] == i2 || continue
-
+      # Tuples of the form (i5, i4, i2).
+      for ind2 in by_second_third[i4, i2]
         i5 = ind2[1]
 
         mt[i5, i6, i3] != 0 || continue
 
-        for ind3 in nonzero
-          # Mathematica pattern: {i7_, i9_, i1}
-          ind3[3] == i1 || continue
-
+        # Tuples of the form (i7, i9, i1).
+        for ind3 in by_third[i1]
           i7 = ind3[1]
           i9 = ind3[2]
 
           for i0 in 1:r
             mt[i4, i7, i0] == 1 || continue
             mt[i6, d[i9], i0] == 1 || continue
-            _crit1_has_one((i9, i0, i6, i7, i4, i1), d, mt) || continue
 
-            for i8 in 1:r
-              if mt[i2, i7, i8] != 0 &&
-                mt[i8, i9, i3] != 0 &&
-                mt[d[i5], i8, i0] == 1 &&
-                _crit1_has_one((i7, i2, i8, i4, i5, i0), d, mt) &&
-                _crit1_has_one((i9, i8, i3, i0, i5, i6), d, mt) &&
-                _crit3_sum((i4, i5, i6, i7, i8, i9), d, mt) == 1
-                return true
-              end
+            crit1_has_one(
+              (i9, i0, i6, i7, i4, i1),
+              d,
+              mt,
+            ) || continue
+
+            # These tuples already guarantee mt[i2, i7, i8] != 0.
+            for ind4 in by_first_second[i2, i7]
+              i8 = ind4[3]
+
+              mt[i8, i9, i3] != 0 || continue
+              mt[d[i5], i8, i0] == 1 || continue
+
+              crit3_is_one(
+                (i4, i5, i6, i7, i8, i9),
+                d,
+                mt,
+              ) || continue
+
+              crit1_has_one(
+                (i7, i2, i8, i4, i5, i0),
+                d,
+                mt,
+              ) || continue
+
+              crit1_has_one(
+                (i9, i8, i3, i0, i5, i6),
+                d,
+                mt,
+              ) || continue
+
+              return true
             end
           end
         end

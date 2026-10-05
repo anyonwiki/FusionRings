@@ -271,7 +271,6 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export tensor_product
-
 function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
   m, n = rank(r1), rank(r2)
   mt1, mt2 = multiplication_table(r1), multiplication_table(r2)
@@ -357,8 +356,10 @@ function tensor_product(rings::Vector{FusionRing})::FusionRing
   return out
 end
 
-function tensor_product(rings...)::FusionRing
-  return tensor_product([rings...])
+#changed: Preserve the FusionRing element type for empty varargs calls so
+# tensor_product() reaches the vector method's empty-product case.
+function tensor_product(rings::FusionRing...)::FusionRing
+  return tensor_product(FusionRing[rings...])
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓

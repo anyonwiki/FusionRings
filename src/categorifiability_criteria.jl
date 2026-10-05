@@ -2,6 +2,8 @@ export csp_criterion,
   pdc_criterion,
   dn_criterion,
   is_d_number,
+  ecc_criterion,
+  lagrange_criterion,
   zsc_criterion,
   osc_criterion
 
@@ -28,7 +30,7 @@ Corollary 8.5
 =#
 
 """
-    csp_criterion(ring; force_compute=false)
+csp_criterion(ring; force_compute=false)
 
 Return `true` when the commutative Schur product criterion obstructs a
 unitary categorification. A noncommutative ring returns `false` because this
@@ -89,7 +91,7 @@ end
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
 
 """
-    pdc_criterion(fr; force_compute=false)
+pdc_criterion(fr; force_compute=false)
 
 Return `true` when the pivotal Drinfeld-center criterion obstructs a complex
 pivotal categorification.
@@ -177,7 +179,7 @@ end
 # The function returns true if the fusion ring has no complex categorification
 #
 """
-    dn_criterion(fr; force_compute=false)
+dn_criterion(fr; force_compute=false)
 
 Return `true` when at least one formal codegree is not a d-number, obstructing
 a complex categorification. This executable test currently returns `false` for
@@ -217,97 +219,88 @@ end
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                          extended cyclotomic criterion                          ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#  The function returns True if the fusion ring cannot be categorified.
-#
-#
-#
-#
-#
-#
-#
-#
-#
+
+"""
+ecc_criterion(fr::FusionRing)
+
+Return true if  extended cyclotomic criterion obstructs a complex
+categorification of `fr`.
+
+For every fusion matrix,  function computes its minimal polynomial over
+the rationals and then the Galois group of its splitting field. A non-abelian
+Galois group obstructs complex categorification.
+
+This currently only works for commutative rings, a non-commutative ring will automatically return false.
+"""
+
+function _has_nonabelian_splitting_field(polynomial)::Bool
+  # Constant and linear polynomials already split over QQ.
+  degree(polynomial) <= 1 && return false
+
+  galois_group_of_polynomial, _ = galois_group(polynomial)
+  return !is_abelian(galois_group_of_polynomial)
+end
+
+#changed: Implement the extended cyclotomic obstruction using the exact
+# minimal polynomial and Galois group of each fusion matrix.
+function ecc_criterion(fr::FusionRing)::Bool
+  is_commutative(fr) || return false
+
+  polynomial_ring_qq, _ = polynomial_ring(QQ, :x)
+  multiplication = multiplication_table(fr)
+
+  for i in 1:rank(fr)
+    fusion_matrix = matrix(QQ, multiplication[i, :, :])
+    polynomial = minpoly(polynomial_ring_qq, fusion_matrix)
+
+    _has_nonabelian_splitting_field(polynomial) && return true
+  end
+
+  return false
+end
+
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                Lagrange criterion                               ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#  The function returns False if the fusion ring cannot be categorified.
-#
-#
-#PackageExport["LCriterion"]
-#
-#LCriterion[ ring_FusionRing ] :=
-#  Module[{ subringDims },
-#    subringDims =
-#      FPDim /@
-#      DeleteDuplicates @
-#      SubFusionRings[ ring ][[;;,2]];
-#
-#    Not[And @@ AlgebraicIntegerQ @ RootReduce[ FPDim[ring]/subringDims ]]
-#
-#  ];
-#
-#
-#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                              zero spectrum criterion                            ┃
-#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#  The function returns True if the fusion ring cannot be categorified.
-#
-#PackageExport["ZSCriterion"]
-#
-#ZSCriterion::usage =
-#  "ZSCriterion[ fusionRing ] returns True if the fusion ring fusionRing cannot be categorified due to " <>
-#  "the Zero Spectrum criterion. (arXiv:2203.06522v1)";
-#
-#(*See arXiv:2203.06522v1 for more info.";*)
-#
-#SetAttributes[ ZSC, Listable ];
-#
-#ZSCriterion[ ring_FusionRing ] :=
-#  Module[{ mt, non0Cons, ones, d, i1, i2, i3, i4, i5, i6, i7, i8, i9, matches1, matches2, matches3, matches4 },
-#    mt =
-#      MT[ring];
-#    non0Cons =
-#      NonZeroStructureConstants[ring];
-#    ones =
-#      Position[ mt, x_Integer/; x == 1 ];
-#    d =
-#      CC[ring] /@ Range[Rank[ring]];
-#
-#    Catch[
-#      Do[
-#        { i2, i1, i3 } = ind;
-#        matches1 = Cases[ non0Cons, { i4_, i1, i6_ } ];
-#        Do[
-#          { i4, i6 } = ind1[[{1,3}]];
-#          matches2 = Cases[ non0Cons, { i5_, i4, i2 } ];
-#          Do[
-#            i5 = ind2[[1]];
-#            If[
-#              mt[[ i5, i6, i3 ]] != 0 &&
-#              MemberQ[ crit1[ {i1,i2,i3,i4,i5,i6}, d, mt ], 1 ],
-#              matches3 = Cases[ non0Cons, { i7_, i9_, i1 } ];
-#              Do[
-#                { i7, i9 } = ind3[[{1,2}]];
-#                matches4 = Cases[ non0Cons, { i2, i7, i8_ } ];
-#                Do[
-#                  i8 = ind4[[3]];
-#                  If[
-#                    mt[[ i8, i9, i3 ]] != 0 &&
-#                    crit3[ { i4, i5, i6, i7, i8, i9 }, d, mt ] == 0 &&
-#                    MemberQ[ crit2[ { i1, i2, i3, i7, i8, i9 }, d, mt ], 1 ],
-#                    Throw[ True ]
-#                  ]
-#                  ,{ ind4, matches4 }]
-#                ,{ ind3, matches3 }]
-#            ]
-#            ,{ ind2, matches2 }]
-#          ,{ ind1, matches1 }]
-#        , { ind, ones } ];
-#      False
-#    ]
-#
-#  ];
-#
+
+"""
+lagrange_criterion(fr::FusionRing; force_compute=false)
+
+Returns true if  Lagrange criterion obstructs categorification.
+
+For every proper, nontrivial fusion-closed based subring `S`, the function
+checks whether
+
+    FPdim(fr) / FPdim(S)
+
+is an algebraic integer. If any quotient is not an algebraic integer, the
+fusion ring cannot be categorifiable
+"""
+
+#changed: Implement the Lagrange obstruction using fusion-closed subsets and
+# the parent ring's FP dimensions, without constructing separate FusionRings.
+function lagrange_criterion(
+  fr::FusionRing; force_compute::Bool = false
+)::Bool
+  dimensions = fpdims(fr; force_compute = force_compute)
+  squared_dimensions = dimensions .^ 2
+  total_dimension = sum(squared_dimensions)
+
+  for subset in sub_fusion_ring_subsets(fr)
+    subring_dimension = sum(i -> squared_dimensions[i], subset)
+    quotient = total_dimension / subring_dimension
+
+    !is_algebraic_integer(quotient) && return true
+  end
+
+  return false
+end
+
+
+
+
+
 #changed: Replace the old Boolean crit1 helper with the three integer sums required by ZSC/OSC.
 function _crit1_sums(i, d, mt)
   length(i) == 6 || throw(ArgumentError("crit1 requires six indices"))

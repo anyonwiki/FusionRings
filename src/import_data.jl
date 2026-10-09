@@ -354,11 +354,7 @@ function refsfromjs(js)
 end
 
 function sfromjs(js)
-  sftw = safe_fetch(js, "software")
-
-  sftw isa Vector && return Dict{String, Vector{String}}("All" => sftw)
-
-  return sftw
+  safe_fetch(js, "software")
 end
 
 #changed: Decode current [degrees, UUID] grading metadata with explicit shape and type checks.

@@ -559,7 +559,6 @@ export is_sub_fusion_ring
 Return `true` iff `S` is a fusion-closed subset of elements containing the unit.
 
 """
-#changed: Reject duplicate indices before testing closure and the fusion-ring axioms.
 function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
   # any subring must be nonempty and contain unit
   S = sort(S)

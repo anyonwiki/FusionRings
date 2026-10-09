@@ -1,13 +1,13 @@
-[FusionRings]
-git-tree-sha1 = "edc377613f3d2a2e11130c9179b5727fad4404c9"
-
-    [[FusionRings.download]]
-      url    = "https://github.com/anyonwiki/AnyonWikiDatabase/raw/refs/heads/main/AlgebraicStructures/FusionRings.tar.gz"
-      sha256 = "e8a67c1b5e8ba1ec80805e379fd5619453f0728a17e1c9733ef666a3ae52b6fe"
-
 [AlgebraicNumbers]
-git-tree-sha1 = "95afe4d9385eefa279696e4825efbb0ee5e331ae"
+git-tree-sha1 = "1c99c1d9af1bcdfffef5c3d9a4272f6430ed88e6"
 
     [[AlgebraicNumbers.download]]
-    url    = "https://github.com/anyonwiki/AnyonWikiDatabase/raw/refs/heads/main/SupportingData/AlgebraicNumbers.tar.gz"
-    sha256 = "f2c4d37d5959b2b9db3aa51dc01276ccd6eed33afa865e908823914c9c4ce88d"
+    sha256 = "9d582f68a46c9596df97275150f603ba0a53b6b776f6d28ade0968462b77d280"
+    url = "https://raw.githubusercontent.com/anyonwiki/AnyonWikiDatabase/badbfe299dd533c12a84e817f5890059705e0a3c/SupportingData/AlgebraicNumbers.tar.gz"
+
+[FusionRings]
+git-tree-sha1 = "d0a1560432b00249b5663ba6d11821eb6399efe2"
+
+    [[FusionRings.download]]
+    sha256 = "432d67324a318b9ec95b4acc0ccecddc66fd3a2e6919c9c61d7861038833e139"
+    url = "https://raw.githubusercontent.com/anyonwiki/AnyonWikiDatabase/badbfe299dd533c12a84e817f5890059705e0a3c/AlgebraicStructures/FusionRings.tar.gz"

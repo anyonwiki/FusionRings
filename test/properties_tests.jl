@@ -189,7 +189,7 @@ using Oscar
         "fpdim(force_compute=true) used stale stored component dimensions",
       )
       return check_equal(
-        string(fpdim(stale_z3, true)),
+        string(fpdim(stale_z3, force_compute = true)),
         "{a1: 3.00000}",
         "the positional force_compute compatibility form did not recompute fpdim",
       )

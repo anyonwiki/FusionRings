@@ -774,6 +774,12 @@ ringfieldinfo = """
     * software: JSON dictionary mapping names of fields to a dictionary describing to software that played a significant role in obtain the data in the way it is represented here. Special field names are
       * "all": when all fields of the ring point to the same software
       * "all_other_data": when all other data, besides the data having specific references, points to the same software.
+      the interpretation of the field names of the dictionary are the following
+        * name: string that represents the name of the software
+        * swhid: string that represents the swhid of the specific revision of software, if backed up by the software heritage foundation. This should contain the substring ":rev:". If not available this field is null.
+        * doi: string that represents the doi of the software version if available, null otherwise.
+        * version: string that represents the version of the software
+      either the doi or the swhid fields must be included to be considered a valid reference
     * all_gradings: vector of vectors [ els, uuid ] where ring[uuid] the group ring that grades this fusion ring, and els are elements of ring[uuid] that grade the elements of the parent ring.
     * upper_central_series: list of vectors v_i =  [ els_i, uuid_i ] where ring[uuid_i] is the ring isomorphic to the adjoint fusion ring of the ring[uuid_{i-1}]. els_i are the elements of ring[uuid_{i-1}] that form its adoint fusion ring. v1 is by definition the couple of all elements of the parent ring and the parent ring itself. Each adjoint ring has its elements in the same order as the original ring and thus not necessarily in the order of the stored ring.
     * realizations: JSON dictionary mapping strings representing realizations of fusion rings in terms of other ones to data that allows to reconstruct the realization. At the moment it contains the following fields
@@ -788,6 +794,7 @@ ringfieldinfo = """
     * is_weakly_integral: true if the ring is nilpotent, false if not.
     * is_non_trivially_graded: true if the ring has a non-trivial grading, false if not.
     * is_commutative: true if the ring is commutative, false if not.
+    * realizations: JSON dictionary mapping kinds of realizations of the fusion ring in terms of other fusion rings using specific constructions. At the moment the only available key is "tensor_product" which points to a list of lists of uuids whose tensor product results in the current fusion ring.
      """
 
 function ring_to_dict(fr)

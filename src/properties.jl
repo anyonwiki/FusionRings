@@ -340,19 +340,22 @@ end
 
 export conjugate_element
 
-function conjugate_element(r::FusionRing)
-  return a -> conjugate_element(r, a)
-end
-
 """
-    conjugate_element(fr, a) -> Int
+    conjugate_element(fr::FusionRing, a::Int64) -> Int64
 
 Return the integer index of the dual (conjugate) simple object of `a`.
-Accepts an integer index, a `String`, or a `Symbol`.
+
+    conjugate_element(fr::FusionRing) -> Function
+
+Return a function that maps an index of an element of the fusion ring `fr` to the index of its dual.
 """
 function conjugate_element(fr::FusionRing, a::Int64)::Int64
   C = conjugation_matrix(fr)
   return findfirst(==(1), C[a, :])
+end
+
+function conjugate_element(r::FusionRing)
+  return a -> conjugate_element(r, a)
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -551,16 +554,16 @@ export is_sub_fusion_ring
 #TODO: write test: pick some rings that are not sub fusion rings and check whether this is recognized
 
 """
-    is_sub_fusion_ring(fr, S) -> Bool
+    is_sub_fusion_ring(fr::FusionRing, S::Vector{Int}) -> Bool
 
-Return `true` iff `S` is a fusion-closed subset of simples containing the unit.
+Return `true` iff `S` is a fusion-closed subset of elements containing the unit.
 
-`S` may be a vector of indices (`Int`/`Integer`) or a vector of labels
-(`String`/`Symbol`).
 """
 #changed: Reject duplicate indices before testing closure and the fusion-ring axioms.
 function is_sub_fusion_ring(fr::FusionRing, S::Vector{Int})::Bool
-  # any subring must contain unit
+  # any subring must be nonempty and contain unit
+  S = sort(S)
+  
   isempty(S) && return false
   1 ∉ S && return false
 
@@ -594,7 +597,13 @@ function realizations(fr::FusionRing; force_compute = false)::Dict{String, Any}
 
   vals = collect(values(rlztns))
 
-  if any(ismissing, vals) || any(isnothing, vals) || force_compute
+  compute = 
+    isempty(vals) ||
+    any(ismissing, vals) ||
+    any(isnothing, vals) ||
+    force_compute
+
+  if compute
     return Dict{String, Any}(
       "tensor_product" =>
         decompositions(fr; kind = "tensor_product", force_compute = force_compute),
@@ -812,13 +821,12 @@ function _normalize_decomposition_kind(kind)
   return "tensor_product"
 end
 
-#changed: Normalize realization keys, honor force_compute, and propagate it into decomposition discovery.
 function decompositions(
   fr::FusionRing; kind = "tensor_product", force_compute = false, represent_by_known = true
 )#::Vector{ Vector{FusionRing} }
   _normalize_decomposition_kind(kind)
 
-  tpd = get(fr.realizations,"tensor_product")
+  tpd = get(fr.realizations,"tensor_product",nothing)
   if ismissing(tpd) || isnothing(tpd) || force_compute
     return non_trivial_tensor_product_decompositions(
       fr; represent_by_known = represent_by_known, force_compute = force_compute

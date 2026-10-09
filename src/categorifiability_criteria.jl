@@ -1,28 +1,145 @@
+export csp_criterion,
+  pdc_criterion,
+  dn_criterion,
+  is_d_number,
+  ecc_criterion,
+  lagrange_criterion,
+  zsc_criterion,
+  osc_criterion
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                     commutative schur product criterion                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-# TODO: check whether s is correct
-#Todo
-# csp_criterion( fusion_ring ) returns true if fusion_ring does not have a unitary categorification due to the commutative schur product criterion
+#=
+@article{LIU2021107905,
+title = {Fusion bialgebras and Fourier analysis: Analytic obstructions for unitary categorification},
+journal = {Advances in Mathematics},
+volume = {390},
+pages = {107905},
+year = {2021},
+issn = {0001-8708},
+doi = {https://doi.org/10.1016/j.aim.2021.107905},
+url = {https://www.sciencedirect.com/science/article/pii/S0001870821003443},
+author = {Zhengwei Liu and Sebastien Palcoux and Jinsong Wu},
+keywords = {Quantum Fourier analysis, Subfactors, Planar algebras, Fusion rings, Unitary categorification},
+abstract = {We introduce fusion bialgebras and their duals and systematically study their Fourier analysis. As an application, we discover new efficient analytic obstructions on the unitary categorification of fusion rings. We prove the Hausdorff-Young inequality, uncertainty principles for fusion bialgebras and their duals. We show that the Schur product property, Young's inequality and the sum-set estimate hold for fusion bialgebras, but not always on their duals. If the fusion ring is the Grothendieck ring of a unitary fusion category, then these inequalities hold on the duals. Therefore, these inequalities are analytic obstructions of categorification. We classify simple integral fusion rings of Frobenius type up to rank 8 and of Frobenius-Perron dimension less than 4080. We find 34 ones, 4 of which are group-like and 28 of which can be eliminated by applying the Schur product property on the dual. In general, these inequalities are obstructions to subfactorize fusion bialgebras.}
+}
 
-function csp_criterion(ring::FusionRing)
-  is_commutative(ring) || return false
+Corollary 8.5
+=#
 
-  chars = characters(ring)
+"""
+csp_criterion(ring; force_compute=false)
+
+Return `true` when the commutative Schur product criterion obstructs a
+unitary categorification. A noncommutative ring returns `false` because this
+commutative criterion does not apply.
+"""
+
+# characters(ring) stores characters by row and simple objects by column, so
+# the theorem's `λ[i,j]` is represented by `chars[j,i]` here.
+ 
+  
+function csp_criterion(
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::Bool
+  return first(
+    csp_criterion_explanation(
+      ring;
+      force_compute = force_compute,
+    ),
+  )
+end
+
+
+
+
+
+#changed: Always return   explanation tuple when 
+# criterion does not apply or finds no obstruction.
+function csp_criterion_explanation(
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::Tuple{
+  Bool,
+  Union{Nothing,Tuple{QQBarFieldElem,NTuple{3,Int}}},
+  String
+}
+  if !is_commutative(ring)
+    return (
+      false,
+      nothing,
+      "The commutative Schur product criterion does not apply to noncommutative rings.",
+    )
+  end
+
+  chars = characters(ring; force_compute = force_compute)
+  dimensions = fpdims(ring; force_compute = force_compute)
   r = rank(ring)
 
   for j1 in 1:r, j2 in 1:r, j3 in 1:r
-    s = sum(chars[i, j1] * chars[i, j2] * chars[i, j3] / chars[i, 1] for i in 1:r)
-    if is_real(s) && s < 0
-      return true
-    else
-      continue
+    coeff = sum(
+      chars[j1, i] *
+      chars[j2, i] *
+      chars[j3, i] /
+      dimensions[i]
+      for i in 1:r
+    )
+
+    if !is_real(coeff) || coeff < 0
+      indices = (j1, j2, j3)
+
+      return (
+        true,
+        (coeff, indices),
+        csp_explanation(coeff, indices),
+      )
     end
   end
 
-  return false
+  return (
+    false,
+    nothing,
+    "The commutative Schur product criterion found no obstruction.",
+  )
 end
+
+
+#changed: Format  exact | approximate coefficient correctly and remove
+#  undefined aprstr variable.
+function csp_explanation(
+  coeff::QQBarFieldElem,
+  indices::NTuple{3,Int},
+)::String
+  j1, j2, j3 = indices
+
+  exact_string = qqb_id_rep(qqb_id(coeff))
+  approximate_string = _format_complex_float(
+    string(ComplexF64(coeff)),
+  )
+
+  return "The fusion ring does not have a unitary categorification " *
+         "because \$s = \\sum_i " *
+         "\\frac{" *
+         "\\lambda_{$(j1),i}" *
+         "\\lambda_{$(j2),i}" *
+         "\\lambda_{$(j3),i}" *
+         "}{\\lambda_{1,i}}\$ = " *
+         exact_string *
+         " \\approx " *
+         approximate_string *
+         ", but \$s \\geq 0\$ according to the commutative Schur product " *
+         "criterion from 10.1016/j.aim.2021.107905, Corollary 8.5."
+end
+
+
+function _format_complex_float(s::String)::String
+  s = replace(s, " + 0.0im" => "")
+  return replace(s, "im" => "i")
+end
+
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                       pivotal drinfeld center criterion                         ┃
@@ -30,26 +147,69 @@ end
 
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
 
-function pdc_criterion(fr::FusionRing)::Bool
-  !is_commutative(fr) && return false
+"""
+pdc_criterion(fr; force_compute=false)
 
-  r = rank(fr)
-  fcds = formal_codegrees(fr)
+Return `true` when the pivotal Drinfeld-center criterion obstructs a complex
+pivotal categorification.
+"""
+#changed: Implement the formal-codegree ratio test with exact integrality, force_compute, and obstruction semantics.
+function pdc_criterion(
+  fr::FusionRing; force_compute::Bool = false
+)::Bool
+  is_commutative(fr) || return false
 
-  for j in 1:r
-    ratios = [fcds[j]/fcds[i] for i in 1:r]
-    if all(is_algebraic_integer, ratios)
+  codegrees = formal_codegrees(fr; force_compute = force_compute)
+  for candidate in codegrees
+    all(codegree -> is_algebraic_integer(candidate/codegree), codegrees) &&
       return false
-    end
   end
 
   return true
 end
 
+
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                    pseudo-unitary drinfeld center criterion                     ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+function pudc_criterion(
+  fr::FusionRing; force_compute::Bool = false
+)::Bool
+  first( pdc_criterion_explanation(fr,force_compute=force_compute) )
+end
+
+
+function pudc_criterion_explanation(
+  fr::FusionRing; force_compute::Bool = false
+)::Tuple{Bool,Tuple{QQBarFieldElem,Int64},String}
+  is_commutative(fr) || return false
+
+  codegrees = formal_codegrees(fr; force_compute = force_compute)
+
+  for i in 1:rank(fr)
+    frac = codegrees[1]//codegrees[i]
+    if !is_algebraic_integer(frac)
+      return ( true, (frac, i), pdc_explanation(frac,i) )
+    end
+  end
+
+  return false
+end
+
+  
+function pudc_explanation( frac, int )
+  qqbstr = qqb_id(frac)
+  
+  "The fusion ring does not have a pseudo-untary categorification"*
+  " because \$\\frac{c_1}{c_$(int)}\$ ="*qqbstr*
+  ", where c_i is the i'th formal codegree, is not an algebraic"*
+  " integer which it needs to be according to the pseudo-unitary"*
+  " version of the Drinfeld center criterion from 10.1007/s11005-022-01542-1 "*
+  "Theorem 2.4."
+end
+  
 #function pudc_criterion(fr::FusionRing)
 #  !is_commutative(fr) && return false
 #
@@ -75,269 +235,332 @@ end
 #
 # The function returns true if the fusion ring has no complex categorification
 #
-export dn_criterion
+"""
+dn_criterion(fr; force_compute=false)
 
-function dn_criterion(fr::FusionRing)::Bool
-  !is_commutative(fr) && return false
-
-  fcds = formal_codegrees(fr)
-
-  for z in fcds
-    !is_d_number(z) && return true
-  end
-
-  return false
+Return `true` when at least one formal codegree is not a d-number, obstructing
+a complex categorification. This executable test currently returns `false` for
+noncommutative rings because the package's general noncommutative formal-codegree
+path does not yet recover the irreducible-representation dimensions needed to
+separate `f_E` from `f_E * dim(E)`.
+"""
+#changed: Apply Ostrik's d-number theorem to every supported commutative formal codegree; any failure obstructs categorification.
+function dn_criterion(
+  fr::FusionRing; force_compute::Bool = false
+)::Bool
+  is_commutative(fr) || return false
+  codegrees = formal_codegrees(fr; force_compute = force_compute)
+  return any(codegree -> !is_d_number(codegree), codegrees)
 end
 
+"""Return whether the algebraic number `z` is a d-number."""
+#changed: Require algebraic integrality and correct the minimal-polynomial coefficient/divisibility direction.
 function is_d_number(z::QQBarFieldElem)::Bool
-  R, _ = polynomial_ring(QQ, :x)
-  mp   = minpoly(R, z)
-  n    = degree(mp)
+  is_algebraic_integer(z) || return false
 
-  an  = constant_coefficient(mp)
-  cfs = collect(coefficients(mp))[2:(end - 1)]
+  polynomial_ring_qq, _ = polynomial_ring(QQ, :x)
+  polynomial = minpoly(polynomial_ring_qq, z)
+  n = degree(polynomial)
+  n <= 1 && return true
 
-  is_empty(cfs) && return true
+  constant_term = coeff(polynomial, 0)
+  constant_term == 0 && return false
 
-  divint(i) = is_integer((an^i) / (cfs[i]^n))
-
-  return all(divint, 1:(n - 1))
+  for i in 1:(n - 1)
+    coefficient = coeff(polynomial, n - i)
+    denominator(coefficient^n / constant_term^i) == 1 || return false
+  end
+  return true
 end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                          extended cyclotomic criterion                          ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#  The function returns True if the fusion ring cannot be categorified.
-#
-#
-#
-#
-#
-#
-#
-#
-#
+
+"""
+ecc_criterion(fr::FusionRing)
+
+Return true if  extended cyclotomic criterion obstructs a complex
+categorification of `fr`.
+
+For every fusion matrix,  function computes its minimal polynomial over
+the rationals and then the Galois group of its splitting field. A non-abelian
+Galois group obstructs complex categorification.
+
+This currently only works for commutative rings, a non-commutative ring will automatically return false.
+"""
+
+function _has_nonabelian_splitting_field(polynomial)::Bool
+  # Constant and linear polynomials already split over QQ.
+  degree(polynomial) <= 1 && return false
+
+  galois_group_of_polynomial, _ = galois_group(polynomial)
+  return !is_abelian(galois_group_of_polynomial)
+end
+
+#changed: Implement the extended cyclotomic obstruction using the exact
+# minimal polynomial and Galois group of each fusion matrix.
+function ecc_criterion(fr::FusionRing)::Bool
+  is_commutative(fr) || return false
+
+  polynomial_ring_qq, _ = polynomial_ring(QQ, :x)
+  multiplication = multiplication_table(fr)
+
+  for i in 1:rank(fr)
+    fusion_matrix = matrix(QQ, multiplication[i, :, :])
+    polynomial = minpoly(polynomial_ring_qq, fusion_matrix)
+
+    _has_nonabelian_splitting_field(polynomial) && return true
+  end
+
+  return false
+end
+
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                                Lagrange criterion                               ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#  The function returns False if the fusion ring cannot be categorified.
-#
-#
-#PackageExport["LCriterion"]
-#
-#LCriterion[ ring_FusionRing ] :=
-#  Module[{ subringDims },
-#    subringDims =
-#      FPDim /@
-#      DeleteDuplicates @
-#      SubFusionRings[ ring ][[;;,2]];
-#
-#    Not[And @@ AlgebraicIntegerQ @ RootReduce[ FPDim[ring]/subringDims ]]
-#
-#  ];
-#
-#
+
+"""
+lagrange_criterion(fr::FusionRing; force_compute=false)
+
+Returns true if  Lagrange criterion obstructs categorification.
+
+For every proper, nontrivial fusion-closed based subring `S`, the function
+checks whether
+
+    FPdim(fr) / FPdim(S)
+
+is an algebraic integer. If any quotient is not an algebraic integer, the
+fusion ring cannot be categorifiable
+"""
+
+#changed: Implement the Lagrange obstruction using fusion-closed subsets and
+# the parent ring's FP dimensions, without constructing separate FusionRings.
+function lagrange_criterion(
+  fr::FusionRing; force_compute::Bool = false
+)::Bool
+  dimensions = fpdims(fr; force_compute = force_compute)
+  squared_dimensions = dimensions .^ 2
+  total_dimension = sum(squared_dimensions)
+
+  for subset in sub_fusion_ring_subsets(fr)
+    subring_dimension = sum(i -> squared_dimensions[i], subset)
+    quotient = total_dimension / subring_dimension
+
+    !is_algebraic_integer(quotient) && return true
+  end
+
+  return false
+end
+
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                      spectrum criterion helper functions                        ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+#changed: Build indexed candidate lists so ZSC  OSC do not repeatedly scan
+# every nonzero structure constant for fixed-coordinate matches.
+function nonzero_structure_constant_lookups(nonzero, r::Int)
+  tuple_type = eltype(nonzero)
+
+  by_second = [tuple_type[] for _i in 1:r]
+  by_second_third = [
+    tuple_type[] for _i in 1:r, _j in 1:r
+  ]
+  by_third = [tuple_type[] for _i in 1:r]
+  by_first_second = [
+    tuple_type[] for _i in 1:r, _j in 1:r
+  ]
+
+  for ind in nonzero
+    first_index, second_index, third_index = ind
+
+    push!(by_second[second_index], ind)
+    push!(by_second_third[second_index, third_index], ind)
+    push!(by_third[third_index], ind)
+    push!(by_first_second[first_index, second_index], ind)
+  end
+
+  return (
+    by_second,
+    by_second_third,
+    by_third,
+    by_first_second,
+  )
+end
+
+
+#changed: Test  three crit1 sums one at a time and stop any sum as soon as
+# it exceeds one.
+function crit1_has_one(i, d, mt)::Bool
+  length(i) == 6 || throw(ArgumentError("crit1 requires six indices"))
+
+  r = size(mt, 1)
+
+  total = 0
+  for k in 1:r
+    total += mt[i[5], i[4], k] * mt[i[3], d[i[1]], k]
+    total > 1 && break
+  end
+  total == 1 && return true
+
+  total = 0
+  for k in 1:r
+    total += mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k]
+    total > 1 && break
+  end
+  total == 1 && return true
+
+  total = 0
+  for k in 1:r
+    total += mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k]
+    total > 1 && return false
+  end
+
+  return total == 1
+end
+
+
+#changed: same as before
+function crit2_has_one(i, d, mt)::Bool
+  length(i) == 6 || throw(ArgumentError("crit2 requires six indices"))
+
+  r = size(mt, 1)
+
+  total = 0
+  for k in 1:r
+    total += mt[i[2], i[4], k] * mt[i[3], d[i[6]], k]
+    total > 1 && break
+  end
+  total == 1 && return true
+
+  total = 0
+  for k in 1:r
+    total += mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k]
+    total > 1 && break
+  end
+  total == 1 && return true
+
+  total = 0
+  for k in 1:r
+    total += mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k]
+    total > 1 && return false
+  end
+
+  return total == 1
+end
+
+
+#changed:  ZSC stops as soon as  crit3 sum  known to be nonzero.
+function crit3_is_zero(i, d, mt)::Bool
+  length(i) == 6 || throw(ArgumentError("crit3 requires six indices"))
+
+  r = size(mt, 1)
+
+  for k in 1:r
+    product =
+      mt[i[1], i[4], k] *
+      mt[d[i[2]], i[5], k] *
+      mt[i[3], d[i[6]], k]
+
+    product != 0 && return false
+  end
+
+  return true
+end
+
+
+#changed:  OSC stops as soon as  nonnegative crit3 sum > 1
+function crit3_is_one(i, d, mt)::Bool
+  length(i) == 6 || throw(ArgumentError("crit3 requires six indices"))
+
+  r = size(mt, 1)
+  total = 0
+
+  for k in 1:r
+    total +=
+      mt[i[1], i[4], k] *
+      mt[d[i[2]], i[5], k] *
+      mt[i[3], d[i[6]], k]
+
+    total > 1 && return false
+  end
+
+  return total == 1
+end
+
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                              zero spectrum criterion                            ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#  The function returns True if the fusion ring cannot be categorified.
-#
-#PackageExport["ZSCriterion"]
-#
-#ZSCriterion::usage =
-#  "ZSCriterion[ fusionRing ] returns True if the fusion ring fusionRing cannot be categorified due to " <>
-#  "the Zero Spectrum criterion. (arXiv:2203.06522v1)";
-#
-#(*See arXiv:2203.06522v1 for more info.";*)
-#
-#SetAttributes[ ZSC, Listable ];
-#
-#ZSCriterion[ ring_FusionRing ] :=
-#  Module[{ mt, non0Cons, ones, d, i1, i2, i3, i4, i5, i6, i7, i8, i9, matches1, matches2, matches3, matches4 },
-#    mt =
-#      MT[ring];
-#    non0Cons =
-#      NonZeroStructureConstants[ring];
-#    ones =
-#      Position[ mt, x_Integer/; x == 1 ];
-#    d =
-#      CC[ring] /@ Range[Rank[ring]];
-#
-#    Catch[
-#      Do[
-#        { i2, i1, i3 } = ind;
-#        matches1 = Cases[ non0Cons, { i4_, i1, i6_ } ];
-#        Do[
-#          { i4, i6 } = ind1[[{1,3}]];
-#          matches2 = Cases[ non0Cons, { i5_, i4, i2 } ];
-#          Do[
-#            i5 = ind2[[1]];
-#            If[
-#              mt[[ i5, i6, i3 ]] != 0 &&
-#              MemberQ[ crit1[ {i1,i2,i3,i4,i5,i6}, d, mt ], 1 ],
-#              matches3 = Cases[ non0Cons, { i7_, i9_, i1 } ];
-#              Do[
-#                { i7, i9 } = ind3[[{1,2}]];
-#                matches4 = Cases[ non0Cons, { i2, i7, i8_ } ];
-#                Do[
-#                  i8 = ind4[[3]];
-#                  If[
-#                    mt[[ i8, i9, i3 ]] != 0 &&
-#                    crit3[ { i4, i5, i6, i7, i8, i9 }, d, mt ] == 0 &&
-#                    MemberQ[ crit2[ { i1, i2, i3, i7, i8, i9 }, d, mt ], 1 ],
-#                    Throw[ True ]
-#                  ]
-#                  ,{ ind4, matches4 }]
-#                ,{ ind3, matches3 }]
-#            ]
-#            ,{ ind2, matches2 }]
-#          ,{ ind1, matches1 }]
-#        , { ind, ones } ];
-#      False
-#    ]
-#
-#  ];
-#
-function crit1(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
-  r = size(mt, 1)
-  return sum(mt[i[5], i[4], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
-         sum(mt[i[2], d[i[4]], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
-         sum(mt[d[i[5]], i[2], k] * mt[i[6], d[i[1]], k] for k in 1:r) == 1
-end
 
-function crit2(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
-  r = size(mt, 1)
-  return sum(mt[i[2], i[4], k] * mt[i[3], d[i[6]], k] for k in 1:r) == 1 ||
-         sum(mt[i[5], d[i[4]], k] * mt[i[3], d[i[1]], k] for k in 1:r) == 1 ||
-         sum(mt[d[i[2]], i[5], k] * mt[i[1], d[i[6]], k] for k in 1:r) == 1
-end
-
-function crit3(i::Vector{Int64}, d::Vector{Int64}, mt::Array{Int64, 3})::Bool
-  r = size(mt, 1)
-  return sum(
-    mt[i[1], i[4], k] * mt[d[i[2]], i[5], k] * mt[i[3], d[i[6]], k] for k in 1:r
-  ) == 0
-end
-
-#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                              one spectrum criterion                             ┃
-#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-#PackageExport["OSCriterion"]
-#
-#OSCriterion::usage =
-#  "OSCriterion[ fusionRing ] returns True if the fusion ring fusionRing cannot be categorified due to " <>
-#  "the One Spectrum criterion. (arXiv:2203.06522v1)";
-#
-#OSCriterion[ ring_FusionRing ] :=
-#  Module[{ mt, non0Cons, zeros, d, i1, i2, i3, i4, i5, i6, i7, i8, i9, matches1, matches2, matches3, matches4 },
-#    mt = MT[ring];
-#    non0Cons = NZSC[ring];
-#    zeros = Position[ mt, x_Integer/; x === 0 ];
-#    d = CC[ring] /@ Range[Rank[ring]];
-#
-#    Catch[
-#      Do[
-#        { i2, i1, i3 } = ind;
-#        matches1 = Cases[ non0Cons, { i4_, i1, i6_ } ];
-#        Do[
-#          { i4, i6 } = ind1[[ { 1, 3 } ]];
-#          matches2 = Cases[ non0Cons, { i5_, i4, i2 } ];
-#          Do[
-#            i5 = ind2[[ 1 ]];
-#            If[
-#              mt[[ i5, i6, i3 ]] =!= 0,
-#              matches3 = Cases[ non0Cons, { i7_, i9_, i1 } ];
-#              Do[
-#                { i7, i9 } = ind3[[ { 1, 2 } ]];
-#                matches4 =
-#                  Cases[
-#                    Range @ Rank @ ring, i0_ /;
-#                    mt[[i4,i7,i0]] === 1 &&
-#                    mt[[i6,d[[i9]],i0]] == 1 &&
-#                    MemberQ[ crit1[ { i9, i0, i6, i7, i4, i1  }, d, mt ], 1 ]
-#                  ];
-#                Do[
-#                  i0 = ind4;
-#                  If[
-#                    !MissingQ[
-#                      FirstCase[
-#                        Range @ Rank @ ring, i8_ /;
-#                        mt[[i2,i7,i8]] =!= 0 && mt[[i8,i9,i3]] =!= 0 &&
-#                        mt[[d[[i5]],i8,i0]] === 1 &&
-#                        MemberQ[ crit1[ { i7, i2, i8, i4, i5, i0  }, d, mt ], 1 ] &&
-#                        MemberQ[ crit1[ { i9, i8, i3, i0, i5, i6  }, d, mt ], 1 ] &&
-#                        crit3[ { i4, i5, i6, i7, i8, i9 }, d, mt ] == 1
-#                      ]
-#                    ],
-#                    Throw @ True
-#                  ]
-#                ,{ ind4, matches4 }]
-#              ,{ ind3, matches3 }]
-#            ]
-#            ,{ ind2, matches2 }]
-#          ,{ ind1, matches1 }]
-#        ,{ ind, zeros }
-#      ];
-#      False
-#    ]
-#
-#  ];
-
-#TODO: to me: take a look at and see if warrants replacement: 
 """
-    zsc_criterion(ring)
+zsc_criterion(ring)
 
-Return `true` if the Zero Spectrum Criterion rules out categorifiability.
-
-This is a direct Julia port of the Mathematica `ZSCriterion` logic, but with
-explicit Boolean helpers.
+Returns true if the Zero Spectrum Criterion rules out categorifiability.
 """
+#changed: Search only indexed matching structure constants, begin from entries
+# equal to one, and use short-circuiting.
 function zsc_criterion(ring::FusionRing)::Bool
-  mt = _mult_table(ring)
+  mt = multiplication_table(ring)
   r = size(mt, 1)
 
-  d = _dual_indices_from_mt(mt)
-  nonzero = _nonzero_structure_constants(mt)
+  d = [conjugate_element(ring, i) for i in 1:r]
+  nonzero = nonzero_structure_constants(ring)
 
-  for i2 in 1:r, i1 in 1:r, i3 in 1:r
-    mt[i2, i1, i3] == 1 || continue
+  (
+    by_second,
+    by_second_third,
+    by_third,
+    by_first_second,
+  ) = nonzero_structure_constant_lookups(nonzero, r)
 
-    for ind1 in nonzero
-      # Mathematica pattern: {i4_, i1, i6_}
-      ind1[2] == i1 || continue
+  # Each position is a CartesianIndex(i2, i1, i3) satisfying
+  # mt[i2, i1, i3] == 1.
+  for position in findall(==(1), mt)
+    i2, i1, i3 = Tuple(position)
 
+    # Tuples of the form (i4, i1, i6).
+    for ind1 in by_second[i1]
       i4 = ind1[1]
       i6 = ind1[3]
 
-      for ind2 in nonzero
-        # Mathematica pattern: {i5_, i4, i2}
-        ind2[2] == i4 || continue
-        ind2[3] == i2 || continue
-
+      # Tuples of the form (i5, i4, i2).
+      for ind2 in by_second_third[i4, i2]
         i5 = ind2[1]
 
         mt[i5, i6, i3] != 0 || continue
-        _crit1_has_one((i1, i2, i3, i4, i5, i6), d, mt) || continue
 
-        for ind3 in nonzero
-          # Mathematica pattern: {i7_, i9_, i1}
-          ind3[3] == i1 || continue
+        crit1_has_one(
+          (i1, i2, i3, i4, i5, i6),
+          d,
+          mt,
+        ) || continue
 
+        # Tuples of the form (i7, i9, i1).
+        for ind3 in by_third[i1]
           i7 = ind3[1]
           i9 = ind3[2]
 
-          for ind4 in nonzero
-            # Mathematica pattern: {i2, i7, i8_}
-            ind4[1] == i2 || continue
-            ind4[2] == i7 || continue
-
+          # Tuples of the form (i2, i7, i8).
+          for ind4 in by_first_second[i2, i7]
             i8 = ind4[3]
 
-            if mt[i8, i9, i3] != 0 &&
-              _crit3_sum((i4, i5, i6, i7, i8, i9), d, mt) == 0 &&
-              _crit2_has_one((i1, i2, i3, i7, i8, i9), d, mt)
-              return true
-            end
+            mt[i8, i9, i3] != 0 || continue
+
+            crit3_is_zero(
+              (i4, i5, i6, i7, i8, i9),
+              d,
+              mt,
+            ) || continue
+
+            crit2_has_one(
+              (i1, i2, i3, i7, i8, i9),
+              d,
+              mt,
+            ) || continue
+
+            return true
           end
         end
       end
@@ -347,61 +570,89 @@ function zsc_criterion(ring::FusionRing)::Bool
   return false
 end
 
-#TODO: take a look at this too
-"""
-    osc_criterion(ring)
 
-Return `true` if the One Spectrum Criterion rules out categorifiability.
+#┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+#┃                              one spectrum criterion                             ┃
+#┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-This is a direct Julia port of the Mathematica `OSCriterion` logic.
 """
+osc_criterion(ring)
+
+Returns true if  One Spectrum Criterion rules out categorifiability.
+"""
+#changed: Search only indexed matching structure constants and use
+# short-circuiting spectrum predicates.
 function osc_criterion(ring::FusionRing)::Bool
-  mt = _mult_table(ring)
+  mt = multiplication_table(ring)
   r = size(mt, 1)
 
-  d = _dual_indices_from_mt(mt)
-  nonzero = _nonzero_structure_constants(mt)
+  d = [conjugate_element(ring, i) for i in 1:r]
+  nonzero = nonzero_structure_constants(ring)
 
+  (
+    by_second,
+    by_second_third,
+    by_third,
+    by_first_second,
+  ) = nonzero_structure_constant_lookups(nonzero, r)
+
+  # Zero entries are usually common, so retaining the direct traversal avoids
+  # allocating a potentially large list containing every zero position.
   for i2 in 1:r, i1 in 1:r, i3 in 1:r
     mt[i2, i1, i3] == 0 || continue
 
-    for ind1 in nonzero
-      # Mathematica pattern: {i4_, i1, i6_}
-      ind1[2] == i1 || continue
-
+    # Tuples of the form (i4, i1, i6).
+    for ind1 in by_second[i1]
       i4 = ind1[1]
       i6 = ind1[3]
 
-      for ind2 in nonzero
-        # Mathematica pattern: {i5_, i4, i2}
-        ind2[2] == i4 || continue
-        ind2[3] == i2 || continue
-
+      # Tuples of the form (i5, i4, i2).
+      for ind2 in by_second_third[i4, i2]
         i5 = ind2[1]
 
         mt[i5, i6, i3] != 0 || continue
 
-        for ind3 in nonzero
-          # Mathematica pattern: {i7_, i9_, i1}
-          ind3[3] == i1 || continue
-
+        # Tuples of the form (i7, i9, i1).
+        for ind3 in by_third[i1]
           i7 = ind3[1]
           i9 = ind3[2]
 
           for i0 in 1:r
             mt[i4, i7, i0] == 1 || continue
             mt[i6, d[i9], i0] == 1 || continue
-            _crit1_has_one((i9, i0, i6, i7, i4, i1), d, mt) || continue
 
-            for i8 in 1:r
-              if mt[i2, i7, i8] != 0 &&
-                mt[i8, i9, i3] != 0 &&
-                mt[d[i5], i8, i0] == 1 &&
-                _crit1_has_one((i7, i2, i8, i4, i5, i0), d, mt) &&
-                _crit1_has_one((i9, i8, i3, i0, i5, i6), d, mt) &&
-                _crit3_sum((i4, i5, i6, i7, i8, i9), d, mt) == 1
-                return true
-              end
+            crit1_has_one(
+              (i9, i0, i6, i7, i4, i1),
+              d,
+              mt,
+            ) || continue
+
+            # These tuples already guarantee mt[i2, i7, i8] != 0.
+            for ind4 in by_first_second[i2, i7]
+              i8 = ind4[3]
+
+              mt[i8, i9, i3] != 0 || continue
+              mt[d[i5], i8, i0] == 1 || continue
+
+              crit3_is_one(
+                (i4, i5, i6, i7, i8, i9),
+                d,
+                mt,
+              ) || continue
+
+              crit1_has_one(
+                (i7, i2, i8, i4, i5, i0),
+                d,
+                mt,
+              ) || continue
+
+              crit1_has_one(
+                (i9, i8, i3, i0, i5, i6),
+                d,
+                mt,
+              ) || continue
+
+              return true
             end
           end
         end

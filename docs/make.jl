@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(FusionRings, :DocTestSetup, :(using FusionRings); recursive 
 
 makedocs(;
   modules = [FusionRings],
-  authors = "gert-vercleyen <gert.vercleyen@protonmail.com>, Szagha02",
+  authors = "gert-vercleyen <gert.vercleyen@protonmail.com>, sami-zagha <szagha2@gmail.com",
   sitename = "FusionRings.jl",
   format = Documenter.HTML(;
     canonical = "https://gert-vercleyen.gitlab.io/FusionRings.jl",

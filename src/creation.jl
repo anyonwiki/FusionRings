@@ -25,7 +25,7 @@ function group_fusion_ring(grp::Group)::FusionRing
   nm  = describe(grp)
   tnm = tex_describe(grp)
 
-  return group_fusion_ring(ct; names = [nm], texnames = [tnm], checktable = false)
+  return group_fusion_ring(ct; names = [nm], tex_names = [tnm], checktable = false)
 end
 
 function grpnames(v::Vector{String})
@@ -40,7 +40,7 @@ end
 function group_fusion_ring(
   ct::Matrix{Int64};
   names::Vector{String} = ["G"],
-  texnames::Vector{String} = ["G"],
+  tex_names::Vector{String} = ["G"],
   checktable::Bool = true,
 )::FusionRing
   if checktable
@@ -57,7 +57,7 @@ function group_fusion_ring(
     mt;
     labels = [bold_integer(i) for i in 1:r],
     names = grpnames(names),
-    texnames = grpnames(texnames),
+    tex_names = grpnames(tex_names),
     frobenius_perron_dimension = qqb_id(QQBar(r)),
     frobenius_perron_dimensions = fill(qqb_id(QQBar(1)), r),
   )
@@ -77,7 +77,7 @@ function zn_fusion_ring(n::Int)::FusionRing
   return fusion_ring(
     mt;
     names = grpnames(["ℤ" * subscript_integer(n), "Z_$n"]),
-    texnames = grpnames(["\\mathbb{Z}_{$n}"]),
+    tex_names = grpnames(["\\mathbb{Z}_{$n}"]),
     labels = string.(0:(n - 1)),
   )
 end
@@ -98,7 +98,7 @@ function group_rep_fusion_ring(g)
   return fusion_ring(
     mt;
     names = grpnames(["Rep("*nms*")"]),
-    texnames = grpnames(["Rep("*texnms*")"]),
+    tex_names = grpnames(["Rep("*texnms*")"]),
     labels = ["χ"*subscript_integer(i) for i in 1:r],
   )
 end
@@ -136,8 +136,8 @@ Rank is 2n. Objects are:
 function HI_fusion_ring(g::Group)::FusionRing
   ct = cayley_table(g);
   names = mscnames(["HI(" * describe(g) * ")"])
-  texnames = mscnames(["\\mathrm{HI}(" * tex_describe(g) * ")"])
-  return HI_fusion_ring(ct; names = names, texnames = texnames, checktable = false)
+  tex_names = mscnames(["\\mathrm{HI}(" * tex_describe(g) * ")"])
+  return HI_fusion_ring(ct; names = names, tex_names = tex_names, checktable = false)
 end
 
 function HI_fusion_ring(
@@ -224,8 +224,8 @@ Rank is n+1 (group elements + one extra object).
 
 function TY_fusion_ring(g::Group)::FusionRing
   names = mscnames(["TY(" * describe(g) * ")"])
-  texnames = mscnames(["TY(" * tex_describe(g) * ")"])
-  return TY_fusion_ring(cayley_table(g); names = names, texnames = texnames)
+  tex_names = mscnames(["TY(" * tex_describe(g) * ")"])
+  return TY_fusion_ring(cayley_table(g); names = names, tex_names = tex_names)
 end
 
 function TY_fusion_ring(tab::AbstractMatrix{<:Integer}; names::Vector{String} = String[])

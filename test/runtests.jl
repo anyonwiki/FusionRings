@@ -142,6 +142,10 @@ end
     include_if_exists("numeric_tests.jl")
   end
 
+  if want_group("categorifiability")
+    include_if_exists("categorifiability_tests.jl")
+  end
+
   if want_group("import_export")
     include("import_export_tests.jl")
   end

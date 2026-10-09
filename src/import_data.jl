@@ -39,9 +39,16 @@ function root_sort_crit(x)
   return (- Int(is_real(x)), real(x), imag(x))
 end
 
-function save_qqb_num(x::QQBarFieldElem)
-  path = joinpath(@__DIR__, "data", "split_number_data", qqb_id(x)*".mrdi")
-  return Oscar.save(path, x)
+#changed: Save into a configurable directory, synchronize qqb_dict, and return the stable QQBar ID.
+function save_qqb_num(
+  x::QQBarFieldElem;
+  directory::AbstractString = joinpath(datadir, "split_number_data"),
+)
+  id = qqb_id(x)
+  mkpath(directory)
+  Oscar.save(joinpath(directory, id*".mrdi"), x)
+  qqb_dict[id] = x
+  return id
 end
 
 # Loading from library of qqb elements
@@ -115,12 +122,28 @@ function safe_fetch(js, key)
 end
 
 # mult tab
+#changed: Require a positive-rank cubic integer array before decoding the multiplication table.
 function mtfromjs(js)::Array{Int64, 3}
-  jsmt = js["mult_tab"]
+  jsmt = safe_fetch(js, "mult_tab")
+  ismissing(jsmt) && throw(ArgumentError("mult_tab is required"))
+  jsmt isa AbstractVector || throw(ArgumentError("mult_tab must be a cubic array"))
+
   r = length(jsmt)
+  r > 0 || throw(ArgumentError("mult_tab must have positive rank"))
+  all(
+    plane ->
+      plane isa AbstractVector &&
+      length(plane) == r &&
+      all(row -> row isa AbstractVector && length(row) == r, plane),
+    jsmt,
+  ) || throw(ArgumentError("mult_tab must be a cubic array"))
+
   mt = zeros(Int, r, r, r)
   for i in 1:r, j in 1:r, k in 1:r
-    mt[i, j, k] = Int.(jsmt[i][j][k])
+    value = jsmt[i][j][k]
+    value isa Integer ||
+      throw(ArgumentError("every mult_tab entry must be an integer"))
+    mt[i, j, k] = Int(value)
   end
   return mt
 end
@@ -198,9 +221,9 @@ function nfromjs(js)
   return nms
 end
 
-# texnames
+# tex_names
 function tnfromjs(js)
-  nms = safe_fetch(js, "texnames")
+  nms = safe_fetch(js, "tex_names")
 
   ismissing(nms) && return _nonames
 
@@ -212,51 +235,86 @@ function tnfromjs(js)
 end
 
 # labels
+#changed: Treat absent labels as missing and validate that present labels are array-like.
 function lfromjs(js)
   lbs = safe_fetch(js, "labels")
 
-  lbs isa Vector{Any} && return string.(lbs)
+  ismissing(lbs) && return missing
+  lbs isa AbstractVector || throw(ArgumentError("labels must be an array or null"))
 
-  return lbs
+  return string.(lbs)
 end
 
 # characters
+#changed: Validate square character data and preserve the row-character/column-simple orientation.
 function chfromjs(js)
   chrs = safe_fetch(js, "characters")
-  chrs isa Vector &&
-    return [string(chrs[i][j]) for i in 1:length(chrs), j in 1:length(chrs[1])]
+  ismissing(chrs) && return missing
+  chrs isa AbstractVector ||
+    throw(ArgumentError("characters must be a square array or null"))
 
-  return chrs
+  r = length(chrs)
+  r > 0 || throw(ArgumentError("characters cannot be an empty array"))
+  all(row -> row isa AbstractVector && length(row) == r, chrs) ||
+    throw(ArgumentError("characters must be a square array"))
+
+  return [string(chrs[i][j]) for i in 1:r, j in 1:r]
 end
 
 # sub-fusion rings
+#changed: Decode current [indices, UUID] subring metadata with explicit shape and type checks.
 function sfrfromjs(js)
   sfr = safe_fetch(js, "non_trivial_sub_fusion_rings")
-  if sfr isa Vector
-    return Tuple{Vector{Int64}, String}[(Int64.(s[1]), s[2]) for s in sfr]
-  else
-    sfr
+  ismissing(sfr) && return missing
+  sfr isa AbstractVector ||
+    throw(ArgumentError("non_trivial_sub_fusion_rings must be an array or null"))
+
+  decoded = Tuple{Vector{Int64}, String}[]
+  for entry in sfr
+    entry isa AbstractVector && length(entry) == 2 ||
+      throw(ArgumentError("each stored subring must be [indices, uuid]"))
+    indices, id = entry
+    indices isa AbstractVector && all(x -> x isa Integer, indices) ||
+      throw(ArgumentError("stored subring indices must be integers"))
+    id isa AbstractString ||
+      throw(ArgumentError("stored subring UUID must be a string"))
+    push!(decoded, (Int64.(indices), String(id)))
   end
+  return decoded
 end
 
+#changed: Require the stored scalar FP dimension to be a QQBar ID string when present.
 function fpdfromjs(js)
-  return safe_fetch(js, "frobenius_perron_dimension")
+  fpd = safe_fetch(js, "frobenius_perron_dimension")
+  ismissing(fpd) && return missing
+  fpd isa AbstractString ||
+    throw(ArgumentError("frobenius_perron_dimension must be a QQBar ID string or null"))
+  return String(fpd)
 end
 
+#changed: Require a vector of QQBar ID strings for stored component FP dimensions.
 function fpdsfromjs(js)
   fpds = safe_fetch(js, "frobenius_perron_dimensions")
+  ismissing(fpds) && return missing
+  fpds isa AbstractVector || throw(
+    ArgumentError("frobenius_perron_dimensions must be an array of QQBar ID strings or null")
+  )
+  all(x -> x isa AbstractString, fpds) ||
+    throw(ArgumentError("every stored FP dimension must be a QQBar ID string"))
 
-  fpds isa Vector && return string.(fpds)
-
-  return fpds
+  return String.(fpds)
 end
 
+#changed: Require a vector of QQBar ID strings for stored formal codegrees.
 function fcdfromjs(js)
   fcd = safe_fetch(js, "formal_codegrees")
+  ismissing(fcd) && return missing
+  fcd isa AbstractVector ||
+    throw(ArgumentError("formal_codegrees must be an array of QQBar ID strings or null"))
+  all(x -> x isa AbstractString, fcd) ||
+    throw(ArgumentError("every formal codegree must be a QQBar ID string"))
 
-  fcd isa Vector && return string.(fcd)
-
-  return fcd
+  return String.(fcd)
 end
 
 function ctpfromjs(js)
@@ -296,37 +354,95 @@ function refsfromjs(js)
 end
 
 function sfromjs(js)
-  sftw = safe_fetch(js, "software")
-
-  sftw isa Vector && return Dict{String, Vector{String}}("All" => sftw)
-
-  return sftw
+  safe_fetch(js, "software")
 end
 
+#changed: Decode current [degrees, UUID] grading metadata with explicit shape and type checks.
 function agfromjs(js)
   ag = safe_fetch(js, "all_gradings")
+  ismissing(ag) && return missing
+  ag isa AbstractVector ||
+    throw(ArgumentError("all_gradings must be an array or null"))
 
-  ag isa Vector && return [(Int64.(gr[1]), gr[2]) for gr in ag]
-  return ag
+  decoded = Tuple{Vector{Int64}, String}[]
+  for grading in ag
+    grading isa AbstractVector && length(grading) == 2 ||
+      throw(ArgumentError("each stored grading must be [degrees, uuid]"))
+    degrees, id = grading
+    degrees isa AbstractVector && all(x -> x isa Integer, degrees) ||
+      throw(ArgumentError("stored grading degrees must be integers"))
+    id isa AbstractString ||
+      throw(ArgumentError("stored grading-ring UUID must be a string"))
+    push!(decoded, (Int64.(degrees), String(id)))
+  end
+  return decoded
 end
 
+#changed: Decode current [indices, UUID] upper-central-series metadata with explicit validation.
 function ucsfromjs(js)
   ucs = safe_fetch(js, "upper_central_series")
+  ismissing(ucs) && return missing
+  ucs isa AbstractVector ||
+    throw(ArgumentError("upper_central_series must be an array or null"))
 
-  ucs isa Vector && return [(Int64.(t[1]), t[2]) for t in ucs]
-
-  return ucs
+  decoded = Tuple{Vector{Int64}, String}[]
+  for term in ucs
+    term isa AbstractVector && length(term) == 2 ||
+      throw(ArgumentError("each upper-central-series term must be [indices, uuid]"))
+    indices, id = term
+    indices isa AbstractVector && all(x -> x isa Integer, indices) ||
+      throw(ArgumentError("upper-central-series indices must be integers"))
+    id isa AbstractString ||
+      throw(ArgumentError("upper-central-series UUID must be a string"))
+    push!(decoded, (Int64.(indices), String(id)))
+  end
+  return decoded
 end
 
+#changed: Validate realization objects and normalize the legacy TensorProduct key.
 function rfromjs(js)
-  r = safe_fetch(js, "realizations")
+  stored = safe_fetch(js, "realizations")
+  ismissing(stored) && return Dict{String, Any}("tensor_product" => missing)
+  stored isa AbstractDict ||
+    throw(ArgumentError("realizations must be a JSON object or null"))
 
-  return ismissing(r) ? Dict{String, Any}("tensor_product" => missing) : r
+  result = Dict{String, Any}(String(k) => v for (k, v) in stored)
+  if !haskey(result, "tensor_product") && haskey(result, "TensorProduct")
+    result["tensor_product"] = pop!(result, "TensorProduct")
+  end
+  get!(result, "tensor_product", missing)
+  return result
 end
 
+#changed: Handle missing automorphism metadata safely and validate cycle generators before group construction.
 function afromjs(js)
   aut = safe_fetch(js, "automorphisms")
   ismissing(aut) && return missing
+#= <<<<<<< consolidated_changes  
+  aut isa AbstractDict ||
+    throw(ArgumentError("automorphisms must be a JSON object or null"))
+  haskey(aut, "cycles") ||
+    throw(ArgumentError("automorphisms must contain a cycles field"))
+
+  generators = aut["cycles"]
+  generators isa AbstractVector ||
+    throw(ArgumentError("automorphism cycles must be an array"))
+
+  mt = safe_fetch(js, "mult_tab")
+  ismissing(mt) && throw(ArgumentError("mult_tab is required to decode automorphisms"))
+  rk = length(mt)
+  isempty(generators) &&
+    return permutation_group(rk, [perm(collect(1:rk))])
+
+  converted = map(generators) do generator
+    generator isa AbstractVector ||
+      throw(ArgumentError("each automorphism generator must be an array of cycles"))
+    all(
+      cycle -> cycle isa AbstractVector && all(x -> x isa Integer, cycle), generator
+    ) || throw(ArgumentError("automorphism cycles must contain integer indices"))
+    return cperm([Int64.(cycle) for cycle in generator])
+  end
+=#
   mt  = safe_fetch(js, "mult_tab")
   rk  = size(mt, 1)
   gns = aut["cycles"]
@@ -352,7 +468,7 @@ function import_ring(js::JSON.Object{String, Any}; skip_check = false)
     uuid                        = uuidfromjs(js),
     anyonwiki_code              = fcfromjs(js),
     names                       = nfromjs(js),
-    texnames                    = tnfromjs(js),
+    tex_names                    = tnfromjs(js),
     labels                      = lfromjs(js),
     characters                  = chfromjs(js),
     sub_fusion_rings            = sfrfromjs(js),
@@ -410,11 +526,12 @@ function actojs(fr::FusionRing)::Union{Vector{Int64}, Nothing}
   return ismissing(c) ? nothing : c
 end
 
+#changed: Export character rows without the prior transpose so JSON round trips preserve orientation.
 function chtojs(fr::FusionRing)
   ch = fr.characters
   if ch !== missing
     r = rank(fr)
-    return [ch[i, j] for j in 1:r, i in 1:r]
+    return [[ch[i, j] for j in 1:r] for i in 1:r]
   else
     return nothing
   end
@@ -525,7 +642,7 @@ end
 function rtojs(fr::FusionRing)
   function convert_realization(val)
     ismissing(val) && return nothing
-    return [[uuid(ring) for ring in list] for list in val]
+    return [[id for id in list] for list in val]
   end
 
   return Dict(k => convert_realization(v) for (k, v) in fr.realizations )
@@ -629,7 +746,7 @@ ringfieldinfo = """
       * "group_like": names associated to the theory of finite groups, such as "Z_2", "Rep(D_6)". Names associated to near-group or group theoretical fusion rings do not belong here but in miscelaneous.
       * "physics": names associated to applications in physics, such as "Fibonacci", "Ising", "Potts".
       * "miscellaneous": names not belonging to another of the above categories.
-    * texnames: a JSON dictionary mapping naming conventions to lists of strings of names typeset in LaTeX given using that convention. The conventions are the same as for the names field.
+    * tex_names: a JSON dictionary mapping naming conventions to lists of strings of names typeset in LaTeX given using that convention. The conventions are the same as for the names field.
     * labels: list of strings used to label the elements of the fusion ring. This is purely cosmetic and has no influence on any other properties. The default is a list of bold digits from 1 to the rank of the ring.
     * characters: vector of vectors [ v_1, ..., v_r ] where each v_i is a vector of r qqb_ids representing the image of the elements of the fusion ring under the i'th character.
     * non_trivial_sub_fusion_rings: list of vectors [ els, uuid ] where els are the elements of the parent ring that form a subring isomorphic to ring[uuid].
@@ -654,9 +771,15 @@ ringfieldinfo = """
       * reason: gives a more in-depth reason for why the value of bool is what it is. This could, e.g., be a reference to a theorem in a paper or a version of a software package used.
     * categorifications: a list of uuids of known fusion categories that categorify the fusion ring. It only contains uuids of categories of which the data is stored.
     * references: JSON dictionary mapping names of fields to a list of references to the paper that played a significant role in obtaining the data in the way it is represented here. Special field names are the same as for software. Only papers that have lead to the data as currently represented are included and thus no papers that represent theory that was not directly used, or ,e.g. , data in another format that was not used to obtain current data.
-    * software: JSON dictionary mapping names of fields to a list of reference to software that played a significant role in obtain the data in the way it is represented here. Special field names are
+    * software: JSON dictionary mapping names of fields to a dictionary describing to software that played a significant role in obtain the data in the way it is represented here. Special field names are
       * "all": when all fields of the ring point to the same software
       * "all_other_data": when all other data, besides the data having specific references, points to the same software.
+      the interpretation of the field names of the dictionary are the following
+        * name: string that represents the name of the software
+        * swhid: string that represents the swhid of the specific revision of software, if backed up by the software heritage foundation. This should contain the substring ":rev:". If not available this field is null.
+        * doi: string that represents the doi of the software version if available, null otherwise.
+        * version: string that represents the version of the software
+      either the doi or the swhid fields must be included to be considered a valid reference
     * all_gradings: vector of vectors [ els, uuid ] where ring[uuid] the group ring that grades this fusion ring, and els are elements of ring[uuid] that grade the elements of the parent ring.
     * upper_central_series: list of vectors v_i =  [ els_i, uuid_i ] where ring[uuid_i] is the ring isomorphic to the adjoint fusion ring of the ring[uuid_{i-1}]. els_i are the elements of ring[uuid_{i-1}] that form its adoint fusion ring. v1 is by definition the couple of all elements of the parent ring and the parent ring itself. Each adjoint ring has its elements in the same order as the original ring and thus not necessarily in the order of the stored ring.
     * realizations: JSON dictionary mapping strings representing realizations of fusion rings in terms of other ones to data that allows to reconstruct the realization. At the moment it contains the following fields
@@ -671,6 +794,7 @@ ringfieldinfo = """
     * is_weakly_integral: true if the ring is nilpotent, false if not.
     * is_non_trivially_graded: true if the ring has a non-trivial grading, false if not.
     * is_commutative: true if the ring is commutative, false if not.
+    * realizations: JSON dictionary mapping kinds of realizations of the fusion ring in terms of other fusion rings using specific constructions. At the moment the only available key is "tensor_product" which points to a list of lists of uuids whose tensor product results in the current fusion ring.
      """
 
 function ring_to_dict(fr)
@@ -681,7 +805,7 @@ function ring_to_dict(fr)
     "uuid"                                => uuid(fr),
     "anyonwiki_code"                      => actojs(fr),
     "names"                               => names(fr),
-    "texnames"                            => tex_names(fr),
+    "tex_names"                            => tex_names(fr),
     "labels"                              => labels(fr),
     "characters"                          => chtojs(fr),
     "non_trivial_sub_fusion_rings"        => sfrtojs(fr),
@@ -811,7 +935,7 @@ function auto_complete_missing_info(fr::FusionRing)::FusionRing
   nms = fr.names
 
   # autocompletion is too expensive on case-by-case basis
-  tnms = fr.texnames
+  tnms = fr.tex_names
 
   # no autocompletion necessary
   lbls = fr.labels
@@ -861,7 +985,7 @@ function auto_complete_missing_info(fr::FusionRing)::FusionRing
     uuid                        = id,
     anyonwiki_code              = awc,
     names                       = nms,
-    texnames                    = tnms,
+    tex_names                    = tnms,
     labels                      = lbls,
     characters                  = chrs,
     sub_fusion_rings            = sfr,
@@ -957,7 +1081,7 @@ function add_nms(fr::FusionRing, tup::Pair{String, Vector{String}}; kind = "tex"
   end
 
   if kind == "tex"
-    return change_properties(fr, :texnames => nms)
+    return change_properties(fr, :tex_names => nms)
   else
     return change_properties(fr, :names => nms)
   end

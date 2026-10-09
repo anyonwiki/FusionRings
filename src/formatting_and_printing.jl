@@ -226,7 +226,6 @@ function tex_reps(x::QQBarFieldElem, qqbid::String; try_cyclo = false)::Dict{Str
   rat = rational_tex_rep(x)
   if rat != ""
     return Dict(
-      "rational"  => rat,
       "radical"   => rat,
       "cyclo"     => rat,
       "general"   => qqb_id_rep(qqbid),
@@ -243,7 +242,6 @@ function tex_reps(x::QQBarFieldElem, qqbid::String; try_cyclo = false)::Dict{Str
   end
 
   return Dict(
-    "rational"  => rational_tex_rep(x),
     "radical"   => radicals_tex_rep(x),
     "cyclo"     => cyc,
     "general"   => qqb_id_rep(qqbid),
@@ -301,7 +299,7 @@ function cyclo_tex_rep(x::QQBarFieldElem)
   for j in 1:deg
     if QQBar( ζ(deg)^j ) == emb2(cgen)
       ϕ = hom(L,QQab,ζ(deg)^j)
-      return (fix_cyclo ∘ fix_poly_string ∘ string ∘  ϕ)(cyclo_el)
+      return (fix_cyclo ∘ fix_poly_string ∘ string ∘ ϕ)(cyclo_el)
     end
   end
   error("Couldn't find embedding from cyclotomics into algebraic_closure(QQ)")
@@ -380,11 +378,17 @@ end
 function power_sum_tex_rep(x::QQBarFieldElem)
   mp = minimal_polynomial(x)
   if is_power_sum(mp)
-    gen = (collect(coefficients(mp)))[2]
+    a = (collect(coefficients(mp)))[2]
     n = degree(mp)
-    a = x*gen
-    i = findfirst(j -> QQb(ζ(n+1)^j) == a, 0:n)
-    factorstring = gen == 1 ? "" : string(1//gen)
+    i = findfirst(j -> QQb(ζ(n+1)^j) == a*x, 0:n) - 1 #-1 since first el is 0
+    factorstring =
+      if a == 1
+        ""
+      elseif a == -1
+        "-"
+      else
+        string(1//a)
+      end
     return string(factorstring, "\\zeta_{", n+1, "}^{", i, "}")
   else
     return ""

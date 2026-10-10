@@ -110,7 +110,7 @@ function fusion_ring(
   uuid                        = missing,
   anyonwiki_code              = missing,
   names                       = missing,
-  tex_names                    = missing,
+  tex_names                   = missing,
   labels                      = missing,
   characters                  = missing,
   sub_fusion_rings            = missing,
@@ -139,7 +139,7 @@ function fusion_ring(
     end
   end
 
-  #@info (mt::Array{Int,3},  uuid, anyonwiki_code, names, texnames, labels, characters, sub_fusion_rings, frobenius_perron_dimension, frobenius_perron_dimensions, formal_codegrees, has_categories_with_props           ,  categorifications                   ,  references                          ,  software                            ,  all_gradings                        ,  upper_central_series,  realizations, automorphism_group)
+  #@info (mt::Array{Int,3}, uuid, anyonwiki_code, names, tex_names, labels, characters, sub_fusion_rings, frobenius_perron_dimension, frobenius_perron_dimensions, formal_codegrees, has_categories_with_props,  categorifications, references, software, all_gradings, upper_central_series, realizations, automorphism_group)
 
   (ismissing(labels) || labels == []) &&
     (labels = String[bold_integer(i) for i in 1:size(mt, 1)])
@@ -228,20 +228,6 @@ function fusion_ring(
     has_categories_with_props
   end
 
-  #TODO: let references be paper of FusionRings if missing.
-  refs = if references isa Vector
-    Dict{String, Vector{String}}("All" => references)
-  else
-    references
-  end
-
-  #TODO: let software be current version of FusionRings if missing.
-  sftw = if software isa Vector
-    Dict{String, Vector{String}}("All" => software)
-  else
-    software
-  end
-
   ag = if all_gradings isa Vector{Tuple{Vector{Int64}, FusionRing}}
     [(t[1], t[2].uuid) for t in all_gradings]
   else
@@ -318,8 +304,8 @@ function fusion_ring(
     fcds,
     hcwp,
     categorifications,
-    refs,
-    sftw,
+    references,
+    software,
     ag,
     ucs,
     rlztns,

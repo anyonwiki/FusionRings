@@ -1,40 +1,52 @@
+# Script to update Artifacts.toml file
+# !!! Need to have git installed and web access for this to work !!!
+
 using Pkg.Artifacts
+using Pkg.PlatformEngines: unpack
+using Downloads
+using SHA
 
-# Path to the Artifacts.toml file in your package root
-artifacts_toml = joinpath(dirname(@__DIR__), "Artifacts.toml")
+# path to artifacts toml in project root
+atfn = joinpath( @__DIR__ , "Artifacts.toml" )
 
-# The folder containing the FusionRings data
-data_source = joinpath(@__DIR__, "src", "data", "FusionRings" )
 
-# Create the artifact from the data_source folder
-FusionRings_hash = create_artifact() do artifact_dir
-    # Copy or create your data files inside the artifact directory
-    cp(data_source, artifact_dir; force=true)
+# when running script we want the data to come from newest commit
+repo   = "anyonwiki/AnyonWikiDatabase"
+branch = "main"
+ref = ( String ∘ first ∘ split )( 
+    read(
+        `git ls-remote https://github.com/$repo.git refs/heads/$branch`, 
+        String
+    )
+)
+
+tarballs = [
+    "FusionRings"      => "AlgebraicStructures/FusionRings.tar.gz",
+    "AlgebraicNumbers" => "SupportingData/AlgebraicNumbers.tar.gz"
+]
+
+function bind_tarball!( atfn, name, pth )
+    url = "https://raw.githubusercontent.com/$repo/$ref/$pth"
+
+    mktempdir() do tmp 
+        tarball = joinpath( tmp, basename( pth) )
+        @info "Downloading $name" url
+        Downloads.download(url,tarball)    
+
+        tb_hash = (bytes2hex ∘ sha256 ∘ open)(tarball)
+        
+        up(dir)   = unpack( tarball, dir ) 
+        tree_hash = create_artifact(up)
+
+        bind_artifact!(
+            atfn, name, tree_hash;
+            download_info = [ ( url, tb_hash ) ],
+            force = true
+        )
+        @info "Bound $name" tree_hash tb_hash
+    end
 end
 
-# Define where the artifact tarball will be hosted (e.g., on GitHub Releases)
-tarball_url = "https://github.com/anyonwiki/AnyonWikiDatabase/blob/main/FusionRings.tar.gz"
-tarball_hash = archive_artifact(FusionRings_hash, "FusionRings.tar.gz")
-
-# Bind the artifact to a name in Artifacts.toml
-bind_artifact!(artifacts_toml, "FusionRings", FusionRings_hash;
-               download_info = [(tarball_url, tarball_hash)],
-               force = true)
-
-# The folder containing the data on algebraic numbers
-data_source = joinpath(@__DIR__, "src", "data", "AlgebraicNumbers" )
-
-# Create the artifact from the data_source folder
-AlgebraicNumbers_hash = create_artifact() do artifact_dir
-    # Copy or create your data files inside the artifact directory
-    cp(data_source, artifact_dir; force=true)
+for (name,path) in tarballs
+    bind_tarball!(atfn,name,path)
 end
-
-# Define where the artifact tarball will be hosted (e.g., on GitHub Releases)
-tarball_url = "https://github.com/anyonwiki/AnyonWikiDatabase/blob/main/AlgebraicNumbers.tar.gz"
-tarball_hash = archive_artifact(AlgebraicNumbers_hash, "AlgebraicNumbers.tar.gz")
-
-# Bind the artifact to a name in Artifacts.toml
-bind_artifact!(artifacts_toml, "AlgebraicNumbers", AlgebraicNumbers_hash;
-               download_info = [(tarball_url, tarball_hash)],
-               force = true)

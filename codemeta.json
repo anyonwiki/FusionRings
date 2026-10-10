@@ -24,7 +24,7 @@
     ],
     "codeRepository": "https://github.com/anyonwiki/FusionRings",
     "dateCreated": "2026-08-07",
-    "dateModified": "2026-08-28",
+    "dateModified": "2026-10-09",
     "description": "Julia package for working with fusion rings",
     "downloadUrl": "https://github.com/anyonwiki/FusionRings/releases",
     "identifier": "750f8238-3f78-4e88-85d4-6e65b940c8ab",
@@ -43,7 +43,7 @@
         "Julia",
         "Jupyter Notebook"
     ],
-    "releaseNotes": "## What's Changed\n* Develop by @gert-vercleyen in https://github.com/anyonwiki/FusionRings/pull/5\n* Develop by @gert-vercleyen in https://github.com/anyonwiki/FusionRings/pull/8\n* Develop by @gert-vercleyen in https://github.com/anyonwiki/FusionRings/pull/10\n* Bugfix artifacts by @gert-vercleyen in https://github.com/anyonwiki/FusionRings/pull/11\n\n\n**Full Changelog**: https://github.com/anyonwiki/FusionRings/commits/0.2.5",
+    "releaseNotes": "## What's Changed\n* Develop by @gert-vercleyen in https://github.com/anyonwiki/FusionRings/pull/5\n* Develop by @gert-vercleyen in https://github.com/anyonwiki/FusionRings/pull/8\n* Develop by @gert-vercleyen in https://github.com/anyonwiki/FusionRings/pull/10\n* Bugfix artifacts by @gert-vercleyen in https://github.com/anyonwiki/FusionRings/pull/11\n\n\n**Full Changelog**: https://github.com/anyonwiki/FusionRings/commits/0.2.7",
     "runtimePlatform": [
         "Accessors",
         "JSON",
@@ -90,7 +90,7 @@
             "@type": "SoftwareApplication"
         }
     ],
-    "version": "0.2.5",
+    "version": "0.2.7",
     "continuousIntegration": "https://raw.githubusercontent.com/anyonwiki/FusionRings/main/.github/workflows/CI.yml",
     "developmentStatus": "wip",
     "issueTracker": "https://api.github.com/repos/anyonwiki/FusionRings/issues",

@@ -221,7 +221,6 @@ end
 Build the Tambara–Yamagami fusion ring for a group with multiplication table `tab`.
 Rank is n+1 (group elements + one extra object).
 """
-
 function TY_fusion_ring(g::Group)::FusionRing
   names = mscnames(["TY(" * describe(g) * ")"])
   tex_names = mscnames(["TY(" * tex_describe(g) * ")"])
@@ -383,17 +382,14 @@ function su2k_fusion_ring(k::Int)::FusionRing
 end
 
 # SO(2)_n fusion rings 
-
+#- odd `N`: uses `_son2_rules_odd(m)`
+#- even `N ≡ 0 (mod 4)`: uses `_son2_rules_div4(N÷2)`
+#- even `N ≡ 2 (mod 4)`: uses `_son2_rules_div2(N÷2)`
 """
     son2_fusion_ring(N::Int)::FusionRing
 
 Return fusion ring ``\\text{SO}(N)_2`` (metaplectic) .
 """
-
-#- odd `N`: uses `_son2_rules_odd(m)`
-#- even `N ≡ 0 (mod 4)`: uses `_son2_rules_div4(N÷2)`
-#- even `N ≡ 2 (mod 4)`: uses `_son2_rules_div2(N÷2)`
-
 function son2_fusion_ring(N::Int)::FusionRing
   N ≥ 4 || throw(ArgumentError("son2_fusion_ring(N): requires integer N ≥ 4, got N=$N"))
 

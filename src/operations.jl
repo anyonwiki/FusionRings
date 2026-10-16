@@ -183,7 +183,6 @@ end
 
 Apply permutation `p` (fixing 1) to all three indices of `N`.
 """
-#changed: Replace the manual loop with validated three-axis indexing and reject invalid permutations.
 function permute_mult_tab(N::Array{Int, 3}, p::Vector{Int})::Array{Int, 3}
   r = size(N, 1)
   size(N) == (r, r, r) || throw(ArgumentError("multiplication table must be cubic"))

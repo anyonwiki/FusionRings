@@ -515,7 +515,6 @@ export sub_fusion_ring_subsets
 Enumerate all **proper, nontrivial** fusion-closed subsets of elements containing
 the unit (index 1), returned as **index vectors**.
 """
-
 function sub_fusion_ring_subsets(fr::FusionRing)::Vector{Vector{Int}}
   r = rank(fr)
   r <= 2 && return Vector{Int}[]
@@ -779,8 +778,6 @@ export fusion_ring_automorphisms
 
 Return all permutations `p` whose action on the indices leave the structure constants invariant.
 """
-#TODO: write test: should match data in test/testdata/properties
-
 function fusion_ring_automorphisms(fr::FusionRing)
   return which_permutation(fr, fr; all = true)
 end
@@ -795,8 +792,6 @@ export automorphism_group
 
 Return all permutations `p` whose action on the indices leave the structure constants invariant.
 """
-#TODO: write test: should match data in test/testdata/properties
-
 function automorphism_group(fr::FusionRing; force_compute = false)::PermGroup
   ag = fr.automorphism_group
   if ismissing(ag) || force_compute
@@ -861,7 +856,6 @@ export non_trivial_tensor_product_decompositions
 
 Return non-trivial decompositions of `r` as tensor products of fusion rings.
 """
-#changed: Propagate forced subring recomputation while retaining the current exhaustive equivalence-checked search.
 function non_trivial_tensor_product_decompositions(
   fr::FusionRing; represent_by_known = true, force_compute = false
 )::Vector{Vector{FusionRing}}
@@ -1141,28 +1135,7 @@ export adjoint_irreps
 
 Return the partition of the simple objects of `ring` into subsets invariant
 under left and right action of the adjoint subring.
-
-- compute  adjoint subring `(subEl, subRing) = adjoint_fusion_ring(ring)`
-- for each simple `e`, take  fixed-point closure of `{e}` under:
-      X -> Action[(ring, adjoint), X] ∪ Action[X, (ring, adjoint)]
-- remove duplicates
-
-More simply, let (S,A) be adjoint subring of R where S is set of simple indices in that subring
-For subset X of simples def:
-    Left action: S*X = \$⋃_{a∈S, x∈X} Sup(a⊗x)
-    Right action: X*S = \$⋃_{x∈X, a∈S} Sup(x⊗a)
-    combined : \$\\theta(X) = S*X ∪ X*S\$
-So for each simple e I start w/ {e} and apply that until stabilizes:
-    X₀ = {e}
-    X₁ = θ(X₀)
-    X₂ = θ(X₁)
-    ...
-    Xₙ = θ(Xₙ₋₁) until Xₙ == Xₙ₋₁
-    Then obv remove duplicates at the end
-
-Note: the code is slightly different than that in anyonica but ive highlighted/commented the parts that match
 """
-#changed: Propagate force_compute and represent_by_known into adjoint-subring computation.
 function adjoint_irreps(
   fr::FusionRing; force_compute = false, represent_by_known = true
 )::Vector{Vector{Int}}
@@ -1280,8 +1253,6 @@ universal grading group by a normal subgroup.
 is  universal grading,  every grading  obtained from U/N,
 where N is a normal subgroup of U.
 """
-
-#changed: Restore stored-grading reuse and make force_compute bypass both direct and nested cached data.
 function all_gradings(
   fr::FusionRing; force_compute = false
 )::Vector{Tuple{Vector{Int64}, FusionRing}}
@@ -1566,6 +1537,12 @@ end
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 export numeric_characters
+#Algorithm:
+#1. Form a random real combination `M = ∑_k c_k N_k`.
+#2. Eigen-decompose `M = V Λ V⁻¹`.
+#3. Verify that every `V⁻¹ N_i V` is (numerically) diagonal. If not, retry.
+#Normalize and sort V
+
 """
     numeric_characters(R::FusionRing; tries::Int=64, tol=1e-12)::Matrix{ComplexF64}
 
@@ -1575,12 +1552,6 @@ If force_compute = false and symbolic characters are available, the numeric char
 
 Throws if no common eigenbasis is found after `tries` attempts.
 """
-#Algorithm:
-#1. Form a random real combination `M = ∑_k c_k N_k`.
-#2. Eigen-decompose `M = V Λ V⁻¹`.
-#3. Verify that every `V⁻¹ N_i V` is (numerically) diagonal. If not, retry.
-#Normalize and sort V
-#changed: Honor forced recomputation and return a correctly shaped numeric 1x1 matrix for rank-one rings.
 function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = false)::Matrix{ComplexF64}
   nc = ring.characters
   if !ismissing(nc) && !force_compute

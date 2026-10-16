@@ -1,12 +1,3 @@
-export csp_criterion,
-  pdc_criterion,
-  dn_criterion,
-  is_d_number,
-  ecc_criterion,
-  lagrange_criterion,
-  zsc_criterion,
-  osc_criterion
-
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                     commutative schur product criterion                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -40,6 +31,7 @@ commutative criterion does not apply.
 # characters(ring) stores characters by row and simple objects by column, so
 # the theorem's `λ[i,j]` is represented by `chars[j,i]` here.
  
+export csp_criterion
   
 function csp_criterion(
   ring::FusionRing;
@@ -53,12 +45,6 @@ function csp_criterion(
   )
 end
 
-
-
-
-
-#changed: Always return   explanation tuple when 
-# criterion does not apply or finds no obstruction.
 function csp_criterion_explanation(
   ring::FusionRing;
   force_compute::Bool = false,
@@ -145,6 +131,22 @@ end
 #┃                       pivotal drinfeld center criterion                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+#= 
+@article{liu2022classification,
+  title={Classification of Grothendieck rings of complex fusion categories of multiplicity one up to rank six: Z. Liu et al.},
+  author={Liu, Zhengwei and Palcoux, Sebastien and Ren, Yunxiang},
+  journal={Letters in Mathematical Physics},
+  volume={112},
+  number={3},
+  pages={54},
+  year={2022},
+  publisher={Springer}
+}
+
+Theorem 2.3
+=#
+
+export pdc_criterion
 # pdc_criterion returns true if ring has no complex pivotal categorification due to the pivotal Drinfeld center criterion
 
 """
@@ -157,33 +159,114 @@ pivotal categorification.
 function pdc_criterion(
   fr::FusionRing; force_compute::Bool = false
 )::Bool
-  is_commutative(fr) || return false
-
-  codegrees = formal_codegrees(fr; force_compute = force_compute)
-  for candidate in codegrees
-    all(codegree -> is_algebraic_integer(candidate/codegree), codegrees) &&
-      return false
-  end
-
-  return true
+  return first(pdc_criterion_explanation)
 end
 
 
+function pdc_criterion_explanation(
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::Tuple{
+  Bool,
+  Union{Nothing,Tuple{Vector{Tuple{Int64,QQBarFieldElem}}},Vector{QQBarFieldElem}},
+  String
+}
+  if !is_commutative(ring)
+    return (
+      false,
+      nothing,
+      "The pivotal Drinfeld center criterion does not apply to noncommutative rings.",
+    )
+  end
+
+  c = formal_codegrees(fr; force_compute = force_compute)
+  r = rank(ring)
+
+  # We collect the simplest problematic fractions for each j 
+  # and store them in `problems`. If every j has a problematic fraction 
+  # the criterion worked and we return 
+  problems = fill( (0,QQBar(0)), r )
+
+  for j1 in 1:r
+    localproblems = []
+    for i in 1:r 
+      x = c[j]//c[i]
+      is_algebraic_integer(x) || push!(localproblems,x)
+    end
+    isempty(localproblems) && continue
+
+    # Prefer numbers with smaller minimal_polynomial 
+    numsize(pol) = degree(minimal_polynomial(pol))
+    problems[j1] = minimum(polsize, localproblems)
+  end
+
+  probcases = filter( x -> x[0] ≠ 0, problems )
+  if length(probcases) < r 
+    return (
+      false,
+      nothing,
+      "The pivotal Drinfeld center criterion found no obstruction.",
+    )
+  else
+    return (
+      true, 
+      ( probcases, c ),
+      pdc_explanation(probcases)
+    )
+  end
+end
+
+function pdc_explanation(probcases::Tuple{Vector{Tuple{Int64,QQBarFieldElem}},Vector{QQBarFieldElem}})::String
+  problems = first(probcases)
+  codegrees = last(probcases)
+  mps(tup) = (minpolstring ∘ last)(tup)
+  r = length(problems)
+  polystrings = mps.(problems)
+
+  cdstring = "(" * join( qqb_id_rep.(codegrees), ", "  )* ")"
+
+  function jstring(j)
+    i = probcases[j][1]
+    "\$\\frac{c_{$j}}{c_{$i}}\$ has minimal polynomial \$" * polystrings(j) *"\$,\n" 
+  end
+
+  nonalgintstr = ""
+  for j in 1:r
+    nonalgintstr = nonalgintstr*jstring(j)
+  end
+
+  return "The fusion ring does not have a complex pivotal categorification " *
+         "because its formal codegrees \$c_{i}\$ equal " *
+         cdstring *
+         " and therefore: \n" *
+         nonalgintstr *
+         "so there exists no value of \$j \\in \\{1,\\ldots,$r\\}\$ "* 
+         "such that \$\frac{c_{j}}{c_i}\$ is an algebraic integer for all " * 
+         "\$i \\in \\{1,\\ldots,$r\\}\$, which needs to be the case for " *
+         "a complex pivotal fusion category according to the pivotal Drinfeld center " * 
+         "criterium from 10.1007/s11005-022-01542-1, Theorem 2.3."
+end
+
+function minpolstring(x::QQBarFieldElem)::String
+  (fix_poly_string ∘ string ∘ minimal_polynomial)(x)
+end
 
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-#┃                    pseudo-unitary drinfeld center criterion                     ┃
+#┃                    pseudo-unitary Drinfeld center criterion                     ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export pudc_criterion
 
 function pudc_criterion(
   fr::FusionRing; force_compute::Bool = false
 )::Bool
-  first( pdc_criterion_explanation(fr,force_compute=force_compute) )
+  first( pudc_criterion_explanation(fr,force_compute=force_compute) )
 end
 
 
 function pudc_criterion_explanation(
   fr::FusionRing; force_compute::Bool = false
-)::Tuple{Bool,Tuple{QQBarFieldElem,Int64},String}
+)::Tuple{Bool,Tuple{QQBarFieldElem,Int64},Vector{QQBarFieldElem}, String}
   is_commutative(fr) || return false
 
   codegrees = formal_codegrees(fr; force_compute = force_compute)
@@ -191,43 +274,33 @@ function pudc_criterion_explanation(
   for i in 1:rank(fr)
     frac = codegrees[1]//codegrees[i]
     if !is_algebraic_integer(frac)
-      return ( true, (frac, i), pdc_explanation(frac,i) )
+      return ( true, (frac, i, codegrees), pdc_explanation(frac,i, codegrees) )
     end
   end
 
-  return false
+  return ( 
+    false, 
+    nothing, 
+    "The pseudo-unitary Drinfeld center criterion found no obstruction" 
+    )
 end
 
   
-function pudc_explanation( frac, int )
-  qqbstr = qqb_id(frac)
-  
+function pudc_explanation( frac, int, codegrees )
+  mps = minpolstring(frac)
+  cdstring = "(" * join( qqb_id_rep.(codegrees), ", "  )* ")"
+
   "The fusion ring does not have a pseudo-untary categorification"*
-  " because \$\\frac{c_1}{c_$(int)}\$ ="*qqbstr*
-  ", where c_i is the i'th formal codegree, is not an algebraic"*
+  " because its codegrees c_{i} are " * 
+  cdstring * 
+  " but \$\\frac{c_1}{c_$(int)}\$ has minimal polynomial " * 
+  mps *
+  "and is therefore not an algebraic"*
   " integer which it needs to be according to the pseudo-unitary"*
-  " version of the Drinfeld center criterion from 10.1007/s11005-022-01542-1 "*
+  " version of the Drinfeld center criterion from 10.1007/s11005-022-01542-1, "*
   "Theorem 2.4."
 end
-  
-#function pudc_criterion(fr::FusionRing)
-#  !is_commutative(fr) && return false
-#
-#  chars = characters(fr)
-#
-#end
-#  Returns True if ring has no complex pseudo-unitary categorification
-#
-#
-#PackageExport["PUDCC"]
-#
-#PUDCC[ ring_FusionRing?CommutativeQ ] :=
-#  With[{ chars = FusionRingCharacters[ring] },
-#    And @@ Flatten @
-#    AlgebraicIntegerQ[ chars[[1]].ConjugateTranspose[chars[[1]]] / chars ]
-#  ];
-#
-#
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                               D-number criterion                                ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -235,6 +308,9 @@ end
 #
 # The function returns true if the fusion ring has no complex categorification
 #
+
+export dn_criterion
+
 """
 dn_criterion(fr; force_compute=false)
 
@@ -245,37 +321,74 @@ path does not yet recover the irreducible-representation dimensions needed to
 separate `f_E` from `f_E * dim(E)`.
 """
 #changed: Apply Ostrik's d-number theorem to every supported commutative formal codegree; any failure obstructs categorification.
-function dn_criterion(
+function dn_criterion_explanation(
   fr::FusionRing; force_compute::Bool = false
-)::Bool
-  is_commutative(fr) || return false
+)::(Bool, Union{Nothing,Tuple{QQBarFieldElem,Int64}}, String)
+  is_commutative(fr) || return (false, nothing, "At the moment, the d-number criterium is only implemented for commutative fusion rings.")
   codegrees = formal_codegrees(fr; force_compute = force_compute)
-  return any(codegree -> !is_d_number(codegree), codegrees)
+
+  for i in 1:length(codegrees)
+    c = codegrees[i]
+    is_dnum, ind, info = is_d_number_explanation(c)
+    is_dnum && continue
+      
+    if isnothing(info) && info === "Not an algebraic integer"
+      return ( true, (c,-1), "The $i'th codegree "*qqb_id_rep(c)*" is not an algebraic number and therefore not a d-number.")
+    else 
+      return ( true, (c,ind), dn_explanation(c,i,ind) )
+    end
+  end
+  return ( false, nothing, "The d-number criterium found no obstruction to categorification." )
 end
 
-"""Return whether the algebraic number `z` is a d-number."""
-#changed: Require algebraic integrality and correct the minimal-polynomial coefficient/divisibility direction.
-function is_d_number(z::QQBarFieldElem)::Bool
-  is_algebraic_integer(z) || return false
+function dn_explanation(c::QQBarFieldElem,i::Int64,ind::Int64,)
+  mps = minpolstring(c) 
+  n = degree(minimal_polynomial(c))
 
-  polynomial_ring_qq, _ = polynomial_ring(QQ, :x)
-  polynomial = minpoly(polynomial_ring_qq, z)
+  return "The fusion ring does not have a categorification because the $i'th formal codegree \$c_{$i}=\$"*
+  qqb_id_rep(c) *
+  " of the fusion rings has minimal polynomial " * 
+  mps * " \$= x^n +a_{1}x^{n-1}+\\ldots+a_{n-1}x+a_{n}\$ so  "* 
+  "a_{$ind}^{$n} does not divide a_{$n}^{$ind} and . The $i'th formal codegree is therefore not a d-number "
+  "which needs to be the case according to 10.48550/arXiv.0810.3242, Theorem 1.2."
+
+end
+
+
+export is_d_number
+
+"""Return whether the algebraic number `z` is a d-number."""
+function is_d_number(z::QQBarFieldElem)::Bool 
+  first(is_d_number_explanation(z))
+end
+
+function is_d_number_explanation(z::QQBarFieldElem)::Tuple{Bool,Union{Nothing,Int64},String}
+  is_algebraic_integer(z) || return ( false, nothing , "Not an algebraic integer" )
+
+  R, _ = QQ[:x]
+  polynomial = minpoly(R, z)
   n = degree(polynomial)
   n <= 1 && return true
 
-  constant_term = coeff(polynomial, 0)
-  constant_term == 0 && return false
+  a_n = constant_coefficient(polynomial)
 
   for i in 1:(n - 1)
-    coefficient = coeff(polynomial, n - i)
-    denominator(coefficient^n / constant_term^i) == 1 || return false
+    a_i = coeff(polynomial, n - i)
+    denominator(a_i^n // a_n^i) == 1 || return ( false, i, "a_{$n}^{$i} does not divide a_{$i}^{$n}" )
   end
   return true
 end
 
+# TODO: there's also a braided unitary d-number criterion from the same paper: 
+# Theorem 1.8 says that for a braided fusion cat |X|^2 is a d-number for any 
+# simple X. For unitary cat |X|^2 = fp_dim(x)^2 so is easy to set up criterion 
+# from that 
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                          extended cyclotomic criterion                          ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+export ecc_criterion
 
 """
 ecc_criterion(fr::FusionRing)
@@ -321,6 +434,7 @@ end
 #┃                                Lagrange criterion                               ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+export lagrange_criterion
 """
 lagrange_criterion(fr::FusionRing; force_compute=false)
 
@@ -494,14 +608,15 @@ end
 #┃                              zero spectrum criterion                            ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+export zs_criterion
 """
-zsc_criterion(ring)
+zs_criterion(ring)
 
 Returns true if the Zero Spectrum Criterion rules out categorifiability.
 """
 #changed: Search only indexed matching structure constants, begin from entries
 # equal to one, and use short-circuiting.
-function zsc_criterion(ring::FusionRing)::Bool
+function zs_criterion(ring::FusionRing)::Bool
   mt = multiplication_table(ring)
   r = size(mt, 1)
 
@@ -575,14 +690,15 @@ end
 #┃                              one spectrum criterion                             ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+export os_criterion
 """
-osc_criterion(ring)
+os_criterion(ring)
 
 Returns true if  One Spectrum Criterion rules out categorifiability.
 """
 #changed: Search only indexed matching structure constants and use
 # short-circuiting spectrum predicates.
-function osc_criterion(ring::FusionRing)::Bool
+function os_criterion(ring::FusionRing)::Bool
   mt = multiplication_table(ring)
   r = size(mt, 1)
 

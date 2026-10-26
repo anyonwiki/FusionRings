@@ -778,3 +778,531 @@ function os_criterion(ring::FusionRing)::Bool
 
   return false
 end
+
+
+## Added: 
+
+
+#changed: Add a compact structured reporting layer without duplicating static
+# criterion metadata or changing the existing Boolean criterion APIs.
+export CategorificationTarget,
+  CriterionOutcome,
+  CriterionSpec,
+  CriterionResult,
+  CategorifiabilityReport,
+  COMPLEX_CATEGORIFICATION,
+  PIVOTAL_CATEGORIFICATION,
+  PSEUDO_UNITARY_CATEGORIFICATION,
+  UNITARY_CATEGORIFICATION,
+  CRITERION_NO_OBSTRUCTION,
+  CRITERION_OBSTRUCTED,
+  CRITERION_NOT_APPLICABLE,
+  CRITERION_INCONCLUSIVE,
+  CRITERION_COMPUTATION_FAILED,
+  criterion_result,
+  csp_criterion_result,
+  pdc_criterion_result,
+  dn_criterion_result,
+  categorifiability_report,
+  criterion_spec,
+  criterion_target,
+  criterion_source,
+  DEFAULT_CATEGORIFIABILITY_CRITERIA,
+  is_obstructed,
+  explain,
+  obstructions
+
+"""The weakest kind of categorification ruled out by a criterion."""
+@enum CategorificationTarget::UInt8 begin
+  COMPLEX_CATEGORIFICATION
+  PIVOTAL_CATEGORIFICATION
+  PSEUDO_UNITARY_CATEGORIFICATION
+  UNITARY_CATEGORIFICATION
+end
+
+"""The outcome of running one necessary categorifiability criterion."""
+@enum CriterionOutcome::UInt8 begin
+  CRITERION_NO_OBSTRUCTION
+  CRITERION_OBSTRUCTED
+  CRITERION_NOT_APPLICABLE
+  CRITERION_INCONCLUSIVE
+  CRITERION_COMPUTATION_FAILED
+end
+
+const _REQUIRES_COMMUTATIVE = UInt8(0x01)
+
+"""
+Static information shared by every run of a criterion.
+
+Keeping this information outside `CriterionResult` avoids copying targets,
+requirements, and literature references into every report.
+"""
+struct CriterionSpec
+  target::CategorificationTarget
+  source::Symbol
+  requirements::UInt8
+end
+
+"""
+The compact result of running one criterion.
+
+`data` is normally `nothing`.  An obstruction stores only its mathematical
+witness; a non-applicable or failed computation stores a short reason.  It is
+deliberately an `Any` field because reports contain only a small heterogeneous
+collection of witnesses and are not part of a numerical inner loop.
+"""
+struct CriterionResult
+  criterion::Symbol
+  outcome::CriterionOutcome
+  data::Any
+end
+
+CriterionResult(criterion::Symbol, outcome::CriterionOutcome) =
+  CriterionResult(criterion, outcome, nothing)
+
+"""A collection of criterion results for one ring."""
+struct CategorifiabilityReport
+  results::Vector{CriterionResult}
+end
+
+const CRITERION_SPECS = Dict{Symbol,CriterionSpec}(
+  :csp => CriterionSpec(
+    UNITARY_CATEGORIFICATION,
+    :LiuPalcouxWu2021_Corollary8_5,
+    _REQUIRES_COMMUTATIVE,
+  ),
+  :pdc => CriterionSpec(
+    PIVOTAL_CATEGORIFICATION,
+    :PivotalDrinfeldCenterCriterion,
+    _REQUIRES_COMMUTATIVE,
+  ),
+  :pudc => CriterionSpec(
+    PSEUDO_UNITARY_CATEGORIFICATION,
+    :PseudoUnitaryDrinfeldCenter_Theorem2_4,
+    _REQUIRES_COMMUTATIVE,
+  ),
+  :d_number => CriterionSpec(
+    COMPLEX_CATEGORIFICATION,
+    :Ostrik2009_Theorem1_2,
+    _REQUIRES_COMMUTATIVE,
+  ),
+  :extended_cyclotomic => CriterionSpec(
+    COMPLEX_CATEGORIFICATION,
+    :LiuPalcouxRen2022_Theorem2_11,
+    _REQUIRES_COMMUTATIVE,
+  ),
+  :lagrange => CriterionSpec(
+    COMPLEX_CATEGORIFICATION,
+    :EGNO_Theorem7_17_6,
+    UInt8(0),
+  ),
+  :zero_spectrum => CriterionSpec(
+    COMPLEX_CATEGORIFICATION,
+    :TriangularPrism_ZeroSpectrum,
+    UInt8(0),
+  ),
+  :one_spectrum => CriterionSpec(
+    COMPLEX_CATEGORIFICATION,
+    :TriangularPrism_OneSpectrum,
+    UInt8(0),
+  ),
+)
+
+const CRITERION_SOURCES = Dict{Symbol,String}(
+  :LiuPalcouxWu2021_Corollary8_5 =>
+    "doi:10.1016/j.aim.2021.107905, Corollary 8.5",
+  :PivotalDrinfeldCenterCriterion =>
+    "Pivotal Drinfeld-center criterion",
+  :PseudoUnitaryDrinfeldCenter_Theorem2_4 =>
+    "doi:10.1007/s11005-022-01542-1, Theorem 2.4",
+  :Ostrik2009_Theorem1_2 =>
+    "arXiv:0810.3242, Theorem 1.2",
+  :LiuPalcouxRen2022_Theorem2_11 =>
+    "arXiv:2010.10264, Theorem 2.11",
+  :EGNO_Theorem7_17_6 =>
+    "Etingof--Gelaki--Nikshych--Ostrik, Theorem 7.17.6",
+  :TriangularPrism_ZeroSpectrum =>
+    "arXiv:2203.06522, zero-spectrum criterion",
+  :TriangularPrism_OneSpectrum =>
+    "arXiv:2203.06522, one-spectrum criterion",
+)
+
+const _CRITERION_LABELS = Dict{Symbol,String}(
+  :csp => "commutative Schur product",
+  :pdc => "pivotal Drinfeld-center",
+  :pudc => "pseudo-unitary Drinfeld-center",
+  :d_number => "d-number",
+  :extended_cyclotomic => "extended cyclotomic",
+  :lagrange => "Lagrange",
+  :zero_spectrum => "zero-spectrum",
+  :one_spectrum => "one-spectrum",
+)
+
+const DEFAULT_CATEGORIFIABILITY_CRITERIA = (
+  :csp,
+  :pdc,
+  :pudc,
+  :d_number,
+  :extended_cyclotomic,
+  :lagrange,
+  :zero_spectrum,
+  :one_spectrum,
+)
+
+const _CRITERION_RUNNERS = Dict{Symbol,Symbol}(
+  :pdc => :pdc_criterion,
+  :pudc => :pudc_criterion,
+  :d_number => :dn_criterion,
+  :extended_cyclotomic => :ecc_criterion,
+  :lagrange => :lagrange_criterion,
+  :zero_spectrum => :zsc_criterion,
+  :one_spectrum => :osc_criterion,
+)
+
+const _FORCE_COMPUTE_CRITERIA = (
+  :pdc,
+  :pudc,
+  :d_number,
+  :lagrange,
+)
+
+"""Return the static specification for a criterion ID or result."""
+function criterion_spec(criterion::Symbol)::CriterionSpec
+  haskey(CRITERION_SPECS, criterion) ||
+    throw(ArgumentError("unknown categorifiability criterion: $criterion"))
+  return CRITERION_SPECS[criterion]
+end
+
+criterion_spec(result::CriterionResult)::CriterionSpec =
+  criterion_spec(result.criterion)
+
+criterion_target(criterion::Symbol)::CategorificationTarget =
+  criterion_spec(criterion).target
+
+criterion_target(result::CriterionResult)::CategorificationTarget =
+  criterion_target(result.criterion)
+
+"""Return the shared literature reference for a criterion."""
+function criterion_source(criterion::Symbol)::String
+  source = criterion_spec(criterion).source
+  return get(CRITERION_SOURCES, source, string(source))
+end
+
+criterion_source(result::CriterionResult)::String =
+  criterion_source(result.criterion)
+
+is_obstructed(result::CriterionResult)::Bool =
+  result.outcome == CRITERION_OBSTRUCTED
+
+is_obstructed(report::CategorifiabilityReport)::Bool =
+  any(is_obstructed, report.results)
+
+obstructions(report::CategorifiabilityReport)::Vector{CriterionResult} =
+  filter(is_obstructed, report.results)
+
+function _not_applicable_result(
+  criterion::Symbol,
+  ring::FusionRing,
+)::Union{Nothing,CriterionResult}
+  spec = criterion_spec(criterion)
+  if spec.requirements & _REQUIRES_COMMUTATIVE != 0 && !is_commutative(ring)
+    return CriterionResult(
+      criterion,
+      CRITERION_NOT_APPLICABLE,
+      (reason = :noncommutative_ring,),
+    )
+  end
+  return nothing
+end
+
+"""
+    csp_criterion_result(ring; force_compute=false)
+
+Run the commutative Schur product criterion and retain its coefficient and
+character indices when it finds an obstruction.
+"""
+function csp_criterion_result(
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::CriterionResult
+  not_applicable = _not_applicable_result(:csp, ring)
+  isnothing(not_applicable) || return not_applicable
+
+  chars = characters(ring; force_compute = force_compute)
+  dimensions = fpdims(ring; force_compute = force_compute)
+  r = rank(ring)
+
+  for j1 in 1:r, j2 in 1:r, j3 in 1:r
+    coefficient = sum(
+      chars[j1, i] * chars[j2, i] * chars[j3, i] / dimensions[i]
+      for i in 1:r
+    )
+
+    if !is_real(coefficient) || coefficient < 0
+      return CriterionResult(
+        :csp,
+        CRITERION_OBSTRUCTED,
+        (
+          coefficient = coefficient,
+          indices = (j1, j2, j3),
+        ),
+      )
+    end
+  end
+
+  return CriterionResult(:csp, CRITERION_NO_OBSTRUCTION)
+end
+
+"""
+    pdc_criterion_result(ring; force_compute=false)
+
+Run the pivotal Drinfeld-center criterion.  When every candidate formal
+codegree fails, retain one nonintegral quotient for each candidate as a compact
+certificate of the obstruction.
+"""
+function pdc_criterion_result(
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::CriterionResult
+  not_applicable = _not_applicable_result(:pdc, ring)
+  isnothing(not_applicable) || return not_applicable
+
+  codegrees = formal_codegrees(ring; force_compute = force_compute)
+  failures = NamedTuple[]
+
+  for (candidate_index, candidate) in pairs(codegrees)
+    failed_index = findfirst(
+      codegree -> !is_algebraic_integer(candidate / codegree),
+      codegrees,
+    )
+
+    isnothing(failed_index) &&
+      return CriterionResult(:pdc, CRITERION_NO_OBSTRUCTION)
+
+    push!(
+      failures,
+      (
+        candidate_index = candidate_index,
+        codegree_index = failed_index,
+        quotient = candidate / codegrees[failed_index],
+      ),
+    )
+  end
+
+  return CriterionResult(
+    :pdc,
+    CRITERION_OBSTRUCTED,
+    (failures = failures,),
+  )
+end
+
+"""
+    dn_criterion_result(ring; force_compute=false)
+
+Run the d-number criterion and retain the first formal codegree that fails.
+"""
+function dn_criterion_result(
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::CriterionResult
+  not_applicable = _not_applicable_result(:d_number, ring)
+  isnothing(not_applicable) || return not_applicable
+
+  codegrees = formal_codegrees(ring; force_compute = force_compute)
+  failed_index = findfirst(codegree -> !is_d_number(codegree), codegrees)
+
+  isnothing(failed_index) &&
+    return CriterionResult(:d_number, CRITERION_NO_OBSTRUCTION)
+
+  return CriterionResult(
+    :d_number,
+    CRITERION_OBSTRUCTED,
+    (
+      codegree_index = failed_index,
+      codegree = codegrees[failed_index],
+    ),
+  )
+end
+
+function _run_boolean_criterion(
+  criterion::Symbol,
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::CriterionResult
+  runner_name = get(_CRITERION_RUNNERS, criterion, nothing)
+  isnothing(runner_name) && return CriterionResult(
+    criterion,
+    CRITERION_INCONCLUSIVE,
+    (reason = :no_runner_registered,),
+  )
+
+  isdefined(@__MODULE__, runner_name) || return CriterionResult(
+    criterion,
+    CRITERION_INCONCLUSIVE,
+    (reason = :not_implemented,),
+  )
+
+  runner = getfield(@__MODULE__, runner_name)
+  obstructed = if criterion in _FORCE_COMPUTE_CRITERIA
+    runner(ring; force_compute = force_compute)
+  else
+    runner(ring)
+  end
+
+  obstructed isa Bool || error("$runner_name did not return a Bool")
+  outcome = obstructed ? CRITERION_OBSTRUCTED : CRITERION_NO_OBSTRUCTION
+  return CriterionResult(criterion, outcome)
+end
+
+"""
+    criterion_result(criterion, ring; force_compute=false)
+
+Run one named criterion and return a structured result.  Existing criteria
+without a dedicated structured implementation are safely adapted from their
+Boolean APIs; their witnesses can be added later without changing this API.
+"""
+function criterion_result(
+  criterion::Symbol,
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::CriterionResult
+  criterion_spec(criterion)
+
+  criterion == :csp && return csp_criterion_result(
+    ring;
+    force_compute = force_compute,
+  )
+  criterion == :pdc && return pdc_criterion_result(
+    ring;
+    force_compute = force_compute,
+  )
+  criterion == :d_number && return dn_criterion_result(
+    ring;
+    force_compute = force_compute,
+  )
+
+  not_applicable = _not_applicable_result(criterion, ring)
+  isnothing(not_applicable) || return not_applicable
+
+  return _run_boolean_criterion(
+    criterion,
+    ring;
+    force_compute = force_compute,
+  )
+end
+
+function _failed_criterion_result(
+  criterion::Symbol,
+  exception,
+)::CriterionResult
+  return CriterionResult(
+    criterion,
+    CRITERION_COMPUTATION_FAILED,
+    (
+      error_type = Symbol(nameof(typeof(exception))),
+      message = sprint(showerror, exception),
+    ),
+  )
+end
+
+"""
+    categorifiability_report(ring; criteria=DEFAULT_CATEGORIFIABILITY_CRITERIA,
+                             force_compute=false, catch_errors=true)
+
+Run several necessary criteria.  A failed computation is never silently
+reported as "no obstruction".  With `catch_errors=true`, it becomes a
+`CRITERION_COMPUTATION_FAILED` result and the remaining criteria still run.
+"""
+function categorifiability_report(
+  ring::FusionRing;
+  criteria = DEFAULT_CATEGORIFIABILITY_CRITERIA,
+  force_compute::Bool = false,
+  catch_errors::Bool = true,
+)::CategorifiabilityReport
+  criterion_ids = Symbol[Symbol(criterion) for criterion in criteria]
+  foreach(criterion_spec, criterion_ids)
+
+  results = CriterionResult[]
+  for criterion in criterion_ids
+    result = if catch_errors
+      try
+        criterion_result(
+          criterion,
+          ring;
+          force_compute = force_compute,
+        )
+      catch exception
+        _failed_criterion_result(criterion, exception)
+      end
+    else
+      criterion_result(
+        criterion,
+        ring;
+        force_compute = force_compute,
+      )
+    end
+    push!(results, result)
+  end
+
+  return CategorifiabilityReport(results)
+end
+   
+function criterion_label(criterion::Symbol)::String
+  return get(_CRITERION_LABELS, criterion, replace(string(criterion), "_" => " "))
+end
+
+function reason_text(reason::Symbol)::String
+  reason == :noncommutative_ring && return "the ring is noncommutative"
+  reason == :not_implemented && return "the criterion is not implemented"
+  reason == :no_runner_registered && return "no implementation is registered"
+  return replace(string(reason), "_" => " ")
+end
+
+"""Generate a short explanation only when it is requested."""
+function explain(result::CriterionResult)::String
+  label = criterion_label(result.criterion)
+
+  result.outcome == CRITERION_NO_OBSTRUCTION &&
+    return "The $label criterion found no obstruction."
+
+  if result.outcome == CRITERION_NOT_APPLICABLE
+    return "The $label criterion does not apply because " *
+           _reason_text(result.data.reason) * "."
+  end
+
+  if result.outcome == CRITERION_INCONCLUSIVE
+    return "The $label criterion was inconclusive because " *
+           _reason_text(result.data.reason) * "."
+  end
+
+  if result.outcome == CRITERION_COMPUTATION_FAILED
+    return "The $label criterion could not be computed: " * result.data.message
+  end
+
+  if result.criterion == :csp
+    coefficient = result.data.coefficient
+    indices = result.data.indices
+    approximate = _format_complex_float(string(ComplexF64(coefficient)))
+    return "The commutative Schur product coefficient for indices $indices is " *
+           "$(qqb_id_rep(qqb_id(coefficient))) ≈ $approximate, which is not " *
+           "a nonnegative real number."
+  end
+
+  if result.criterion == :pdc
+    failures = result.data.failures
+    first_failure = first(failures)
+    return "The pivotal Drinfeld-center criterion found no formal-codegree " *
+           "candidate whose ratios are all algebraic integers. For example, " *
+           "candidate $(first_failure.candidate_index) divided by formal " *
+           "codegree $(first_failure.codegree_index) is " *
+           "$(qqb_id_rep(qqb_id(first_failure.quotient)))."
+  end
+
+  if result.criterion == :d_number
+    return "Formal codegree $(result.data.codegree_index), " *
+           "$(qqb_id_rep(qqb_id(result.data.codegree))), is not a d-number."
+  end
+
+  return "The $label criterion found an obstruction."
+end
+ 

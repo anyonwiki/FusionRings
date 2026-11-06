@@ -631,7 +631,7 @@ end
 # containts this vector
 
 export which_permutation
-
+#changed: fixed caching
 """
     which_permutation(fr1, fr2, all=false, short_circuit=true)::Union{Nothing,Vector{Int64}}
 
@@ -641,8 +641,8 @@ export which_permutation
     not equivalent. This saves time if it is known a priori that the rings have to be equivalent.
 """
 function which_permutation(
-  fr1::FusionRing, fr2::FusionRing; all = false, short_circuit = true
-)::Union{Nothing, Vector{Vector{Int64}}}
+  fr1::FusionRing, fr2::FusionRing; all::Bool = false, short_circuit::Bool = true, force_compute::Bool = false,
+)::Union{Nothing,Vector{Vector{Int64}}}
   r = rank(fr1)
 
   # if ranks are different we can't compare so necessary to short_circuit
@@ -656,8 +656,9 @@ function which_permutation(
   short_circuit && mult(fr1) != mult(fr2) && return nothing
 
   # rings must have same fpdims
-  fpd1 = fpdims(fr1)
-  fpd2 = fpdims(fr2)
+  fpd1 = fpdims(fr1; force_compute = force_compute)
+  fpd2 = fpdims(fr2; force_compute = force_compute)
+
 
   short_circuit && sort(fpd1) ≠ sort(fpd2) && return nothing
 

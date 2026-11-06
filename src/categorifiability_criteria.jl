@@ -192,6 +192,58 @@ function csp_criterion_explanation(
   )
 end
 
+#changed: added explanation for csp 
+#ex: 
+#result = csp_result(fr)
+#result.status
+#result.reason
+#result.failed_input.indices
+#result.failed_input.coefficeint
+function csp_result(
+  ring::FusionRing;
+  force_compute::Bool = false,
+)::CriterionResult
+  if !is_commutative(ring)
+    return CriterionResult(
+      NotApplicable,
+      "The implemented Schur-product criterion only applies to commutative rings.",
+    )
+  end
+
+  try
+    obstructed, witness, explanation =
+      csp_criterion_explanation(
+        ring;
+        force_compute = force_compute,
+      )
+
+    if obstructed
+      coefficient, indices = witness
+
+      return CriterionResult(
+        Obstructed,
+        explanation;
+        failed_input = (
+          indices = indices,
+          coefficient = coefficient,
+        ),
+      )
+    end
+
+    return CriterionResult(
+      NoObstructionFound,
+      explanation,
+    )
+  catch err
+    err isa InterruptException && rethrow()
+
+    return computation_failed_result(
+      "The Schur-product criterion could not be computed.",
+      err,
+    )
+  end
+end
+
 
 #changed: Format  exact | approximate coefficient correctly and remove
 #  undefined aprstr variable.
@@ -418,6 +470,58 @@ function pudc_criterion_explanation(
     "The pseudo-unitary Drinfeld-center criterion found no obstruction.",
   )
 end
+
+#changed: added explanations for pudc 
+function pudc_result(
+  fr::FusionRing;
+  force_compute::Bool = false,
+)::CriterionResult
+  if !is_commutative(fr)
+    return CriterionResult(
+      NotApplicable,
+      "The implemented pseudo-unitary criterion only applies to commutative rings.",
+    )
+  end
+
+  try
+    obstructed, witness, explanation =
+      pudc_criterion_explanation(
+        fr;
+        force_compute = force_compute,
+      )
+
+    if obstructed
+      ratio, codegree_index = witness
+      codegrees = formal_codegrees(
+        fr;
+        force_compute = force_compute,
+      )
+
+      return CriterionResult(
+        Obstructed,
+        explanation;
+        failed_input = (
+          codegree_index = codegree_index,
+          codegree = codegrees[codegree_index],
+          ratio = ratio,
+        ),
+      )
+    end
+
+    return CriterionResult(
+      NoObstructionFound,
+      explanation,
+    )
+  catch err
+    err isa InterruptException && rethrow()
+
+    return computation_failed_result(
+      "The pseudo-unitary criterion could not be computed.",
+      err,
+    )
+  end
+end
+
   
 function pudc_explanation( frac, int, codegrees )
   mps = minpolstring(frac)

@@ -293,11 +293,18 @@ function tensor_product(r1::FusionRing, r2::FusionRing)::FusionRing
     tpnames(names(r1), names(r2))
   end
 
+  #changed: old code just copied whatever dims were cached on input rings
   fpdims_new = try
-    [d1 * d2 for d1 in fpdims(r1) for d2 in fpdims(r2)]
+  [
+    d1 * d2
+    for d1 in fpdims(r1; force_compute = true)
+    for d2 in fpdims(r2; force_compute = true)
+  ]
   catch
     missing
   end
+
+
 
   return fusion_ring(
     mt; names = names_tp, labels = elnames, frobenius_perron_dimensions = fpdims_new

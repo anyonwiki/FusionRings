@@ -11,6 +11,43 @@ using Oscar
     return check_true(osc_criterion(z2) isa Bool, "osc_criterion did not return a Bool")
   end
 
+  maybe_testset("basic", "crit results") do
+  z2 = zn_fusion_ring(2)
+
+  result = csp_result(z2)
+
+  check_true(
+    result isa CriterionResult,
+    "csp_result did not return a CriterionResult",
+  )
+
+  check_equal(
+    result.status,
+    NoObstructionFound,
+    "CSP returned an unexpected status for Z2",
+  )
+
+  check_equal(
+    result.failed_input,
+    nothing,
+    "Unobstructed CSP result returned a failed input",
+  )
+
+  data = CategorifiabilityData()
+  data[:csp] = result
+
+  check_true(
+    haskey(data, :csp),
+    "CategorifiabilityData did not store the CSP result",
+  )
+
+  return check_equal(
+    data[:csp],
+    result,
+    "CategorifiabilityData returned the wrong CSP result",
+  )
+end
+
   maybe_testset("intermediate", "2. formulas and cache behavior") do
     z2 = zn_fusion_ring(2)
 

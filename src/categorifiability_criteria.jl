@@ -1,3 +1,103 @@
+export CriterionStatus,
+  CriterionResult,
+  CategorifiabilityData,
+  Obstructed,
+  NoObstructionFound,
+  NotApplicable,
+  ComputationFailed,
+  csp_criterion,
+  csp_result,
+  pdc_criterion,
+  dn_criterion,
+  is_d_number,
+  ecc_criterion,
+  lagrange_criterion,
+  zsc_criterion,
+  osc_criterion
+
+
+  #changed: added exports and data structure for storing categorifiability data
+  @enum CriterionStatus begin
+  Obstructed
+  NoObstructionFound
+  NotApplicable
+  ComputationFailed
+end
+
+
+struct CriterionResult{T}
+  status::CriterionStatus
+  reason::String
+  failed_input::Union{Nothing,T}
+end
+
+
+function CriterionResult(
+  status::CriterionStatus,
+  reason::AbstractString;
+  failed_input = nothing,
+)
+  return CriterionResult{typeof(failed_input)}(
+    status,
+    String(reason),
+    failed_input,
+  )
+end
+
+
+struct CategorifiabilityData
+  results::Dict{Symbol,CriterionResult}
+end
+
+
+CategorifiabilityData() =
+  CategorifiabilityData(Dict{Symbol,CriterionResult}())
+
+
+Base.getindex(data::CategorifiabilityData, criterion::Symbol) =
+  data.results[criterion]
+
+
+Base.haskey(data::CategorifiabilityData, criterion::Symbol) =
+  haskey(data.results, criterion)
+
+
+function Base.setindex!(
+  data::CategorifiabilityData,
+  result::CriterionResult,
+  criterion::Symbol,
+)
+  data.results[criterion] = result
+  return data
+end
+
+##so for example it would look like
+#data = CategorifiabilityData()
+#data[:csp] = csp_result(fr)
+#data[:csp].status
+#data[:csp].reason
+#data[:csp].failed_input
+
+#changed: helps with with reasons behind faliure
+function computation_failed_result(
+  reason::AbstractString,
+  err;
+  failed_input = nothing,
+)::CriterionResult
+  details = (
+    input = failed_input,
+    exception_type = nameof(typeof(err)),
+    exception_message = sprint(showerror, err),
+  )
+
+  return CriterionResult(
+    ComputationFailed,
+    reason;
+    failed_input = details,
+  )
+end
+
+
 #┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 #┃                     commutative schur product criterion                         ┃
 #┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

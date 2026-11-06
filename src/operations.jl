@@ -36,8 +36,8 @@ export replace_by_known
 # elements of the given ring.
 # safe_return=true makes the function return the original ring in case no built-in 
 # ring is found
-
-function replace_by_known(fr::FusionRing; keep_order = true, safe_return = true)::FusionRing
+#changed: fixed behaviour if missing
+function replace_by_known(fr::FusionRing; keep_order = true, safe_return = true)::Union{FusionRing,Missing}
   r = rank(fr)
   m = multiplicity(fr)
   n = nnsd(fr)
@@ -53,7 +53,9 @@ function replace_by_known(fr::FusionRing; keep_order = true, safe_return = true)
   p      = nothing
   target = nothing
   for ring in proposals
-    p = which_permutation(ring, fr)
+    p = which_permutation(ring, fr, force_compute=true)
+    #safe_return already returns missing but old only allowed fusiongring
+    #so stale dims cannot reject a otherwise identical known ring
     if !isnothing(p)
       target = ring
       break

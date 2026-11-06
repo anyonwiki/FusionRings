@@ -1544,7 +1544,7 @@ export numeric_characters
 #2. Eigen-decompose `M = V Λ V⁻¹`.
 #3. Verify that every `V⁻¹ N_i V` is (numerically) diagonal. If not, retry.
 #Normalize and sort V
-
+#changed: fixed signature for numeric chars as well
 """
     numeric_characters(R::FusionRing; tries::Int=64, tol=1e-12)::Matrix{ComplexF64}
 
@@ -1554,7 +1554,7 @@ If force_compute = false and symbolic characters are available, the numeric char
 
 Throws if no common eigenbasis is found after `tries` attempts.
 """
-function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = false)::Matrix{ComplexF64}
+function numeric_characters(ring::FusionRing, tries::Int = 64, tol::Real = 1e-12; force_compute::Bool = false)::Matrix{ComplexF64}
   nc = ring.characters
   if !ismissing(nc) && !force_compute
     return ComplexF64.(Matrix(characters(ring)))
@@ -1571,7 +1571,7 @@ function numeric_characters(ring, tries::Int = 64, tol = 1e-12; force_compute = 
   mt   = multiplication_table(ring)
   r    = rank(ring)
   mats = [mt[i, :, :] for i in 1:r]
-  V    = (normalize_first_col ∘ numeric_diagonalizing_matrix)(mats)
+  V    = (normalize_first_col(numeric_diagonalizing_matrix(mats,tries,tol)))
 
   return sortslices(V; dims = 1, by = num_char_sort_crit)
 end

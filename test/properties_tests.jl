@@ -900,3 +900,22 @@ using Oscar
     end
   end
 end
+
+#added: testset for chars
+@testset "character computation" begin
+  z3 = zn_fusion_ring(3)
+
+  chars = characters(
+    z3;
+    force_compute = true,
+    tries = 64,
+    tol = 1e-12,
+  )
+
+  @test size(chars) == (3, 3)
+end
+
+@test csp_criterion(z3; force_compute = true) isa Bool
+@test pdc_criterion(z3; force_compute = true) isa Bool
+@test dn_criterion(z3; force_compute = true) isa Bool
+

@@ -162,7 +162,6 @@ function pdc_criterion(
   return first(pdc_criterion_explanation)
 end
 
-
 function pdc_criterion_explanation(
   ring::FusionRing;
   force_compute::Bool = false,
@@ -257,34 +256,68 @@ end
 
 export pudc_criterion
 
+
+#changed: formal codegrees sorts codegrees w/increasing abs. vals
+#so codeg[1] == smallest stored val. not c1, so for Ising FPdim(R) = 4 , {c_{i} = {2,4,4}}
+#codeg[1] == 2 -> 2/4 = 1/2 but correct ratios are 4/2 = 2 , 4/4 = 1 , 4/4 = 1 since c1= Fpdim(R)
 function pudc_criterion(
-  fr::FusionRing; force_compute::Bool = false
+  fr::FusionRing;
+  force_compute::Bool = false,
 )::Bool
-  first( pudc_criterion_explanation(fr,force_compute=force_compute) )
+  return first(
+    pudc_criterion_explanation(
+      fr;
+      force_compute = force_compute,
+    ),
+  )
 end
 
 
 function pudc_criterion_explanation(
-  fr::FusionRing; force_compute::Bool = false
-)::Tuple{Bool,Tuple{QQBarFieldElem,Int64},Vector{QQBarFieldElem}, String}
-  is_commutative(fr) || return false
+  fr::FusionRing;
+  force_compute::Bool = false,
+)::Tuple{
+  Bool,
+  Union{Nothing,Tuple{QQBarFieldElem,Int}},
+  String,
+}
+  if !is_commutative(fr)
+    return (
+      false,
+      nothing,
+      "The implemented pseudo-unitary Drinfeld-center criterion " *
+      "does not apply to noncommutative rings.",
+    )
+  end
 
-  codegrees = formal_codegrees(fr; force_compute = force_compute)
+  codegrees = formal_codegrees(
+    fr;
+    force_compute = force_compute,
+  )
 
-  for i in 1:rank(fr)
-    frac = codegrees[1]//codegrees[i]
+  c1 = fpdim(
+    fr;
+    force_compute = force_compute,
+  )
+
+  for (i, codegree) in enumerate(codegrees)
+    frac = c1 / codegree
+
     if !is_algebraic_integer(frac)
-      return ( true, (frac, i, codegrees), pdc_explanation(frac,i, codegrees) )
+      return (
+        true,
+        (frac, i),
+        pudc_explanation(frac, i),
+      )
     end
   end
 
-  return ( 
-    false, 
-    nothing, 
-    "The pseudo-unitary Drinfeld center criterion found no obstruction" 
-    )
+  return (
+    false,
+    nothing,
+    "The pseudo-unitary Drinfeld-center criterion found no obstruction.",
+  )
 end
-
   
 function pudc_explanation( frac, int, codegrees )
   mps = minpolstring(frac)

@@ -80,3 +80,49 @@ using Oscar
     end
   end
 end
+
+#changed: added tests for pudc
+#it should not matter where a value happens to appear in a vector!
+@testset "pseudo-unitary Drinfeld-center criterion" begin
+  ising = su2k_fusion_ring(2)
+
+  result = FusionRings.pudc_criterion_explanation(
+    ising;
+    force_compute = true,
+  )
+
+  @test result isa Tuple
+  @test length(result) == 3
+  @test result[1] == false
+
+  @test !FusionRings.pudc_criterion(
+    ising;
+    force_compute = true,
+  )
+end
+
+#changed: testing independence from cached ordering
+@testset "PUDC is independent of codegree ordering" begin
+  ising = su2k_fusion_ring(2)
+
+  codegrees = formal_codegrees(
+    ising;
+    force_compute = true,
+  )
+
+  normal_order = change_properties(
+    ising,
+    :formal_codegrees => qqb_id.(codegrees),
+  )
+
+  reversed_order = change_properties(
+    ising,
+    :formal_codegrees => qqb_id.(reverse(codegrees)),
+  )
+
+  @test FusionRings.pudc_criterion(normal_order) ==
+        FusionRings.pudc_criterion(reversed_order)
+
+  @test !FusionRings.pudc_criterion(normal_order)
+  @test !FusionRings.pudc_criterion(reversed_order)
+end

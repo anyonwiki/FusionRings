@@ -1348,7 +1348,8 @@ end
 export characters
 
 #changed: Honor forced recomputation and return a correctly shaped exact 1x1 matrix for rank-one rings.
-function characters(ring::FusionRing; use_numerics = true, force_compute = false)::AbstractAlgebra.Generic.MatSpaceElem{QQBarFieldElem}
+#changed - char signature accepts tried and tol -> other wise breaks csp_crit lines 78-79, dn and pdc_crit through formal codegrees
+function characters(ring::FusionRing; use_numerics = true, force_compute = false, tries::Int=64, tol::Real=1e-12,)::AbstractAlgebra.Generic.MatSpaceElem{QQBarFieldElem}
   if !ismissing(ring.characters) && !force_compute
     return matrix( QQBar, from_qqb_id(ring.characters) )
   end
@@ -1370,7 +1371,8 @@ function characters(ring::FusionRing; use_numerics = true, force_compute = false
 
   if use_numerics
     # find numeric diagonalizing matrix
-    V = normalize_first_col(numeric_diagonalizing_matrix(mats),tol=tol,tries=tries)
+    #changed: fixed correct input
+    V = normalize_first_col(numeric_diagonalizing_matrix(mats,tries,tol))
     # find symbolic evals
     evals = union(vcat([eigenvalues(matrix(qqb, m)) for m in mats] ...))
     # identify evals in V, sort mat, and convert to matrix of qqb's

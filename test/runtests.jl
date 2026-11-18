@@ -1,48 +1,97 @@
 using Test
 using FusionRings
 
-using FusionRings: fix_fractions
-using FusionRings: factor_squares
-using FusionRings: bold_integer
+using FusionRings: fix_fractions, factor_squares, bold_integer
 
 include("test_utils.jl")
 include("test_fixtures.jl")
 
 # ============================================================
-# Test group / level configuration
+# Configuration
 # ============================================================
 
-const TEST_GROUP = lowercase(get(ENV, "FUSIONRINGS_TEST_GROUP", "all"))
+const TEST_GROUPS = (
+  "creation",
+  "properties",
+  "operations",
+  "subring",
+  "automorphism",
+  "numeric",
+  "categorifiability",
+  "import_export",
+  "formatting",
+)
 
-# test_utils.jl defines normalize_test_level(...)
-const TEST_LEVEL = normalize_test_level(get(ENV, "FUSIONRINGS_TEST_LEVEL", "all"))
+const TEST_LEVELS = (
+  "basic",
+  "intermediate",
+  "reference",
+)
+
+function validate_test_group(name::AbstractString)
+  group = lowercase(strip(name))
+
+  if group != "all" && !(group in TEST_GROUPS)
+    throw(ArgumentError(
+      "Unknown test group $(repr(name)). Expected one of: " *
+      join(TEST_GROUPS, ", ") * ", all.",
+    ))
+  end
+
+  return group
+end
+
+function validate_test_level(name::AbstractString)
+  level = normalize_test_level(name)
+
+  if level != "all" && !(level in TEST_LEVELS)
+    throw(ArgumentError(
+      "Unknown test level $(repr(name)). Expected basic, intermediate, " *
+      "reference, all, or a supported alias such as level1.",
+    ))
+  end
+
+  return level
+end
+
+const TEST_GROUP = validate_test_group(
+  get(ENV, "FUSIONRINGS_TEST_GROUP", "all"),
+)
+
+const TEST_LEVEL = validate_test_level(
+  get(ENV, "FUSIONRINGS_TEST_LEVEL", "all"),
+)
+
+# ============================================================
+# Selection
+# ============================================================
 
 """
     want_group(name)
 
-Return true if the test group `name` should run.
-
-Examples:
-    FUSIONRINGS_TEST_GROUP=creation
-    FUSIONRINGS_TEST_GROUP=properties
-    FUSIONRINGS_TEST_GROUP=all
+Whether the requested group is enabled.
+The group "all" imposes no additional restriction.
 """
 function want_group(name::AbstractString)
-  return TEST_GROUP == "all" || lowercase(name) == TEST_GROUP
+  group = validate_test_group(name)
+
+  return TEST_GROUP == "all" ||
+         group == "all" ||
+         group == TEST_GROUP
 end
 
 """
     want_level(name)
 
-Return true if the test level `name` should run.
-
-Accepted names:
-    basic, intermediate, reference
-    level1, level2, level3
-    all
+Whether the requested level is enabled.
+The level "all" imposes no additional restriction.
 """
 function want_level(name::AbstractString)
-  return TEST_LEVEL == "all" || normalize_test_level(name) == TEST_LEVEL
+  level = validate_test_level(name)
+
+  return TEST_LEVEL == "all" ||
+         level == "all" ||
+         level == TEST_LEVEL
 end
 
 """
@@ -50,24 +99,20 @@ end
         ...
     end
 
-    maybe_testset(name, level) do
-        ...
-    end
-
-    maybe_testset(name, group, level) do
-        ...
-    end
-
-Run a testset only if the requested group and level are enabled.
+Run the body when both its group and level are enabled.
+Prefer this explicit keyword form for new tests.
 """
+function maybe_testset(
+  f::Function,
+  name::AbstractString;
+  group::AbstractString = "all",
+  level::AbstractString = "all",
+)
+  # Validate both arguments even when one selector excludes the test.
+  group_enabled = want_group(group)
+  level_enabled = want_level(level)
 
-function maybe_group_ok(group::AbstractString)
-  g = lowercase(strip(group))
-  return g == "all" || want_group(g)
-end
-
-function run_maybe_testset(f::Function, name::AbstractString; group = "all", level = "all")
-  if maybe_group_ok(group) && want_level(level)
+  if group_enabled && level_enabled
     @testset "$name" begin
       f()
     end
@@ -76,90 +121,73 @@ function run_maybe_testset(f::Function, name::AbstractString; group = "all", lev
   return nothing
 end
 
-# Keyword style:
-# maybe_testset("name"; group="properties", level="basic") do ... end
-function maybe_testset(f::Function, name::AbstractString; group = "all", level = "all")
-  return run_maybe_testset(f, name; group = group, level = level)
-end
+"""
+    maybe_testset(level, name) do
+        ...
+    end
 
-# Positional level style:
-# maybe_testset("name", "basic") do ... end
-function maybe_testset(f::Function, name::AbstractString, level::AbstractString)
-  return run_maybe_testset(f, name; level = level)
-end
-
-# Positional group + level style:
-# maybe_testset("name", "properties", "basic") do ... end
+Compatibility with the level-first calls used by the current test files.
+"""
 function maybe_testset(
-  f::Function, name::AbstractString, group::AbstractString, level::AbstractString
+  f::Function,
+  level::AbstractString,
+  name::AbstractString,
 )
-  return run_maybe_testset(f, name; group = group, level = level)
+  return maybe_testset(f, name; level = level)
 end
 
 """
-    include_if_exists(path)
+    maybe_testset(name, group, level) do
+        ...
+    end
 
-Include  test file only if  exists.  This  useful for optional
-test groups which may be empty or absent while the main tests
-live in properties_tests.jl.
+Compatibility with the previous three-string interface.
 """
-function include_if_exists(path::AbstractString)
-  fullpath = joinpath(@__DIR__, path)
+function maybe_testset(
+  f::Function,
+  name::AbstractString,
+  group::AbstractString,
+  level::AbstractString,
+)
+  return maybe_testset(f, name; group = group, level = level)
+end
 
-  if isfile(fullpath)
-    include(path)
-  else
-    @info "Skipping missing optional test file" path
+# ============================================================
+# File loading
+# ============================================================
+
+function include_test_file(filename::AbstractString)
+  path = joinpath(@__DIR__, filename)
+
+  isfile(path) ||
+    error("Selected test file is missing: $path")
+
+  # The current subring, automorphism, and numeric files are blank.
+  # Record these as skipped coverage rather than silently doing nothing.
+  if isempty(strip(read(path, String)))
+    @info "Skipping empty test file" file = filename
+
+    @testset "Empty test file: $filename" begin
+      @test_skip false
+    end
+
+    return nothing
   end
+
+  include(path)
+  return nothing
 end
 
 # ============================================================
-# Main tests
+# Run selected groups
 # ============================================================
+
+@info "FusionRings test selection" group = TEST_GROUP level = TEST_LEVEL
 
 @testset "FusionRings.jl" begin
-  if want_group("creation")
-    include("creation_tests.jl")
-  end
-
-  if want_group("properties")
-    include("properties_tests.jl")
-  end
-
-  if want_group("operations")
-    include("operations_tests.jl")
-  end
-
-  if want_group("subring")
-    include_if_exists("subring_tests.jl")
-  end
-
-  if want_group("automorphism")
-    include_if_exists("automorphism_tests.jl")
-  end
-
-  if want_group("numeric")
-    include_if_exists("numeric_tests.jl")
-  end
-
-  if want_group("categorifiability")
-    include_if_exists("categorifiability_tests.jl")
-  end
-
-  if want_group("import_export")
-    include("import_export_tests.jl")
-  end
-
-  if want_group("formatting")
-    include("formatting_tests.jl")
+  for group in TEST_GROUPS
+    if want_group(group)
+      include_test_file(group * "_tests.jl")
+    end
   end
 end
-
-#example: julia --project=. test/runtests.jl
-#FUSIONRINGS_TEST_LEVEL=level1 julia --project=. test/runtests.jl
-#FUSIONRINGS_TEST_LEVEL=level3 julia --project=. test/runtests.jl - representative anyonica tests
-#FUSIONRINGS_TEST_LEVEL=level3 FUSIONRINGS_ORACLE_MODE=all julia --project=. test/runtests.jl -full anyonica tests
-#only creation tests: FUSIONRINGS_TEST_GROUP=creation FUSIONRINGS_TEST_LEVEL=level3 julia --project=. test/runtests.jl
-#level1 = basic hand-written sanity tests
-#level2 = intermediate hand-checkable correctness tests
-#level3 = reference / Anyonica oracle tests
